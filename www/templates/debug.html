@@ -1,0 +1,19 @@
+<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons" hide-back-button="true">
+
+	<ion-content has-header="true" padding="true">
+		
+		<button class="button button-positive" ng-click="btConnect()">Bluetooth Connect</button>
+		
+		<button class="button button-positive" ng-click="btScan()">Bluetooth Scan</button>
+		
+		
+		<div class="list card">		
+		  <a class="item item-icon-left" ng-repeat="device in discovered" ng-click="btConnect(device.address)">
+		    <i class="icon ion-home"></i>
+		    {{device.name}} - {{device.rssi}}
+		  </a>
+		</div>
+		
+	</ion-content>
+
+</ion-view>

@@ -19,6 +19,7 @@ angular.module('cbt.controllers', [])
 
 .controller('OneController', function ($scope) {
 	$scope.navTitle = "Page One Title";
+	$scope.title = "CANBus Triple";
 	
 	$scope.leftButtons = [{
 	  type: 'button-icon icon ion-navicon',
@@ -43,8 +44,16 @@ angular.module('cbt.controllers', [])
   $scope.rightButtons = [];
 })
 
-.controller('ThreeController', function ($scope) {
-  $scope.navTitle = "Page Three Title";
+.controller('DebugController', function ($scope, BluetoothService) {
+
+  $scope.navTitle = "Debug";
+  
+  $scope.discovered = BluetoothService.discovered;
+  $scope.$on('didFindNewBluetoothDevice', function(event, data){
+  	console.log(BluetoothService.discovered);
+	  $scope.discovered = BluetoothService.discovered;
+  });
+  
 
   $scope.leftButtons = [{
     type: 'button-icon icon ion-navicon',
@@ -54,4 +63,19 @@ angular.module('cbt.controllers', [])
 	}];
 
 	$scope.rightButtons = [];
+	
+	
+	$scope.btScan = function(){
+		BluetoothService.scan();
+	}
+	
+	$scope.btConnect = function(address){
+		BluetoothService.setDevice(address);
+		BluetoothService.connect();
+	}
+	
+	
+	
+	
+	
 });

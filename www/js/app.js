@@ -26,10 +26,10 @@ angular.module('cbt', ['ionic', 'cbt.services', 'cbt.controllers'])
             controller: 'TwoController',
             templateUrl: 'templates/two.html'
         })
-        .state('three', {
-            url: '/three',
-            controller: 'ThreeController',
-            templateUrl: 'templates/three.html'
+        .state('debug', {
+            url: '/debug',
+            controller: 'DebugController',
+            templateUrl: 'templates/debug.html'
         });
 
     // if none of the above states are matched, use this as the fallback

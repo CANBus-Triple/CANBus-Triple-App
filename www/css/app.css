@@ -1,8 +1,13 @@
-/* Your app's CSS, go crazy, make it your own */
 
-.ionic-logo {
-  display: block;
-  margin: 15px auto;
-  width: 96px;
-  height: 96px;
+body,
+h1,
+h2,
+h3,
+h4,
+h5 {
+	font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, "Lucida Grande";
+}
+
+h1 {
+	font-weight: bold;
 }
