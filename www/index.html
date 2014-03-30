@@ -20,8 +20,13 @@
 
     <!-- your app's script -->
     <script src="js/app.js"></script>
-    <script src="js/services.js"></script>
-    <script src="js/controllers.js"></script>
+    <script src="js/services/MenuService.js"></script>
+    <script src="js/services/BluetoothService.js"></script>
+    <script src="js/services/SerialService.js"></script>
+    <script src="js/controllers/DashboardController.js"></script>
+    <script src="js/controllers/ConnectionController.js"></script>
+    <script src="js/controllers/MenuController.js"></script>
+    <script src="js/controllers/DebugController.js"></script>
   </head>
 	
   <body ng-app="cbt">
@@ -31,12 +36,11 @@
 			<!-- Center content -->
 			<ion-pane ion-side-menu-content>
 			  <ion-nav-bar type="bar-assertive" back-button-type="button-icon" back-button-icon="ion-arrow-left-c"></ion-nav-bar>
-					
 			  <ion-nav-view disableanimation="slide-left-right-ios7"></ion-nav-view>
 			</ion-pane>
 			
 			<!-- Left Side Menu -->
-			<ion-side-menu side="left" is-enabled="true" ng-controller="MenuController">
+			<ion-side-menu id="left-menu" side="left" is-enabled="true" ng-controller="MenuController">
 		    <ion-header-bar class="bar bar-header bar-assertive" title="{{title}}">
 		    </ion-header-bar>
 		    <ion-content has-header="true">
@@ -46,6 +50,7 @@
 		          {{item.text}}
 		        </ion-item>
 		      </ion-list>
+		     <img id='logo' src="img/cbt-128.png"/>
 		    </ion-content>
 			</ion-side-menu>
 		

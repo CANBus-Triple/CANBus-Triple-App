@@ -2,7 +2,7 @@
 
 	<ion-content has-header="true" padding="true">
 		
-		<button class="button button-positive" ng-click="btConnect()">Bluetooth Connect</button>
+		<button class="button button-positive" ng-click="btDisconnect()">Bluetooth Disconnect</button>
 		
 		<button class="button button-positive" ng-click="btScan()">Bluetooth Scan</button>
 		
@@ -10,8 +10,14 @@
 		<div class="list card">		
 		  <a class="item item-icon-left" ng-repeat="device in discovered" ng-click="btConnect(device.address)">
 		    <i class="icon ion-home"></i>
-		    {{device.name}} - {{device.rssi}}
+		    {{device.name}}:{{device.rssi}}
 		  </a>
+		</div>
+		
+		<div class="list card">
+			<div class="item item-text-wrap">
+				<p ng-bind="serial"></p>
+			</div>
 		</div>
 		
 	</ion-content>

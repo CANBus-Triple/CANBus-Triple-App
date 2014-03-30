@@ -11,3 +11,29 @@ h5 {
 h1 {
 	font-weight: bold;
 }
+
+.italic {
+	font-style: italic;
+}
+
+.center {
+	text-align: center;
+}
+
+#left-menu {
+	
+}
+
+#left-menu #logo {
+	display: block;
+	margin: 0 auto;
+}
+
+
+/*
+*		Colors 
+*/
+.color-assertive {
+	background-color: #ef4e3a;
+	color: white;
+}
