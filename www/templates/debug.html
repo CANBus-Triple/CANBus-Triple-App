@@ -6,6 +6,8 @@
 		
 		<button class="button button-positive" ng-click="btScan()">Bluetooth Scan</button>
 		
+		<button class="button button-positive" ng-click="serialTest()">Serial Test</button>
+		
 		
 		<div class="list card">		
 		  <a class="item item-icon-left" ng-repeat="device in discovered" ng-click="btConnect(device.address)">
@@ -19,6 +21,11 @@
 				<p ng-bind="serial"></p>
 			</div>
 		</div>
+
+
+		
+		
+
 		
 	</ion-content>
 

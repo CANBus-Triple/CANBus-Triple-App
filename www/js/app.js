@@ -6,8 +6,8 @@
 */
 
 
-angular.module('cbt', ['ionic'])
-	.config(function($stateProvider, $urlRouterProvider) {
+angular.module('cbt', ['ionic', 'LocalStorageModule'])
+	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 	
 			// Ionic uses AngularUI Router which uses the concept of states
 	    // Learn more here: https://github.com/angular-ui/ui-router
@@ -33,5 +33,8 @@ angular.module('cbt', ['ionic'])
 			
 	    // $urlRouterProvider.otherwise('/dashboard');
 	    $urlRouterProvider.otherwise('/connection');
+	    
+	    // Set local storage prefix
+	    localStorageServiceProvider.setPrefix('newPrefix');
 	    
 	});

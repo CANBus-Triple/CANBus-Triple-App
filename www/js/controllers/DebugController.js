@@ -2,7 +2,7 @@
 
 
 angular.module('cbt')
-	.controller('DebugController', function ($scope, BluetoothService) {
+	.controller('DebugController', function ($scope, BluetoothService, SerialService) {
 	
 	  $scope.navTitle = "Debug";
 	  
@@ -14,10 +14,13 @@ angular.module('cbt')
 	  });
 	  
 	  $scope.discovered = BluetoothService.discovered;
+	  /*
+	  // Use binding
 	  $scope.$on('didFindNewBluetoothDevice', function(event, data){
 	  	console.log(BluetoothService.discovered);
 		  $scope.discovered = BluetoothService.discovered;
 	  });
+		*/
 	  
 	
 	  $scope.leftButtons = [{
@@ -43,6 +46,14 @@ angular.module('cbt')
 			BluetoothService.disconnect();
 		}
 		
+		
+		// SerialService.open();
+		
+		$scope.serialTest = function(){
+			
+			SerialService.test();
+			
+		}
 		
 		
 	});

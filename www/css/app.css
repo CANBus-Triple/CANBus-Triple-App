@@ -35,5 +35,22 @@ h1 {
 */
 .color-assertive {
 	background-color: #ef4e3a;
+}
+
+.type-white {
 	color: white;
+}
+
+
+/*
+*	Ionic Framework Overrides
+*/
+
+
+.card {
+	margin-left: 0;
+	margin-right: 0;
+	-webkit-transform: translate3d(0, 0, 0);
+	-webkit-backface-visibility: hidden;
+	-webkit-perspective: 1000;
 }

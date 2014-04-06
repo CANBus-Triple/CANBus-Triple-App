@@ -2,17 +2,19 @@
 
 
 angular.module('cbt')
-	.controller('ConnectionController', function ($scope, $location, MenuService) {
+	.controller('DashboardController', function ($scope, $location, MenuService) {
 		
-		$scope.title = "CANBus Triple";
+		$scope.navTitle = "Dashboard";
+		$scope.title = "Dashboard";
 		
-		$scope.list = MenuService.all();
+		$scope.leftButtons = [{
+		  type: 'button-icon icon ion-navicon',
+	    tap: function(e) {
+	      $scope.sideMenuController.toggleLeft();
+	    }
+		}];
 		
-		$scope.goTo = function(page) {
-		  console.log('Going to ' + page);
-		  $scope.sideMenuController.toggleLeft();
-		  $location.url('/' + page);
-		};
+		$scope.rightButtons = [];
 		
 		
 	});

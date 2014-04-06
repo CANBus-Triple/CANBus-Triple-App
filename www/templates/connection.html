@@ -1,10 +1,16 @@
 <ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons" hide-back-button="true">
 
-    <ion-content has-header="true" padding="true" class="color-assertive">
-        <h2 class="center color-assertive italic">Let's get connected</h2>
-        
-        <p>Assure your CANBus triple is powered up and plugged. If you have a Bluetooth LE model super cool bro.</p>
-        
-    </ion-content>
+  <ion-content has-header="true" padding="true" class="color-assertive">
+  	<span class="type-white">
+      <h2 class="center color-assertive italic">Let's get connected</h2>
+      <p>Assure your CANBus triple is powered up and plugged. If you have a Bluetooth LE model super cool bro.</p>
+      <!-- <i class="icon ion-refreshing"></i> -->
+  	</span>
+  	
+  	<device-list></device-list>
+  	
+  	<button class="button button-outline button-block button-light button-bottom" ng-click="search()">Scan Again</button>
+  	  
+  </ion-content>
 
 </ion-view>

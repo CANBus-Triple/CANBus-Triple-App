@@ -4,12 +4,13 @@ angular.module('cbt')
 	.factory('BluetoothService', function($rootScope, $timeout) {
 		
 		/*
-		*		TODO: Clean this mess up boy.
+		*		TODO: Clean this mess up boy. Use promises, 
 		*/
 		
 		// Fake bt lib for local testing
-		if(typeof bluetoothle == "undefined")
-			var bluetoothle = {
+		if(!('bluetoothle' in window)){
+			console.log('making fake btle');
+			window.bluetoothle = {
 				initialize: function(){},
 				startScan: function(){},
 				stopScan: function(){},
@@ -20,7 +21,7 @@ angular.module('cbt')
 				subscribe: function(){},
 				services: function(){}
 			}
-		
+		}
 		
 		
 		var deviceInfo = {
@@ -29,7 +30,8 @@ angular.module('cbt')
 			characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8657'
 		}
 		
-		var connected = false,
+		var scanSeconds = 10,
+				connected = false,
 				initialized = false,
 				device = {},
 				discovered = {};
@@ -39,32 +41,43 @@ angular.module('cbt')
 		
 		function init(){
 			bluetoothle.initialize(function initializeSuccessCallback(status){
-				initalized = true;
+				console.log("initializeSuccessCallback", status);
+				initialized = true;
 			}, function initializeErrorCallback(status){
-				console.log("initializeErrorCallback");
+				console.log("initializeErrorCallback", status);
 			});
 		}
 		
-		function scan(){
+		function scan(sw){
+		
+			clearDiscovered();
+		
+			if(!sw){
+				bluetoothle.stopScan(function stopScanSuccessCallback(){}, function stopScanErrorCallback(error){ console.log(error) });
+				console.log("Bluetooth scan stopped");
+				return;
+			}
+			
+			console.log("Bluetooth scan");
 			
 			bluetoothle.startScan(function startScanSuccessCallback(status){
-				console.log("startScanSuccessCallback", status );
-				console.log(JSON.stringify(status));
-				// console.log( bluetoothle.getBytes( status.advertisement ) );
 				
 				// Add to discovered array
 				if( status.status = 'scanResult' && status.address ){
-					discovered[status.address] = status;
-					}
+					if(!$rootScope.$$phase)
+						$rootScope.$apply(function(){
+							discovered[status.address] = status;
+						});
+				}
 				
 				
-			}, function startScanErrorCallback(v){
+			}, function startScanErrorCallback(status){
 				console.log("startScanErrorCallback", status );
 			}, {});
 			
 			$timeout(function(){
-				bluetoothle.stopScan(function stopScanSuccessCallback(){}, function stopScanErrorCallback(){});
-			}, 200);
+				bluetoothle.stopScan(function stopScanSuccessCallback(){}, function stopScanErrorCallback(error){ console.log(error) });
+			}, scanSeconds*1000);
 			
 		}
 	
@@ -178,11 +191,19 @@ angular.module('cbt')
 		}
 		
 		
+		function clearDiscovered(){
+			for(var k in discovered){
+				console.log(discovered[k]);
+				delete discovered[k];
+			}
+		}
 		
 		
 		
 		
-		init();
+		/* Hax for testing, this is bad */
+		$timeout(init, 300);
+		
 		
 	  return {
 	    scan: scan,
