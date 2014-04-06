@@ -8,8 +8,16 @@
 		
 		<button class="button button-positive" ng-click="serialTest()">Serial Test</button>
 		
+		<button class="button button-positive" ng-click="showToggle()">Toggle</button>
 		
-		<div class="list card">		
+		<div class="list card height-animation" ng-show="showCard">
+		  <a class="item item-icon-left" ng-repeat="card in derp">
+		    <i class="icon ion-home"></i>
+		    Entry
+		  </a>
+		</div>
+		
+		<div class="list card">
 		  <a class="item item-icon-left" ng-repeat="device in discovered" ng-click="btConnect(device.address)">
 		    <i class="icon ion-home"></i>
 		    {{device.name}}:{{device.rssi}}
@@ -21,8 +29,7 @@
 				<p ng-bind="serial"></p>
 			</div>
 		</div>
-
-
+		
 		
 		
 

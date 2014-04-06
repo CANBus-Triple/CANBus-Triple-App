@@ -20,6 +20,11 @@ h1 {
 	text-align: center;
 }
 
+.element-center {
+	display: block;
+	margin: 0 auto;
+}
+
 #left-menu {
 	
 }
@@ -30,16 +35,7 @@ h1 {
 }
 
 
-/*
-*		Colors 
-*/
-.color-assertive {
-	background-color: #ef4e3a;
-}
 
-.type-white {
-	color: white;
-}
 
 
 /*
@@ -54,3 +50,44 @@ h1 {
 	-webkit-backface-visibility: hidden;
 	-webkit-perspective: 1000;
 }
+
+
+
+
+
+/*
+*	Animation
+*/
+
+
+.height-animation {
+  -webkit-transition: 1.5s linear max-height;
+  transition: 1.5s linear max-height;
+	max-height: 1200px;
+}
+
+.height-animation.ng-hide {
+  max-height: 0px;
+}
+
+.height-animation.ng-hide-add {
+/* 	display: block!important; */
+} 
+.height-animation.ng-hide-remove {
+	display: block!important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,101 @@
+/*
+*		Base Sass 
+* 	CANBus Triple App
+*		Derek K etx313@gmail.com
+*/
+/*
+*		Variables
+* 	CANBus Triple App
+*		Derek K etx313@gmail.com
+*/
+/*
+*		Colors 
+*/
+/* line 18, ../sass/_colors.scss */
+.color-assertive {
+  background-color: #ef4e3a;
+}
+
+/* line 22, ../sass/_colors.scss */
+.type-white {
+  color: white;
+}
+
+/* line 26, ../sass/_colors.scss */
+.type-energized {
+  color: #f0b840;
+}
+
+/* line 7, ../sass/_app.scss */
+body,
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, "Lucida Grande";
+}
+
+/* line 11, ../sass/_app.scss */
+h1 {
+  font-weight: bold;
+}
+
+/* line 15, ../sass/_app.scss */
+.italic {
+  font-style: italic;
+}
+
+/* line 19, ../sass/_app.scss */
+.center {
+  text-align: center;
+}
+
+/* line 23, ../sass/_app.scss */
+.element-center {
+  display: block;
+  margin: 0 auto;
+}
+
+/* line 32, ../sass/_app.scss */
+#left-menu #logo {
+  display: block;
+  margin: 0 auto;
+}
+
+/*
+*	Ionic Framework Overrides
+*/
+/* line 46, ../sass/_app.scss */
+.card {
+  margin-left: 0;
+  margin-right: 0;
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1000;
+}
+
+/*
+*	Animation
+*/
+/* line 63, ../sass/_app.scss */
+.height-animation {
+  -webkit-transition: 1.5s linear max-height;
+  transition: 1.5s linear max-height;
+  max-height: 1200px;
+}
+
+/* line 69, ../sass/_app.scss */
+.height-animation.ng-hide {
+  max-height: 0px;
+}
+
+/* line 73, ../sass/_app.scss */
+.height-animation.ng-hide-add {
+  /* 	display: block!important; */
+}
+
+/* line 76, ../sass/_app.scss */
+.height-animation.ng-hide-remove {
+  display: block !important;
+}

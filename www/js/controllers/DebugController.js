@@ -55,5 +55,13 @@ angular.module('cbt')
 			
 		}
 		
+		$scope.derp = [{},{},{}];
+		$scope.showCard = true;
+		$scope.showToggle = function(){
+			$scope.showCard = $scope.showCard === true ? false : true;
+			// $scope.derp.push({card:1});
+		}
+		
+		
 		
 	});

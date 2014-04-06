@@ -2,7 +2,7 @@
 
 
 angular.module('cbt')
-	.controller('ConnectionController', function ($scope, $timeout, HardwareService, BluetoothService, SerialService) {
+	.controller('ConnectionController', function ($scope, $timeout, HardwareService, BluetoothService, SerialService, localStorageService) {
 		
 		$scope.navTitle = "Connect to your CANBus Triple";
 		$scope.title = "Connect";
