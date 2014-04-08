@@ -2,30 +2,36 @@
 
 /*
 *		Derek K etx313@gmail.com
-*		HardwareService manages Bluetooth LE and Serial Connections
+*		HardwareService manages Bluetooth LE and Serial Connections into a common API
 *	
 */
 
 angular.module('cbt')
-	.factory('HardwareService', function( $rootScope, $q, SerialService, BluetoothService ) {
+	.factory('HardwareService', function( $rootScope, $q, $timeout, localStorageService, SerialService, BluetoothService ) {
 		
-		var ConnectionMode = {
-			USB:'usb',
-			BT:'bt'
-		}
+		var connectionMode = null,
+				readHandlers = [],
+				ConnectionMode = {
+					USB:'usb',
+					BT:'bt'
+				};
+				
+				
+				
+			
+			
+		console.log("localStorageService ", localStorageService.get('device'));
 		
-		
-		var connected = false,
-				connectionMode = ConnectionMode.USB;
-	
 	
 		/*
 		*		CANBus Triple API Commands
 		*/
 		var commands = {
-			info: String.fromCharCode(0x01, 0x01),
+			info: String.fromCharCode(0x01, 0x01), // Get Device Info
 			
 		}
+		
+		
 		
 		/*
 		*	Enable/Disable hardware search
@@ -34,6 +40,11 @@ angular.module('cbt')
 		function searchForDevices(b){
 			
 			if(b){
+			
+				// Disconnect if connected
+				if(connectionMode)
+					disconnect();
+			
 				BluetoothService.scan(true);
 				if(window.device && window.device.platform == 'Android')
 					SerialService.search(true);
@@ -54,25 +65,143 @@ angular.module('cbt')
 			/*
 			*		Get selected device from Local storage and connect
 			*/
-			console.log( localStorageService.get('device') );
+			var device = localStorageService.get('device');
 			
-			HardwareService.connect();
+			console.log("connect to device ", device);
+			
+			if(device.address == 'serial')
+				SerialService.open();
+			else
+				BluetoothService.connect(device);
+			
+		}
+		
+		/*
+		*	Disconnect from a device
+		*/
+		function disconnect(){
+			
+			switch(connectionMode){
+				case ConnectionMode.BT:
+					BluetoothService.disconnect();
+				break;
+				case ConnectionMode.USB:
+					SerialService.close();
+				break;
+			}				
+			
+		}
+
+
+		/*
+		*	Write to connected service
+		*/
+		function write(data){
+			
+			switch(connectionMode){
+				case null:
+					return;
+				case ConnectionMode.BT:
+					
+				break;
+				case ConnectionMode.USB:
+					
+				break;
+			}
 			
 			
 		}
 		
+		
+		/*
+		*	Register a callback to be called when we recieve data
+		*/
+		function registerReadHandler( callback ){
+			if( !(callback instanceof Function) ) return;
+			readHandlers.push(callback);
+		}
+		
+		/*
+		*	Call all read callbacks
+		*/
+		function notifyReadHandlers(){
+			for(var f in readHandlers)
+				f();
+		}
+		
+		
+		
+		
+		/*
+		*	Store and broadcast connected event
+		*/
+		function serviceStatusHandler( event ){
+		
+			switch(event.name){
+				case "BluetoothService.CONNECTED":
+					connectionMode = ConnectionMode.BT;
+					$rootScope.$broadcast( 'HardwareService.CONNECTED' );
+				break;
+				case "SerialService.OPEN":
+					connectionMode = ConnectionMode.USB;
+					$rootScope.$broadcast( 'HardwareService.CONNECTED' );
+				break;
+				case "BluetoothService.DISCONNECTED":
+				case "SerialService.CLOSE":
+					connectionMode = null;
+					$rootScope.$broadcast( 'HardwareService.DISCONNECTED' );
+				break;
+				
+			}
+			
+			
+		}
+
+		
+		/*
+		*	Connect to last device by default
+		*/
+		/*
+
+		$timeout(function(){
+			if(localStorageService.get('device'))
+				connect();
+		}, 1500);
+*/
+
+		
+		
+		
+		/*
+		*	Event Listeners
+		*/
+		$rootScope.$on('BluetoothService.CONNECTED', serviceStatusHandler);
+		$rootScope.$on('BluetoothService.DISCONNECTED', serviceStatusHandler);
+		$rootScope.$on('SerialService.OPEN', serviceStatusHandler);
+		$rootScope.$on('SerialService.CLOSE', serviceStatusHandler);
+
 		
 		
 		
 		
 	  return {
 	    /* Interface Properties */
-	    connected: connected,
-	    ConnectionMode: ConnectionMode,
-	    connect: connect,
+	    connectionMode: function(){ return connectionMode; },
+	    
 	    
 	    /* Interface Methods */
 	    search: searchForDevices,
+	    connect: connect,
+	    disconnect: disconnect,
 	    
 	  }
 	});
+	
+	
+	
+	
+	
+	
+	
+	
+	

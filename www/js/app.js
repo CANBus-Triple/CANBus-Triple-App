@@ -35,6 +35,26 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    $urlRouterProvider.otherwise('/connection');
 	    
 	    // Set local storage prefix
-	    localStorageServiceProvider.setPrefix('newPrefix');
+	    localStorageServiceProvider.setPrefix('CBTSettings');
 	    
-	});
+	})
+	
+	.config(['$provide', function ($provide) {
+	  $provide.decorator('$rootScope', function ($delegate) {
+	    
+	    var _emit = $delegate.$emit;
+	    $delegate.$emit = function(){
+	      console.log.apply(console, arguments);
+	      _emit.apply(this, arguments);
+	    };
+	    
+			var origBroadcast = $delegate.$broadcast;
+			$delegate.$broadcast = function() {
+	      console.log("$broadcast: ", arguments);
+	      return origBroadcast.apply(this, arguments);
+	    };
+			
+	    return $delegate;
+	    
+	  });
+	}]);

@@ -1,29 +1,15 @@
 'use strict';
 
 angular.module('cbt')
-	.factory('BluetoothService', function($rootScope, $timeout) {
+	.factory('BluetoothService', function($rootScope, $timeout, $q, UtilsService) {
 		
 		/*
 		*		TODO: Clean this mess up boy. Use promises, 
 		*/
 		
-		// Fake bt lib for local testing
-		if(!('bluetoothle' in window)){
-			console.log('making fake btle');
-			window.bluetoothle = {
-				initialize: function(){},
-				startScan: function(){},
-				stopScan: function(){},
-				connect: function(){},
-				read: function(){},
-				write: function(){},
-				discover: function(){},
-				subscribe: function(){},
-				services: function(){}
-			}
-		}
 		
 		
+				
 		var deviceInfo = {
 			name: 'CANBus Triple',
 			serviceUUID: '7a1fb359-735c-4983-8082-bdd7674c74d2',
@@ -32,33 +18,51 @@ angular.module('cbt')
 		
 		var scanSeconds = 10,
 				connected = false,
+				connectedOnce = false,
 				initialized = false,
+				reconnectAttempts = 0,
 				device = {},
 				discovered = {};
 		
 		
 		
-		
+		/*
+		*
+		*/
 		function init(){
+		
+			var deferred = $q.defer();
+		
 			bluetoothle.initialize(function initializeSuccessCallback(status){
-				console.log("initializeSuccessCallback", status);
+				$rootScope.$broadcast('BluetoothService.INIT');
 				initialized = true;
-			}, function initializeErrorCallback(status){
-				console.log("initializeErrorCallback", status);
+				// disconnect();
+				deferred.resolve();
+			}, function initializeErrorCallback(error){
+				$rootScope.$broadcast('BluetoothService.INIT_ERROR');
+				initialized = false;
+				deferred.reject(new Error("Failed to init bluetooth"));
 			});
+			
+			return deferred.promise;
 		}
 		
+		
+		/*
+		*
+		*/
 		function scan(sw){
-		
-			clearDiscovered();
-		
+			
 			if(!sw){
-				bluetoothle.stopScan(function stopScanSuccessCallback(){}, function stopScanErrorCallback(error){ console.log(error) });
-				console.log("Bluetooth scan stopped");
+				bluetoothle.stopScan(function stopScanSuccessCallback(){
+					$rootScope.$broadcast('BluetoothService.SCAN_COMPLETE');
+				}, function stopScanErrorCallback(error){});
 				return;
 			}
 			
-			console.log("Bluetooth scan");
+			clearDiscovered();
+			
+			$rootScope.$broadcast('BluetoothService.SCAN_START');
 			
 			bluetoothle.startScan(function startScanSuccessCallback(status){
 				
@@ -73,52 +77,137 @@ angular.module('cbt')
 				
 			}, function startScanErrorCallback(status){
 				console.log("startScanErrorCallback", status );
+				$rootScope.$broadcast('BluetoothService.SCAN_ERROR');
 			}, {});
 			
 			$timeout(function(){
-				bluetoothle.stopScan(function stopScanSuccessCallback(){}, function stopScanErrorCallback(error){ console.log(error) });
+				bluetoothle.stopScan(function stopScanSuccessCallback(){
+					$rootScope.$broadcast('BluetoothService.SCAN_COMPLETE');
+				}, function stopScanErrorCallback(error){
+					
+				});
 			}, scanSeconds*1000);
 			
 		}
 	
-	
-		function connect(){
+		
+		
+		/*
+		*
+		*/
+		function connect(device){
 			
-			bluetoothle.connect(function connectSuccessCallback( status ){
-				console.log("connectSuccessCallback", status);
-				
-				switch(status.status){
-					case 'connected':
-						$rootScope.$broadcast('bluetoothDidConnect');
-						
-						console.log("Platform ", window.device.platform, window.device.platform == 'Android');
-						if(window.device.platform == 'Android') discover();
-						else if(window.device.platform == 'iOS')  services();
-						
-						
-					break;
-					case 'disconnected':
-						$rootScope.$broadcast('bluetoothDidDisconnect');
-					break;
+			console.log("Connecting to device via BT:", device);
+			
+			reconnectAttempts = 0;
+			
+			scan(false);
+			/*
+
+			if(connectedOnce){
+				reconnect(device);
+				return;
 				}
-				
-			}, function connectErrorCallback(){
-				console.log("connectErrorCallback");
-			}, { 'address':device.address });
+*/
+			
+			bluetoothle.connect(
+				connectSuccessCallback,
+				connectErrorCallback, 
+				{ 'address': device.address });
 			
 			
 		}
 		
+		/*
+		*	Reconnect to BT
+		*	@param {Object} device
+		*/
+		function reconnect(device){
+			bluetoothle.reconnect(
+				connectSuccessCallback,
+				connectErrorCallback
+			);
+		}
 		
 		
+		/*
+		*	Callbacks used by connect and reconnect plugin methods
+		*/
+		function connectErrorCallback(error){
+			
+			if( reconnectAttempts > 3 ){
+				$rootScope.$broadcast('BluetoothService.CONNECT_ERROR');
+				return;
+			}
+			
+			// Try reconnect method
+			$rootScope.$broadcast('BluetoothService.RECONNECTING');
+			
+			console.log( "Reconnect attempt ", reconnectAttempts );
+			
+			if(reconnectAttempts > 1)
+				reconnect( device );
+			else
+				disconnect().finally(function(){reconnect( device );});
+				
+			reconnectAttempts++;
+			
+		}
+		
+		function connectSuccessCallback( status ){
+			
+			switch(status.status){
+				case 'connected':
+					$rootScope.$broadcast('BluetoothService.CONNECTED');
+					connected = true;
+					connectedOnce = true;
+				break;
+				case 'disconnected':
+					connected = false;
+					$rootScope.$broadcast('BluetoothService.DISCONNECTED');
+				break;
+		
+				}
+		}
+		
+		
+		
+		
+		
+		
+		
+		/*
+		*
+		*/
 		function disconnect(){
 			
-			bluetoothle.disconnect();
+			var deferred = $q.defer();
+			
+			bluetoothle.disconnect(function disconnectSuccess(status){
+				
+				switch(status.status){
+					case 'disconnecting':
+						$rootScope.$broadcast('BluetoothService.DISCONNECTING');
+					break;
+					case 'disconnected':
+						connected = false;
+						deferred.resolve();
+						$rootScope.$broadcast('BluetoothService.DISCONNECTED');
+					break;
+				}
+				
+			}, function disconnectError(){
+				deferred.reject(new Error("Failed to init bluetooth"));
+			});
+			
+			return deferred.promise;
 			
 		};
 		
 		
-		
+		/* !!!!!!! FIX
+		*
+		*/
 		function read(){
 			
 			bluetoothle.read(function readSuccessCallback(result){
@@ -133,6 +222,7 @@ angular.module('cbt')
 			});
 			
 		}
+		
 		
 		/*
 		*		iOS Service Discovery
@@ -166,7 +256,9 @@ angular.module('cbt')
 		}
 		
 		
-		
+		/*
+		*
+		*/
 		function subscribe(){
 			
 			bluetoothle.subscribe(function subscribeSuccessCallback(result){
@@ -190,7 +282,9 @@ angular.module('cbt')
 			
 		}
 		
-		
+		/*
+		*	Clears discovered object without destroying ng bindings
+		*/
 		function clearDiscovered(){
 			for(var k in discovered){
 				console.log(discovered[k]);
@@ -201,13 +295,23 @@ angular.module('cbt')
 		
 		
 		
-		/* Hax for testing, this is bad */
-		$timeout(init, 300);
 		
-		
+		/*
+		*	External Interface
+		*/
 	  return {
-	    scan: scan,
-	    connect: connect,
+	    scan: function(sw){
+		    if(!initialized)
+		    	init().then(function(){scan(sw);});
+		    	else
+		    	scan(sw);
+	    },
+	    connect: function(device){
+		    if(!initialized)
+		    	init().then(function(){connect(device)});
+		    	else
+		    	connect(device);
+	    },
 	    disconnect: disconnect,
 	    setDevice: function(i){ device = discovered[i] },
 	    

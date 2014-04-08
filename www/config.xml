@@ -10,7 +10,7 @@
     <content src="index.html" />
     <access origin="*" />
     <preference name="fullscreen" value="false" />
-    <preference name="webviewbounce" value="false" />
+    <preference name="webviewbounce" value="true" />
     <preference name="UIWebViewBounce" value="false" />
-    <preference name="DisallowOverscroll" value="true" />
+    <preference name="DisallowOverscroll" value="false" />
 </widget>

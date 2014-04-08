@@ -14,23 +14,10 @@ angular.module('cbt')
 	  });
 	  
 	  $scope.discovered = BluetoothService.discovered;
-	  /*
-	  // Use binding
-	  $scope.$on('didFindNewBluetoothDevice', function(event, data){
-	  	console.log(BluetoothService.discovered);
-		  $scope.discovered = BluetoothService.discovered;
-	  });
-		*/
+	  
 	  
 	
-	  $scope.leftButtons = [{
-	    type: 'button-icon icon ion-navicon',
-	    tap: function(e) {
-	        $scope.sideMenuController.toggleLeft();
-			}
-		}];
-	
-		$scope.rightButtons = [];
+	  
 		
 		
 		$scope.btScan = function(){

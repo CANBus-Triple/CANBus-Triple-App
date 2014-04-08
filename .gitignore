@@ -2,3 +2,7 @@
 *.sw*
 platforms/^.*
 www/components
+www/plugins/^.*
+www/plugins
+cordova*.js
+node_modules

@@ -8,6 +8,7 @@
         Derek K etx313@gmail.com
     </author>
     <content src="index.html" />
+<!--     <content src="http://192.168.11.9:8000/" /> -->
     <access origin="*" />
     <preference name="fullscreen" value="false" />
     <preference name="webviewbounce" value="false" />

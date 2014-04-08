@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('cbt')
-	.factory('SerialService', function( $q, $rootScope, $interval, BluetoothService, UtilsService ) {
+	.factory('SerialService', function( $q, $rootScope, $interval, UtilsService ) {
 
 		
 
@@ -13,18 +13,6 @@ angular.module('cbt')
 				discovered = {};
 				
 		
-		// Fake bt lib for local testing
-		if(!('serial' in window)){
-			console.log('making fake serial');
-			window.serial = {
-				open: function(){},
-				close: function(){},
-				registerReadCallback: function(){},
-				requestPermission: function(){},
-				read: function(){},
-				write: function(){}
-			}
-		}
 		
 
 		/**
@@ -46,6 +34,7 @@ angular.module('cbt')
 					},
 					function error(){
 						serialOpened = false;
+						$rootScope.$broadcast('SerialService.OPEN_ERROR');
 						deferred.reject(new Error("Failed to open Serial port"));
 					}
 				);
@@ -53,24 +42,24 @@ angular.module('cbt')
 			
 			
 			if( !usbSerialPermissionGranted ){
-			
-				console.log("usbSerialPermissionGranted", usbSerialPermissionGranted)
 				
 				serial.requestPermission(
 					function success(){
 						usbSerialPermissionGranted = true;
+						$rootScope.$broadcast('SerialService.PERMISSION_GRANTED');
 						doOpen();
 					},
 					function error(){
 						usbSerialPermissionGranted = false;
+						$rootScope.$broadcast('SerialService.PERMISSION_DENIED');
 						deferred.reject(new Error("Permission Denied by OS/User"));
 					}
 				);
 				
 			}
-			else {
+			else
 				doOpen();
-				}
+			
 			
 			return deferred.promise;
 			
@@ -168,7 +157,7 @@ angular.module('cbt')
 				return;
 			}
 			
-			$rootScope.$broadcast('SerialService.readData', data);
+			$rootScope.$broadcast('SerialService.READ_DATA', data);
 			
 		}
 		
@@ -189,6 +178,7 @@ angular.module('cbt')
 				if(line.length > 0){
 					readBuffer = readBuffer.slice(line[0].length);
 					search( false );
+					close();
 					}
 				
 				if(!$rootScope.$$phase)
