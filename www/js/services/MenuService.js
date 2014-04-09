@@ -6,7 +6,8 @@ angular.module('cbt')
 	  var menuItems = [
 	      { text: 'Dashboard', iconClass: 'icon ion-model-s', link: 'dashboard'},
 	      { text: 'Connection', iconClass: 'icon ion-usb', link: 'connection'},
-	      { text: 'Debug', iconClass: 'icon ion-gear-b', link: 'debug'}
+	      { text: 'Settings', iconClass: 'icon ion-gear-b', link: 'settings'},
+	      { text: 'Debug', iconClass: 'icon ion-bug', link: 'debug'}
 	  ];
 	
 	  return {

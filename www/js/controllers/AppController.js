@@ -14,19 +14,12 @@ angular.module('cbt')
 		$scope.rightButtons = [];
 		
 		
-		
-		var connectedIconButton = {
-				  type: 'button-icon icon ion-ios7-circle-filled',
-			    tap: function(e) {
-			      HardwareService.disconnect();
-			    }
-				},
-				disconnectedIconButton = {
-				  type: 'button-icon icon ion-ios7-circle-outline',
-			    tap: function(e) {
-			      HardwareService.connect();
-			    }
-				};
+				
+				
+				
+		/* 
+		*	Private Methods
+		*/
 		
 		
 		
@@ -35,6 +28,9 @@ angular.module('cbt')
 		*
 		*/
 		$rootScope.$on('HardwareService.CONNECTED', statusHandler);
+		$rootScope.$on('HardwareService.CONNECTING', statusHandler);
+		$rootScope.$on('HardwareService.RECONNECTING', statusHandler);
+		$rootScope.$on('HardwareService.DISCONNECTING', statusHandler);
 		$rootScope.$on('HardwareService.DISCONNECTED', statusHandler);
 		
 		
@@ -48,18 +44,42 @@ angular.module('cbt')
 			
 			switch(event.name){
 				case 'HardwareService.CONNECTED':
-					$scope.$apply(function(){$scope.rightButtons = [connectedIconButton];});
+					$scope.rightButtons = [{
+					  type: 'button-icon icon ion-ios7-circle-filled',
+				    tap: function(e) {
+				      	HardwareService.disconnect();
+							}
+					}];
+				break;
+				case 'HardwareService.CONNECTING':
+				case 'HardwareService.RECONNECTING':
+					$scope.rightButtons = [{
+					  type: 'button-icon icon ion-ios7-circle-filled disabled',
+				    tap: function(e) {}
+					}];
+				break;
+				case 'HardwareService.DISCONNECTING':
+					$scope.rightButtons = [{
+					  type: 'button-icon icon ion-ios7-circle-outline disabled',
+				    tap: function(e) {}
+					}];
 				break;
 				case 'HardwareService.DISCONNECTED':
-					$scope.$apply(function(){$scope.rightButtons = [disconnectedIconButton];});
+					$scope.rightButtons = [{
+					  type: 'button-icon icon ion-ios7-circle-outline',
+				    tap: function(e) {
+				      	HardwareService.connect();
+							}
+					}];
 				break;
 				default:
-					$scope.$apply(function(){$scope.rightButtons = [];});
+					$scope.rightButtons = [];
 				break;
 			}
 			
 		};
 		
+
 				
 		
 	});

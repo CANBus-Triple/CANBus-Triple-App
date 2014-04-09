@@ -12,8 +12,10 @@ angular.module('cbt')
 				
 		var deviceInfo = {
 			name: 'CANBus Triple',
-			serviceUUID: '7a1fb359-735c-4983-8082-bdd7674c74d2',
-			characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8657'
+			serial: {
+				serviceUUID: '7a1fb359-735c-4983-8082-bdd7674c74d2',
+				characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8657'	
+			}
 		}
 		
 		var scanSeconds = 10,
@@ -21,7 +23,6 @@ angular.module('cbt')
 				connectedOnce = false,
 				initialized = false,
 				reconnectAttempts = 0,
-				device = {},
 				discovered = {};
 		
 		
@@ -102,13 +103,11 @@ angular.module('cbt')
 			reconnectAttempts = 0;
 			
 			scan(false);
-			/*
-
+			
 			if(connectedOnce){
 				reconnect(device);
 				return;
 				}
-*/
 			
 			bluetoothle.connect(
 				connectSuccessCallback,
@@ -123,6 +122,7 @@ angular.module('cbt')
 		*	@param {Object} device
 		*/
 		function reconnect(device){
+			$rootScope.$broadcast('BluetoothService.RECONNECTING');
 			bluetoothle.reconnect(
 				connectSuccessCallback,
 				connectErrorCallback
@@ -141,11 +141,10 @@ angular.module('cbt')
 			}
 			
 			// Try reconnect method
-			$rootScope.$broadcast('BluetoothService.RECONNECTING');
 			
 			console.log( "Reconnect attempt ", reconnectAttempts );
 			
-			if(reconnectAttempts > 1)
+			if(reconnectAttempts == 1)
 				reconnect( device );
 			else
 				disconnect().finally(function(){reconnect( device );});
@@ -205,24 +204,6 @@ angular.module('cbt')
 		};
 		
 		
-		/* !!!!!!! FIX
-		*
-		*/
-		function read(){
-			
-			bluetoothle.read(function readSuccessCallback(result){
-				console.log( "readSuccessCallback", result );
-				subscribe();
-			}, function readErrorCallback(result){
-				console.log( "readErrorCallback", result );
-			},
-			{
-				'serviceAssignedNumber':'7a00',
-				'characteristicAssignedNumber':'7a01'
-			});
-			
-		}
-		
 		
 		/*
 		*		iOS Service Discovery
@@ -248,7 +229,6 @@ angular.module('cbt')
 			console.log("Discovering");
 			bluetoothle.discover(function discoverSuccessCallback(result){
 				console.log( "discoverSuccessCallback", result );
-				subscribe();
 			}, function discoverErrorCallback(result){
 				console.log( "discoverErrorCallback", result );
 			});
@@ -257,7 +237,7 @@ angular.module('cbt')
 		
 		
 		/*
-		*
+		*	Subscribe to charateristic
 		*/
 		function subscribe(){
 			
@@ -275,12 +255,51 @@ angular.module('cbt')
 				console.log( "subscribeErrorCallback", result );
 			},
 			{
-				"serviceAssignedNumber": deviceInfo.serviceUUID,
-				"characteristicAssignedNumber": deviceInfo.characteristicUUID,
-				"isNotification":false
+				"serviceUuid": deviceInfo.serial.serviceUUID,
+				"characteristicUuid": deviceInfo.serial.characteristicUUID,
+				"isNotification": false
 			});
 			
 		}
+		
+		
+		
+		/* !!!!!!! FIX
+		*
+		*/
+		function read(){
+			
+			bluetoothle.read(function readSuccessCallback(result){
+				console.log( "readSuccessCallback", result );
+			}, function readErrorCallback(result){
+				console.log( "readErrorCallback", result );
+			},
+			{
+				'serviceUuid': deviceInfo.serial.serviceUUID,
+				'characteristicUuid': deviceInfo.serial.serviceUUID
+			});
+			
+		}
+		
+		/*
+		*	Write to serial service
+		*/
+		function write(data){
+			bluetoothle.write(function writeSuccessCallback(result){
+				console.log( "writeSuccessCallback", result );
+			}, function writeErrorCallback(result){
+				console.log( "writeErrorCallback", result );
+			},{
+				"value": data,
+				"serviceUuid": deviceInfo.serial.serviceUUID,
+				"characteristicUuid":deviceInfo.serial.characteristicUUID
+			});
+		}
+		
+		
+		
+		
+		
 		
 		/*
 		*	Clears discovered object without destroying ng bindings
@@ -311,6 +330,7 @@ angular.module('cbt')
 		    	init().then(function(){connect(device)});
 		    	else
 		    	connect(device);
+		    	// Need to subscribe to Serial service now! subscribe()
 	    },
 	    disconnect: disconnect,
 	    setDevice: function(i){ device = discovered[i] },

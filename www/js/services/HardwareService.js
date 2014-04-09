@@ -7,7 +7,7 @@
 */
 
 angular.module('cbt')
-	.factory('HardwareService', function( $rootScope, $q, $timeout, localStorageService, SerialService, BluetoothService ) {
+	.factory('HardwareService', function( $rootScope, $q, $timeout, SettingsService, SerialService, BluetoothService ) {
 		
 		var connectionMode = null,
 				readHandlers = [],
@@ -15,14 +15,10 @@ angular.module('cbt')
 					USB:'usb',
 					BT:'bt'
 				};
-				
-				
-				
-			
-			
-		console.log("localStorageService ", localStorageService.get('device'));
 		
-	
+		
+		
+		
 		/*
 		*		CANBus Triple API Commands
 		*/
@@ -42,8 +38,10 @@ angular.module('cbt')
 			if(b){
 			
 				// Disconnect if connected
+				/*
 				if(connectionMode)
 					disconnect();
+					*/
 			
 				BluetoothService.scan(true);
 				if(window.device && window.device.platform == 'Android')
@@ -65,9 +63,7 @@ angular.module('cbt')
 			/*
 			*		Get selected device from Local storage and connect
 			*/
-			var device = localStorageService.get('device');
-			
-			console.log("connect to device ", device);
+			var device = SettingsService.getDevice();
 			
 			if(device.address == 'serial')
 				SerialService.open();
@@ -102,10 +98,11 @@ angular.module('cbt')
 				case null:
 					return;
 				case ConnectionMode.BT:
-					
+					// Convert to ?String? 
+					BluetoothService.write(data);
 				break;
 				case ConnectionMode.USB:
-					
+					SerialService.write(data);
 				break;
 			}
 			
@@ -146,6 +143,15 @@ angular.module('cbt')
 					connectionMode = ConnectionMode.USB;
 					$rootScope.$broadcast( 'HardwareService.CONNECTED' );
 				break;
+				case "BluetoothService.CONNECTING":
+					$rootScope.$broadcast( 'HardwareService.CONNECTING' );
+				break;
+				case "BluetoothService.RECONNECTING":
+					$rootScope.$broadcast( 'HardwareService.RECONNECTING' );
+				break;
+				case "BluetoothService.DISCONNECTING":
+					$rootScope.$broadcast( 'HardwareService.DISCONNECTING' );
+				break;
 				case "BluetoothService.DISCONNECTED":
 				case "SerialService.CLOSE":
 					connectionMode = null;
@@ -159,15 +165,13 @@ angular.module('cbt')
 
 		
 		/*
-		*	Connect to last device by default
+		*	Connect to last device
 		*/
-		/*
-
 		$timeout(function(){
-			if(localStorageService.get('device'))
+			if( SettingsService.getAutoconnect() == "true" && SettingsService.getDevice())
 				connect();
 		}, 1500);
-*/
+
 
 		
 		
@@ -177,6 +181,8 @@ angular.module('cbt')
 		*/
 		$rootScope.$on('BluetoothService.CONNECTED', serviceStatusHandler);
 		$rootScope.$on('BluetoothService.DISCONNECTED', serviceStatusHandler);
+		$rootScope.$on('BluetoothService.CONNECTING', serviceStatusHandler);
+		$rootScope.$on('BluetoothService.DISCONNECTING', serviceStatusHandler);
 		$rootScope.$on('SerialService.OPEN', serviceStatusHandler);
 		$rootScope.$on('SerialService.CLOSE', serviceStatusHandler);
 

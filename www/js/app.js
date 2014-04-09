@@ -25,6 +25,11 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	            controller: 'DashboardController',
 	            templateUrl: 'templates/dashboard.html'
 	        })
+	        .state('settings', {
+	            url: '/settings',
+	            controller: 'SettingsController',
+	            templateUrl: 'templates/Settings.html'
+	        })
 	        .state('debug', {
 	            url: '/debug',
 	            controller: 'DebugController',
@@ -39,7 +44,8 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    
 	})
 	
-	.config(['$provide', function ($provide) {
+	/*
+.config(['$provide', function ($provide) {
 	  $provide.decorator('$rootScope', function ($delegate) {
 	    
 	    var _emit = $delegate.$emit;
@@ -57,4 +63,7 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    return $delegate;
 	    
 	  });
-	}]);
+	}])
+*/
+	
+	;
