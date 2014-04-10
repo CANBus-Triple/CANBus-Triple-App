@@ -1,6 +1,7 @@
 *.keystore
 *.sw*
 platforms/^.*
+www/.sass-cache
 www/components
 www/plugins/^.*
 www/plugins
