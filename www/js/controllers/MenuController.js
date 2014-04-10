@@ -10,7 +10,7 @@ angular.module('cbt')
 		
 		$scope.goTo = function(page) {
 		  console.log('Going to ' + page);
-		  $scope.sideMenuController.toggleLeft();
+		  $scope.cbtSideMenu.toggle();
 		  $location.url('/' + page);
 		};
 				

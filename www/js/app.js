@@ -44,8 +44,7 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    
 	})
 	
-	/*
-.config(['$provide', function ($provide) {
+	.config(['$provide', function ($provide) {
 	  $provide.decorator('$rootScope', function ($delegate) {
 	    
 	    var _emit = $delegate.$emit;
@@ -64,6 +63,5 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    
 	  });
 	}])
-*/
 	
 	;

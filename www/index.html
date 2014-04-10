@@ -33,35 +33,30 @@
     <script src="js/controllers/MenuController.js"></script>
     <script src="js/controllers/SettingsController.js"></script>
     <script src="js/controllers/DebugController.js"></script>
+    <script src="js/directives/CBTSideMenu.js"></script>
     <script src="js/directives/DeviceListDirective.js"></script>
   </head>
 	
   <body ng-app="cbt" ng-controller="AppController">
 
-		<ion-side-menus>
-		
-			<!-- Center content -->
-			<ion-pane ion-side-menu-content>
-			  <ion-nav-bar type="bar-assertive" back-button-type="button-icon" back-button-icon="ion-arrow-left-c"></ion-nav-bar>
-			  <ion-nav-view disabled-animation="slide-left-right-ios7"></ion-nav-view>
-			</ion-pane>
-			
-			<!-- Left Side Menu -->
-			<ion-side-menu id="left-menu" side="left" is-enabled="true" ng-controller="MenuController">
-		    <ion-header-bar class="bar bar-header bar-assertive" title="{{title}}">
-		    </ion-header-bar>
-		    <ion-content has-header="true">
-		      <ion-list>
-		        <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in list">
-		          <i ng-class="item.iconClass"></i>
-		          {{item.text}}
-		        </ion-item>
-		      </ion-list>
-		     <img id='logo' src="img/cbt-128.png"/>
-		    </ion-content>
-			</ion-side-menu>
-		
-		</ion-side-menus>
+		<cbt-side-menu>
+	    <ion-content ng-controller="MenuController">
+	      <ion-list>
+	        <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in list">
+	          <i ng-class="item.iconClass"></i>
+	          {{item.text}}
+	        </ion-item>
+	      </ion-list>
+	     <img id='logo' src="img/cbt-128.png"/>
+	    </ion-content>
+		</cbt-side-menu>
+
+		<ion-nav-bar class="bar-assertive">
+      <ion-nav-back-button class="button-icon button-clear ion-ios7-arrow-back">
+      </ion-nav-back-button>
+    </ion-nav-bar>
+
+    <ion-nav-view animation="slide-left-right-ios7"></ion-nav-view>
     
   </body>
 </html>

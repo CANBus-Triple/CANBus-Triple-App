@@ -7,7 +7,8 @@ angular.module('cbt')
 		$scope.leftButtons = [{
 		  type: 'button-icon icon ion-navicon',
 	    tap: function(e) {
-	      $scope.sideMenuController.toggleLeft();
+	      // $scope.sideMenuController.toggleLeft();
+	      $scope.cbtSideMenu.toggle();
 	    }
 		}];
 		

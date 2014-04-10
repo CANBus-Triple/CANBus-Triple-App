@@ -26,6 +26,17 @@
   color: #f0b840;
 }
 
+/* line 3, ../sass/_directives.scss */
+.cbt-side-menu {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  display: block;
+  width: 80%;
+  z-index: 9999;
+  box-shadow: 2px 4px 5px rgba(50, 50, 50, 0.4);
+}
+
 /* line 7, ../sass/_app.scss */
 body,
 h1,
