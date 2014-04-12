@@ -9,7 +9,7 @@
 
 
 angular.module('cbt')
-.directive('cbtSideMenu', function($timeout, $ionicGesture){
+.directive('cbtSideMenu', function($timeout, $document){
 	
 	var showing = false;
 	
@@ -18,135 +18,192 @@ angular.module('cbt')
     restrict: 'E',
     controller: function($scope){
 	    
+      $scope.cbtSideMenu = this;
+				        
+    },
+    link: function(scope, element, attr, controller){
 	    
-	    angular.extend(this, ionic.controllers.SideMenuController.prototype);
+	    var header,
+	    		startX = 0,
+	    		startY = 0,
+			    x = 0,
+			    y = 0,
+			    deltaX = 0,
+			    lastX = 0,
+			    peek = 12,
+			    intent,
+			    containerOutAlpha = 0.7;
+			    
+			var panel = element[0].childNodes[0],
+					container = element[0];
+			
+      function init(){
 
-      ionic.controllers.SideMenuController.call(this, {
-        left: { width: 275 },
-        right: { width: 275 }
+    		controller.updateState();
+	      
+      }
+      
+      
+      element.on('touchstart', function(event) {
+      	
+      	intent = null;
+      	
+      	setHeaderOffset();
+      	
+      	// Expand container to 100% when a drag starts
+      	container.style['transition'] = 'background 0.2s cubic-bezier(.50,.0,.5,.99), width 1ms ease';
+				container.style['width'] = '100%';
+      
+        // Prevent default dragging of selected content
+        event.preventDefault();
+        lastX = deltaX = 0;
+        startX = event.touches[0].pageX - x;
+        startY = event.touches[0].pageY - y;
+        // startY = event.pageY - y;
+        $document.on('touchmove', mousemove);
+        $document.on('touchend', mouseup);
+        $document.on('touchleave', mouseup);
+        $document.on('touchcancel', mouseup);
+        
+        panel.style["transition"] = '';
+        
       });
       
       
+      function mousemove(event) {
       
-	    
-	    $scope.cbtSideMenu = function(){};
-	    $scope.cbtSideMenu.toggle = function(){
-				showing = !showing;
-		    
-		    console.log();
-		    
-		    $scope.element[0].style["transition"] = '-webkit-transform 0.33s cubic-bezier(.50,.0,.5,.99)';
-		    
-		    if(showing)
-		    	$scope.element[0].style[ionic.CSS.TRANSFORM] = 'translate3d(0, 0, 0)';
-		    	else
-		    	$scope.element[0].style[ionic.CSS.TRANSFORM] = 'translate3d(-105%, 0, 0)';
-		    	
-		    
-		    
-		    // End a drag with the given event
-		    function _endDrag(e) {
-		      if(this._isDragging) {
-		        this.snapToRest(e);
-		      }
-		      this._startX = null;
-		      this._lastX = null;
-		      this._offsetX = null;
-		    }
-		    
-		
-		    // Handle a drag event
-		    function _handleDrag(e) {
-		    
-		    	console.log(e);
-		    
-		      // If we don't have start coords, grab and store them
-		      if(!this._startX) {
-		        this._startX = e.gesture.touches[0].pageX;
-		        this._lastX = this._startX;
-		      } else {
-		        // Grab the current tap coords
-		        this._lastX = e.gesture.touches[0].pageX;
-		      }
-		
-		      // Calculate difference from the tap points
-		      if(!this._isDragging && Math.abs(this._lastX - this._startX) > this.dragThresholdX) {
-		        // if the difference is greater than threshold, start dragging using the current
-		        // point as the starting point
-		        this._startX = this._lastX;
-		
-		        this._isDragging = true;
-		        // Initialize dragging
-		        this.content.disableAnimation();
-		        this._offsetX = this.getOpenAmount();
-		      }
-		
-		      if(this._isDragging) {
-		        this.openAmount(this._offsetX + (this._lastX - this._startX));
-		      }
-		    }
-  
-		    
+      	// Abort if intent is vertical
+      	if ( intent == null && 
+      			 Math.abs(event.touches[0].pageY - startY) > Math.abs(event.touches[0].pageX - startX) ){
+	      		mouseup();
+	      		return;
+      		}else{
+      			intent = 'x';
+      		}
+      	
+        deltaX = (event.touches[0].pageX - lastX) * 65 ;
+        lastX = event.touches[0].pageX;
+        x = event.touches[0].pageX - startX;
+        
+        
+        if(x > 0) x = 0;
+        
+        panel.style['webkitTransform'] = 'translate3d('+x+'px, 0px, 0)';
+        // container.style['transition'] = '';
+        // container.style['background-color'] = 'rgba(0,0,0,'+containerOutAlpha * percentPanelIn()+')';
+        
+        
+      }
+ 
+      function mouseup() {
+        $document.unbind('touchmove', mousemove);
+        $document.unbind('touchend', mouseup);
+        
+        panel.style["transition"] = '-webkit-transform 0.333s ease-out';
+        
+        // Tap on shaded container will hide panel
+        if( x == 0 && startX > panel.offsetWidth && showing ){
+	        showing = false;
+	        controller.updateState();
+	        return;
+        }
+        
+        // Ease to final X on touch release
+        if( x + deltaX > -panel.offsetWidth*0.5 ){        	
+        	showing = true;
+        	controller.updateState();
+        	}else{
+        	showing = false;
+        	controller.updateState();
+        	}
+        
+        
+        
+      }
+      
+      function percentPanelIn(){
+	      return (x/panel.offsetWidth)+1;
+      }
+      
+      function setHeaderOffset(){
+	      // Set header y offset
+      	if(header == undefined)
+	      	header = $document.find('header');
+	      
+	      if(header)
+	      	container.style['top'] = header[0].offsetHeight+'px';
+      }
+      
+      
+      
+      /*
+      *	Ng Event listeners
+      */
+      
+      scope.$on('$destroy', function(){
+	      element.unbind('touchstart');
+      });
+      
+      
+      /*
+      *	Event listeners
+      */
+      
+      $document.on('resize', init);
+      $document.on('orientationchange', init);
+      
+      
+      // Init
+      $timeout(function(){
+      	init();
+      });
+      
+      /*
+      *	Controller methods
+      */
+      
+      
+      controller.toggle = function(){
+	    	showing = !showing;
+	    	setHeaderOffset();
+				this.updateState();
 	    }
-	    
-	    
-	    	    
-    },
-    compile: function(element, attr) {
-      return { pre: prelink };
-      function prelink($scope, $element, $attr, controller) {
-	    	
-	    	var defaultPrevented = false;
-        var isDragging = false;
-        var slideX = 0;
-        
-	    	
-	    	$scope.element = $element;
-	    	
-	    	// Hide 
-				$element[0].style[ionic.CSS.TRANSFORM] = 'translate3d(-105%, 0, 0)';
-				
-				
-				
-				var dragFn = function(e) {
-          if(defaultPrevented) return;
-          isDragging = true;
-          // controller._handleDrag(e);
-          // console.log(e.gesture);
-          slideX += e.gesture.deltaX;
-          $element[0].style[ionic.CSS.TRANSFORM] = 'translate3d('+slideX+'px, 0, 0)';
-          e.gesture.srcEvent.preventDefault();
-        };
-        
-        var dragReleaseFn = function(e) {
-          isDragging = false;
-          if(!defaultPrevented) {
-            controller._endDrag(e);
-          }
-          defaultPrevented = false;
-        };
-        
-        
-        
-        var dragRightGesture = $ionicGesture.on('dragright', dragFn, $element);
-	      var dragLeftGesture = $ionicGesture.on('dragleft', dragFn, $element);
-	      var releaseGesture = $ionicGesture.on('release', dragReleaseFn, $element);
-				
-				$scope.$on('$destroy', function() {
-		      $ionicGesture.off(dragLeftGesture, 'dragleft', dragFn);
-		      $ionicGesture.off(dragRightGesture, 'dragright', dragFn);
-		      $ionicGesture.off(releaseGesture, 'release', dragReleaseFn);
-				});
-				
-				
-				
-	    	
-			}
+
       
+      
+      controller.updateState = function(){
+	      	      
+	      panel.style["transition"] = '-webkit-transform 0.333s cubic-bezier(.50,.0,.5,.99) 0s';
+	      
+	      if(showing){
+	      	x = 0;
+					container.style['background-color'] = 'rgba(0,0,0,'+containerOutAlpha+')';
+					container.style['transition'] = 'background 0.2s cubic-bezier(.50,.0,.5,.99), width 1ms ease';
+					container.style['width'] = '100%';
+					panel.style['webkitTransform'] = 'translate3d('+x+'px, 0, 0)';
+					scope.$broadcast('CBTSideMenu.IN');
+	      	}else{
+	      	x = -panel.offsetWidth - peek;
+					container.style['background-color'] = 'rgba(0,0,0,0)';
+					container.style['transition'] = 'background 0.2s cubic-bezier(.50,.0,.5,.99), width 1ms ease 0.2s';
+					container.style['width'] = peek+'px';
+					panel.style['webkitTransform'] = 'translate3d('+x+'px, 0, 0)';
+					scope.$broadcast('CBTSideMenu.OUT');
+	      	}
+	      
+	      
+	      
+	      
+      }
+      
+      
+      
+      
+	    
     },
 		replace: true,
     transclude: true,
-    template: '<div class="view cbt-side-menu" ng-transclude></div>'
+    template: '<div class="cbt-side-menu"><div id="panel" ng-transclude></div></div>'
   };
   
 });

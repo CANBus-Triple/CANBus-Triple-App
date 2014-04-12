@@ -17,6 +17,12 @@ angular.module('cbt')
 								text: 'Autoconnect to last device',
 								checked: SettingsService.getAutoconnect() === "true",
 								setter: SettingsService.setAutoconnect
+							},
+							{
+								name: 'debugMode',
+								text: 'Show developer options',
+								checked: SettingsService.getDebugMode() === "true",
+								setter: SettingsService.setDebugMode
 							}
 						];
 													

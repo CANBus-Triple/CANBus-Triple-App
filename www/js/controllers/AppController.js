@@ -1,5 +1,5 @@
 angular.module('cbt')
-	.controller('AppController', function ($scope, $rootScope, HardwareService) {
+	.controller('AppController', function ($scope, $rootScope, $timeout, HardwareService) {
 		
 		$scope.navTitle = "AppController";
 		$scope.title = "AppController title";
@@ -7,16 +7,34 @@ angular.module('cbt')
 		$scope.leftButtons = [{
 		  type: 'button-icon icon ion-navicon',
 	    tap: function(e) {
-	      // $scope.sideMenuController.toggleLeft();
 	      $scope.cbtSideMenu.toggle();
 	    }
-		}];
+		},
+		/*{
+		  type: 'button-icon icon cbt-icon',
+		}*/
+		];
 		
 		$scope.rightButtons = [];
 		
+		$scope.navShowing = false;
+		$scope.$on('CBTSideMenu.IN', navHandler);
+		$scope.$on('CBTSideMenu.OUT', navHandler);
 		
+		function navHandler(event){
+			
+			$timeout(function(){
+				switch(event.name){
+					case 'CBTSideMenu.IN':
+						$scope.navShowing = true;
+					break;
+					case 'CBTSideMenu.OUT':
+						$scope.navShowing = false;
+					break;
+				}
+			})
 				
-				
+		}
 				
 		/* 
 		*	Private Methods

@@ -52,6 +52,58 @@ h1 {
 }
 
 
+/*
+*	Main Nav
+*/
+
+.cbt-side-menu .icon {
+	font-size: 1.6em;
+}
+
+.cbt-side-menu .item-content {
+	font-weight: bold;
+	padding: 1.5em;
+}
+
+
+
+
+
+/*
+*	Header left button animation
+*/
+
+header {
+	-webkit-transform: translate3d(0, 0, 0);
+}
+
+.nav-showing header .left-buttons {
+	margin-left: -20px;
+}
+
+header .left-buttons {
+	margin-left: 0;
+	transition: margin-left 0.33s ease-in-out;
+}
+
+
+/*
+*	Graphics
+*/
+
+#connection-icon {
+	max-width: 100%;
+}
+
+.cbt-icon {
+	margin-top: 0.2em;
+	height: 2em;
+	width: 2.2em;
+	background: transparent url($img-cbt-outline-white) no-repeat !important;
+	background-size: contain !important;
+}
+
+
 
 
 
@@ -77,6 +129,11 @@ h1 {
 	display: block!important;
 }
 
+
+
+/*
+*		View Specific styles
+*/
 
 
 

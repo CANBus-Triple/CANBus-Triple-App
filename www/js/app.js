@@ -28,7 +28,7 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	        .state('settings', {
 	            url: '/settings',
 	            controller: 'SettingsController',
-	            templateUrl: 'templates/Settings.html'
+	            templateUrl: 'templates/settings.html'
 	        })
 	        .state('debug', {
 	            url: '/debug',
@@ -43,7 +43,8 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    localStorageServiceProvider.setPrefix('CBTSettings');
 	    
 	})
-	
+	/*
+
 	.config(['$provide', function ($provide) {
 	  $provide.decorator('$rootScope', function ($delegate) {
 	    
@@ -64,4 +65,5 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	  });
 	}])
 	
+*/
 	;

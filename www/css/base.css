@@ -26,15 +26,59 @@
   color: #f0b840;
 }
 
-/* line 3, ../sass/_directives.scss */
+/*
+*	CBTSideMenu 
+*/
+/* line 6, ../sass/_directives.scss */
 .cbt-side-menu {
-  position: absolute;
-  top: 44px;
+  position: relative;
   left: 0;
+  top: 44px;
   display: block;
+  height: 100%;
+  z-index: 9900;
+}
+/* line 14, ../sass/_directives.scss */
+.cbt-side-menu #panel {
+  display: block;
+  position: absolute;
+  left: 0;
+  height: 100%;
   width: 80%;
-  z-index: 9999;
+  max-width: 380px;
+  z-index: 9901;
   box-shadow: 2px 4px 5px rgba(50, 50, 50, 0.4);
+  -webkit-transform: translate3d(-300px, 0px, 0);
+}
+/* line 26, ../sass/_directives.scss */
+.cbt-side-menu img#logo {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+/*
+*	CBTUserInfo
+*/
+/* line 41, ../sass/_directives.scss */
+.user-info {
+  display: table;
+}
+/* line 45, ../sass/_directives.scss */
+.user-info img.avatar {
+  border-radius: 9999px;
+  border: 3px solid #f5f5f5;
+  max-height: 64px;
+  max-width: 64px;
+  margin: 8px;
+  display: table-cell;
+}
+/* line 54, ../sass/_directives.scss */
+.user-info p {
+  display: table-cell;
+  vertical-align: middle;
+  margin: 0;
+  padding: 0;
 }
 
 /* line 7, ../sass/_app.scss */
@@ -87,26 +131,80 @@ h1 {
 }
 
 /*
+*	Main Nav
+*/
+/* line 59, ../sass/_app.scss */
+.cbt-side-menu .icon {
+  font-size: 1.6em;
+}
+
+/* line 63, ../sass/_app.scss */
+.cbt-side-menu .item-content {
+  font-weight: bold;
+  padding: 1.5em;
+}
+
+/*
+*	Header left button animation
+*/
+/* line 76, ../sass/_app.scss */
+header {
+  -webkit-transform: translate3d(0, 0, 0);
+}
+
+/* line 80, ../sass/_app.scss */
+.nav-showing header .left-buttons {
+  margin-left: -20px;
+}
+
+/* line 84, ../sass/_app.scss */
+header .left-buttons {
+  margin-left: 0;
+  transition: margin-left 0.33s ease-in-out;
+}
+
+/*
+*	Graphics
+*/
+/* line 94, ../sass/_app.scss */
+#connection-icon {
+  max-width: 100%;
+}
+
+/* line 98, ../sass/_app.scss */
+.cbt-icon {
+  margin-top: 0.2em;
+  height: 2em;
+  width: 2.2em;
+  background: transparent url("../img//cbt-outline-white.svg") no-repeat !important;
+  background-size: contain !important;
+}
+
+/*
 *	Animation
 */
-/* line 63, ../sass/_app.scss */
+/* line 115, ../sass/_app.scss */
 .height-animation {
   -webkit-transition: 1.5s linear max-height;
   transition: 1.5s linear max-height;
   max-height: 1200px;
 }
 
-/* line 69, ../sass/_app.scss */
+/* line 121, ../sass/_app.scss */
 .height-animation.ng-hide {
   max-height: 0px;
 }
 
-/* line 73, ../sass/_app.scss */
+/* line 125, ../sass/_app.scss */
 .height-animation.ng-hide-add {
   /* 	display: block!important; */
 }
 
-/* line 76, ../sass/_app.scss */
+/* line 128, ../sass/_app.scss */
 .height-animation.ng-hide-remove {
   display: block !important;
 }
+
+/*
+*		View Specific styles
+*/

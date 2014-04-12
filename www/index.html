@@ -26,6 +26,7 @@
     <script src="js/services/SerialService.js"></script>
     <script src="js/services/HardwareService.js"></script>
     <script src="js/services/SettingsService.js"></script>
+    <script src="js/services/FirmwareService.js"></script>
     <script src="js/services/UtilsService.js"></script>
     <script src="js/controllers/AppController.js"></script>
     <script src="js/controllers/DashboardController.js"></script>
@@ -35,26 +36,35 @@
     <script src="js/controllers/DebugController.js"></script>
     <script src="js/directives/CBTSideMenu.js"></script>
     <script src="js/directives/DeviceListDirective.js"></script>
+    <script src="js/directives/CBTUserInfo.js"></script>
   </head>
 	
   <body ng-app="cbt" ng-controller="AppController">
 
 		<cbt-side-menu>
-	    <ion-content ng-controller="MenuController">
-	      <ion-list>
-	        <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in list">
-	          <i ng-class="item.iconClass"></i>
-	          {{item.text}}
-	        </ion-item>
-	      </ion-list>
-	     <img id='logo' src="img/cbt-128.png"/>
-	    </ion-content>
+			<ion-view>
+		    <ion-content ng-controller="MenuController">
+		      <ion-list>
+		      	<cbt-user-info name="'Derek K'" email="'etx313@gmail.com'"></cbt-user-info>
+		      	<div class="item item-divider">
+					    Settings
+					  </div>
+		        <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in list">
+		          <i ng-class="item.iconClass"></i>
+		          {{item.text}}
+		        </ion-item>
+		      </ion-list>
+		     <img id='logo' src="img/cbt-outline.svg"/>
+		    </ion-content>
+		   </ion-view>
 		</cbt-side-menu>
 
-		<ion-nav-bar class="bar-assertive">
-      <ion-nav-back-button class="button-icon button-clear ion-ios7-arrow-back">
-      </ion-nav-back-button>
-    </ion-nav-bar>
+		<div ng-class="{'nav-showing': navShowing}">
+			<ion-nav-bar class="bar-assertive" >
+	      <ion-nav-back-button class="button-icon button-clear ion-ios7-arrow-back">
+	      </ion-nav-back-button>
+	    </ion-nav-bar>
+		</div>
 
     <ion-nav-view animation="slide-left-right-ios7"></ion-nav-view>
     

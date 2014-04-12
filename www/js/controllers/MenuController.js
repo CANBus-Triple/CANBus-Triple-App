@@ -9,11 +9,21 @@ angular.module('cbt')
 		$scope.list = MenuService.all();
 		
 		$scope.goTo = function(page) {
-		  console.log('Going to ' + page);
 		  $scope.cbtSideMenu.toggle();
 		  $location.url('/' + page);
 		};
-				
+		
+		
+		$scope.$on('SettingsService.CHANGE', function(event, name){
+			
+			switch(name){
+				case 'debugMode':
+					$scope.list = MenuService.all();
+				break;
+			}
+			
+		});
+		
 		
 		
 		
