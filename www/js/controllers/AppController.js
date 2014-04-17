@@ -61,40 +61,42 @@ angular.module('cbt')
 		
 		function statusHandler(event){
 			
-			switch(event.name){
-				case 'HardwareService.CONNECTED':
-					$scope.rightButtons = [{
-					  type: 'button-icon icon ion-ios7-circle-filled',
-				    tap: function(e) {
-				      	HardwareService.disconnect();
-							}
-					}];
-				break;
-				case 'HardwareService.CONNECTING':
-				case 'HardwareService.RECONNECTING':
-					$scope.rightButtons = [{
-					  type: 'button-icon icon ion-ios7-circle-filled disabled',
-				    tap: function(e) {}
-					}];
-				break;
-				case 'HardwareService.DISCONNECTING':
-					$scope.rightButtons = [{
-					  type: 'button-icon icon ion-ios7-circle-outline disabled',
-				    tap: function(e) {}
-					}];
-				break;
-				case 'HardwareService.DISCONNECTED':
-					$scope.rightButtons = [{
-					  type: 'button-icon icon ion-ios7-circle-outline',
-				    tap: function(e) {
-				      	HardwareService.connect();
-							}
-					}];
-				break;
-				default:
-					$scope.rightButtons = [];
-				break;
-			}
+			$timeout(function(){
+				switch(event.name){
+					case 'HardwareService.CONNECTED':
+						$scope.rightButtons = [{
+						  type: 'button-icon icon ion-ios7-circle-filled',
+					    tap: function(e) {
+					      	HardwareService.disconnect();
+								}
+						}];
+					break;
+					case 'HardwareService.CONNECTING':
+					case 'HardwareService.RECONNECTING':
+						$scope.rightButtons = [{
+						  type: 'button-icon icon ion-ios7-circle-filled disabled',
+					    tap: function(e) {}
+						}];
+					break;
+					case 'HardwareService.DISCONNECTING':
+						$scope.rightButtons = [{
+						  type: 'button-icon icon ion-ios7-circle-outline disabled',
+					    tap: function(e) {}
+						}];
+					break;
+					case 'HardwareService.DISCONNECTED':
+						$scope.rightButtons = [{
+						  type: 'button-icon icon ion-ios7-circle-outline',
+					    tap: function(e) {
+					      	HardwareService.connect();
+								}
+						}];
+					break;
+					default:
+						$scope.rightButtons = [];
+					break;
+				}
+			});
 			
 		};
 		

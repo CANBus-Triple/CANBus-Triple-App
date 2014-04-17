@@ -135,9 +135,9 @@ angular.module('cbt')
 		 * Register a callback function that is called when the plugin reads data
 		 * @return null
 		 */	
-		function registerReadCallback(){
+		function registerReadCallback(callback){
 			
-			serial.registerReadCallback(handleData,
+			serial.registerReadCallback(callback,
 				function error(){
 					new Error("Failed to register read callback");
 				});
@@ -157,7 +157,8 @@ angular.module('cbt')
 				return;
 			}
 			
-			$rootScope.$broadcast('SerialService.READ_DATA', data);
+			// $rootScope.$broadcast('SerialService.READ_DATA', data);
+			readHandler(data);
 			
 		}
 		
@@ -232,8 +233,8 @@ angular.module('cbt')
 		*	Return Interface
 		*/
 	  return {
-	    open: function openConnection(){
-		    open().then(registerReadCallback);
+	    open: function openConnection(callback){
+		    open().then(function(){ registerReadCallback(callback) });
 	    },
 	    close: close,
 	    read: read,

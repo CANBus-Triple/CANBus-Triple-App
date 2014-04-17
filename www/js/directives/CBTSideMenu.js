@@ -38,9 +38,7 @@ angular.module('cbt')
 					container = element[0];
 			
       function init(){
-
     		controller.updateState();
-	      
       }
       
       
@@ -149,7 +147,7 @@ angular.module('cbt')
       *	Event listeners
       */
       
-      $document.on('resize', init);
+      // $document.on('resize', init);
       $document.on('orientationchange', init);
       
       

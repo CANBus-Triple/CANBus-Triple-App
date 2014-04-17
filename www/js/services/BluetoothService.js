@@ -96,24 +96,28 @@ angular.module('cbt')
 		/*
 		*
 		*/
+		var connectDeferred;
 		function connect(device){
-			
-			console.log("Connecting to device via BT:", device);
 			
 			reconnectAttempts = 0;
 			
 			scan(false);
 			
+			connectDeferred = $q.defer();
+			
 			if(connectedOnce){
 				reconnect(device);
-				return;
+				return connectDeferred.promise;
 				}
+			
+			$rootScope.$broadcast('BluetoothService.CONNECTING');
 			
 			bluetoothle.connect(
 				connectSuccessCallback,
 				connectErrorCallback, 
 				{ 'address': device.address });
 			
+			return connectDeferred.promise;
 			
 		}
 		
@@ -122,11 +126,13 @@ angular.module('cbt')
 		*	@param {Object} device
 		*/
 		function reconnect(device){
+			
 			$rootScope.$broadcast('BluetoothService.RECONNECTING');
 			bluetoothle.reconnect(
 				connectSuccessCallback,
 				connectErrorCallback
 			);
+			
 		}
 		
 		
@@ -136,6 +142,7 @@ angular.module('cbt')
 		function connectErrorCallback(error){
 			
 			if( reconnectAttempts > 3 ){
+				connectDeferred.reject();
 				$rootScope.$broadcast('BluetoothService.CONNECT_ERROR');
 				return;
 			}
@@ -157,11 +164,13 @@ angular.module('cbt')
 			
 			switch(status.status){
 				case 'connected':
+					connectDeferred.resolve();
 					$rootScope.$broadcast('BluetoothService.CONNECTED');
 					connected = true;
 					connectedOnce = true;
 				break;
 				case 'disconnected':
+					connectDeferred.resolve();
 					connected = false;
 					$rootScope.$broadcast('BluetoothService.DISCONNECTED');
 				break;
@@ -206,32 +215,58 @@ angular.module('cbt')
 		
 		
 		/*
-		*		iOS Service Discovery
+		*		iOS Characteristics Discovery
 		*/
-		function services(){
+		function characteristics(){
 			
-			bluetoothle.services(function servicesSuccessCallback(result){
-				console.log( "servicesSuccessCallback", result );
+			console.log( "iOS characteristics()" );
+			
+			var deferred = $q.defer();
+			
+			bluetoothle.characteristics(function characteristicsSuccessCallback(result){
+				console.log( "characteristicsSuccessCallback", result );
 				console.log( JSON.stringify(result) );
-			}, function servicesErrorCallback(result){
-				console.log( "servicesErrorCallback", result );
+				deferred.resolve(result);
+			}, function characteristicsErrorCallback(result){
+				console.log( "characteristicsErrorCallback", result );
+				deferred.reject();
 			},
-			{});
+			{
+				"serviceUuid":deviceInfo.serial.serviceUUID,
+				"characteristicUuids":deviceInfo.serial.characteristicUUID
+			});
+			
+			return deferred.promise;
 			
 		}
-		
-		
+
 		
 		/*
 		*		Android Service Discovery
 		*/
 		function discover(){
-			console.log("Discovering");
-			bluetoothle.discover(function discoverSuccessCallback(result){
-				console.log( "discoverSuccessCallback", result );
-			}, function discoverErrorCallback(result){
-				console.log( "discoverErrorCallback", result );
-			});
+			
+			var deferred = $q.defer();
+			
+			if( device.platform == "Android" )
+				bluetoothle.discover(function discoverSuccessCallback(result){
+					deferred.resolve(result);
+				}, function discoverErrorCallback(result){
+					deferred.reject();
+				});
+				
+			if( device.platform == "iOS" )
+				bluetoothle.services(function servicesSuccessCallback(result){
+					console.log( "servicesSuccessCallback", result );
+					console.log( JSON.stringify(result) );
+					deferred.resolve(result);
+				}, function servicesErrorCallback(result){
+					console.log( "servicesErrorCallback", result );
+					deferred.reject();
+				},
+				{});
+			
+			return deferred.promise;
 			
 		}
 		
@@ -239,20 +274,29 @@ angular.module('cbt')
 		/*
 		*	Subscribe to charateristic
 		*/
-		function subscribe(){
+		function subscribeToSerial(callback){
+			
+			var deferred = $q.defer();
 			
 			bluetoothle.subscribe(function subscribeSuccessCallback(result){
-				console.log( "subscribeSuccessCallback", result );
+				
+				console.log("subscribeSuccessCallback", JSON.stringify(result));
 				
 				switch(result.status){
 					case 'subscribedResult':
-						console.log( atob( result.value ) );
-						$rootScope.$broadcast('didGetSerialData', atob( result.value ));
+						if(callback instanceof Function)
+							callback(result.value);
+						deferred.resolve(result);
+					break;
+					default:
+						$rootScope.$broadcast('BluetoothService.SUBSCRIBE', result.status );
 					break;
 				}
 				
 			}, function subscribeErrorCallback(result){
-				console.log( "subscribeErrorCallback", result );
+				console.log("subscribeErrorCallback", JSON.stringify(result));
+				$rootScope.$broadcast('BluetoothService.SUBSCRIBE_ERROR', result.status );
+				deferred.reject();
 			},
 			{
 				"serviceUuid": deviceInfo.serial.serviceUUID,
@@ -260,24 +304,53 @@ angular.module('cbt')
 				"isNotification": false
 			});
 			
+			return deferred.promise;
+			
+		}
+
+		function unsubscribeFromSerial(){
+			
+			var deferred = $q.defer();
+			
+			bluetoothle.unsubscribe(function unsubscribeSuccessCallback(result){
+				switch(result.status){
+					case 'unsubscribed':
+						$rootScope.$broadcast('BluetoothService.UNSUBSCRIBE' );
+						deferred.resolve(result);
+					break;
+				}
+			}, function unsubscribeErrorCallback(result){
+				deferred.reject();
+			},
+			{
+				"serviceUuid": deviceInfo.serial.serviceUUID,
+				"characteristicUuid": deviceInfo.serial.characteristicUUID
+			});
+			
+			return deferred.promise;
+			
 		}
 		
 		
 		
-		/* !!!!!!! FIX
-		*
+		/* 
+		*	Manual Read 
 		*/
 		function read(){
+		
+			var deferred = $q.defer();
 			
 			bluetoothle.read(function readSuccessCallback(result){
-				console.log( "readSuccessCallback", result );
+				deferred.resolve(result.data);
 			}, function readErrorCallback(result){
-				console.log( "readErrorCallback", result );
+				deferred.reject();
 			},
 			{
 				'serviceUuid': deviceInfo.serial.serviceUUID,
 				'characteristicUuid': deviceInfo.serial.serviceUUID
 			});
+			
+			return deferred.promise;
 			
 		}
 		
@@ -285,15 +358,30 @@ angular.module('cbt')
 		*	Write to serial service
 		*/
 		function write(data){
+			
+			var deferred = $q.defer();
+			
+			if(typeof data == 'string')
+				data = btoa(data);
+				
+			if(data instanceof Uint8Array)
+				data = bluetoothle.bytesToEncodedString(data);
+			
+			
 			bluetoothle.write(function writeSuccessCallback(result){
-				console.log( "writeSuccessCallback", result );
+				console.log("writeSuccessCallback",result, atob(result.value));
+				deferred.resolve(result);
 			}, function writeErrorCallback(result){
-				console.log( "writeErrorCallback", result );
-			},{
+				console.log("writeErrorCallback", JSON.stringify(result) );
+				deferred.reject(result);
+			},
+			{
 				"value": data,
 				"serviceUuid": deviceInfo.serial.serviceUUID,
-				"characteristicUuid":deviceInfo.serial.characteristicUUID
+				"characteristicUuid": deviceInfo.serial.characteristicUUID
 			});
+			
+			return deferred.promise;
 		}
 		
 		
@@ -325,17 +413,29 @@ angular.module('cbt')
 		    	else
 		    	scan(sw);
 	    },
-	    connect: function(device){
+	    connect: function(device, readHandler){
+	    	
 		    if(!initialized)
 		    	init().then(function(){connect(device)});
 		    	else
-		    	connect(device);
-		    	// Need to subscribe to Serial service now! subscribe()
+		    		connect(device).then(discover).then(function(){ 
+		    			if(device.platform == "Android")
+		    				subscribeToSerial(readHandler);
+		    				else
+		    					characteristics().then( function(){ subscribeToSerial(readHandler) });
+									
+		    			});
+		    	
 	    },
-	    disconnect: disconnect,
+	    disconnect: function(){
+		    unsubscribeFromSerial().then(disconnect);
+	    },
 	    setDevice: function(i){ device = discovered[i] },
 	    
-	    discovered: discovered
+	    discovered: discovered,
+	    write: function(data){
+				write(data);
+	    },
 	    
 	  }
 	  

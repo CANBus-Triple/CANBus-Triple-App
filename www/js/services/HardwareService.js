@@ -16,7 +16,7 @@ angular.module('cbt')
 					BT:'bt'
 				};
 		
-		
+		var debugString = {data:'Derp'};
 		
 		
 		/*
@@ -66,9 +66,9 @@ angular.module('cbt')
 			var device = SettingsService.getDevice();
 			
 			if(device.address == 'serial')
-				SerialService.open();
+				SerialService.open(readHandler);
 			else
-				BluetoothService.connect(device);
+				BluetoothService.connect(device, readHandler);
 			
 		}
 		
@@ -96,6 +96,7 @@ angular.module('cbt')
 			
 			switch(connectionMode){
 				case null:
+					console.log("HardwareService cannot write, not connected");
 					return;
 				case ConnectionMode.BT:
 					// Convert to ?String? 
@@ -118,13 +119,27 @@ angular.module('cbt')
 			readHandlers.push(callback);
 		}
 		
+		function deregisterReadHandler( callback ){
+			//// TODO
+		}
+		
+		
 		/*
+		*	Read Handler
 		*	Call all read callbacks
 		*/
-		function notifyReadHandlers(){
+		function readHandler(data){
+			
+			$timeout(function(){
+				debugString.data += atob(data);
+			});
+			
+			console.log("readHandler", atob(data) );
+			
 			for(var f in readHandlers)
 				f();
-		}
+			
+			}
 		
 		
 		
@@ -134,32 +149,33 @@ angular.module('cbt')
 		*/
 		function serviceStatusHandler( event ){
 		
-			switch(event.name){
-				case "BluetoothService.CONNECTED":
-					connectionMode = ConnectionMode.BT;
-					$rootScope.$broadcast( 'HardwareService.CONNECTED' );
-				break;
-				case "SerialService.OPEN":
-					connectionMode = ConnectionMode.USB;
-					$rootScope.$broadcast( 'HardwareService.CONNECTED' );
-				break;
-				case "BluetoothService.CONNECTING":
-					$rootScope.$broadcast( 'HardwareService.CONNECTING' );
-				break;
-				case "BluetoothService.RECONNECTING":
-					$rootScope.$broadcast( 'HardwareService.RECONNECTING' );
-				break;
-				case "BluetoothService.DISCONNECTING":
-					$rootScope.$broadcast( 'HardwareService.DISCONNECTING' );
-				break;
-				case "BluetoothService.DISCONNECTED":
-				case "SerialService.CLOSE":
-					connectionMode = null;
-					$rootScope.$broadcast( 'HardwareService.DISCONNECTED' );
-				break;
+			$timeout(function(){
+				switch(event.name){
+					case "BluetoothService.CONNECTED":
+						connectionMode = ConnectionMode.BT;
+						$rootScope.$broadcast( 'HardwareService.CONNECTED' );
+					break;
+					case "SerialService.OPEN":
+						connectionMode = ConnectionMode.USB;
+						$rootScope.$broadcast( 'HardwareService.CONNECTED' );
+					break;
+					case "BluetoothService.CONNECTING":
+						$rootScope.$broadcast( 'HardwareService.CONNECTING' );
+					break;
+					case "BluetoothService.RECONNECTING":
+						$rootScope.$broadcast( 'HardwareService.RECONNECTING' );
+					break;
+					case "BluetoothService.DISCONNECTING":
+						$rootScope.$broadcast( 'HardwareService.DISCONNECTING' );
+					break;
+					case "BluetoothService.DISCONNECTED":
+					case "SerialService.CLOSE":
+						connectionMode = null;
+						$rootScope.$broadcast( 'HardwareService.DISCONNECTED' );
+					break;	
+				}
 				
-			}
-			
+			});
 			
 		}
 
@@ -193,14 +209,18 @@ angular.module('cbt')
 	  return {
 	    /* Interface Properties */
 	    connectionMode: function(){ return connectionMode; },
-	    
+	    debugString: debugString,
 	    
 	    /* Interface Methods */
 	    search: searchForDevices,
 	    connect: connect,
 	    disconnect: disconnect,
-	    
-	  }
+	    send: function(s){
+		    write(s);
+		    }
+		  
+	    }
+	   
 	});
 	
 	
