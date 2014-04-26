@@ -55,7 +55,8 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    
 			var origBroadcast = $delegate.$broadcast;
 			$delegate.$broadcast = function() {
-	      console.log("$broadcast: ", JSON.stringify(arguments));
+	      // console.log("$broadcast: ", JSON.stringify(arguments));
+	      console.log("$broadcast: ", arguments);
 	      return origBroadcast.apply(this, arguments);
 	    };
 			

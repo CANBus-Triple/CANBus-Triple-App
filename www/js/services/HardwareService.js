@@ -7,7 +7,7 @@
 */
 
 angular.module('cbt')
-	.factory('HardwareService', function( $rootScope, $q, $timeout, SettingsService, SerialService, BluetoothService ) {
+	.factory('HardwareService', function( $rootScope, $q, $timeout, SettingsService, SerialService, BluetoothService, UtilsService ) {
 		
 		var connectionMode = null,
 				readHandlers = [],
@@ -99,7 +99,6 @@ angular.module('cbt')
 					console.log("HardwareService cannot write, not connected");
 					return;
 				case ConnectionMode.BT:
-					// Convert to ?String? 
 					BluetoothService.write(data);
 				break;
 				case ConnectionMode.USB:
@@ -116,11 +115,17 @@ angular.module('cbt')
 		*/
 		function registerReadHandler( callback ){
 			if( !(callback instanceof Function) ) return;
-			readHandlers.push(callback);
+				
+			console.log("registerReadHandler", readHandlers.indexOf(callback));
+			// NEEDS TESTINGs
+			
+			if( readHandlers.indexOf(callback) < 1 )
+				readHandlers.push(callback);
 		}
 		
 		function deregisterReadHandler( callback ){
-			//// TODO
+			//// TODO TEST
+			readHandlers.splice(readHandlers.indexOf(callback), 1);
 		}
 		
 		
@@ -131,13 +136,13 @@ angular.module('cbt')
 		function readHandler(data){
 			
 			$timeout(function(){
-				debugString.data += atob(data);
+				debugString.data += UtilsService.ab2str(data);
 			});
 			
-			console.log("readHandler", atob(data) );
+			console.log("readHandler", UtilsService.ab2str(data) );
 			
 			for(var f in readHandlers)
-				f();
+				readHandlers[f](data);
 			
 			}
 		
@@ -172,12 +177,38 @@ angular.module('cbt')
 					case "SerialService.CLOSE":
 						connectionMode = null;
 						$rootScope.$broadcast( 'HardwareService.DISCONNECTED' );
+					break;
+					case "BluetoothService.RESET":
+					case "SerialService.RESET":
+						$rootScope.$broadcast( 'HardwareService.RESET' );
 					break;	
 				}
 				
 			});
 			
 		}
+		
+		
+		/*
+		*	Reset Connected CBT Hardware
+		*/
+		// TODO: Finish
+		function resetHardware(){
+			
+			switch( connectionMode ){
+				case ConnectionMode.BT:
+					BluetoothService.reset();
+				break;
+				case ConnectionMode.USB:
+					SerialService.reset();
+				break;
+				default:
+					$rootScope.$broadcast( 'HardwareService.RESET_FAIL', 'Not Connected' );
+				break;
+			}
+			
+		}
+		
 
 		
 		/*
@@ -201,6 +232,8 @@ angular.module('cbt')
 		$rootScope.$on('BluetoothService.DISCONNECTING', serviceStatusHandler);
 		$rootScope.$on('SerialService.OPEN', serviceStatusHandler);
 		$rootScope.$on('SerialService.CLOSE', serviceStatusHandler);
+		$rootScope.$on('BluetoothService.RESET', serviceStatusHandler);
+		$rootScope.$on('SerialService.RESET', serviceStatusHandler);
 
 		
 		
@@ -217,7 +250,10 @@ angular.module('cbt')
 	    disconnect: disconnect,
 	    send: function(s){
 		    write(s);
-		    }
+		    },
+		  reset: function(){ resetHardware(); },
+		  registerReadHandler: registerReadHandler,
+		  deregisterReadHandler: deregisterReadHandler
 		  
 	    }
 	   

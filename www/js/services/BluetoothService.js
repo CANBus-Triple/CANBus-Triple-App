@@ -3,51 +3,38 @@
 angular.module('cbt')
 	.factory('BluetoothService', function($rootScope, $timeout, $q, UtilsService) {
 		
-		/*
-		*		TODO: Clean this mess up boy. Use promises, 
-		*/
-		
-		
 		
 				
 		var deviceInfo = {
 			name: 'CANBus Triple',
-			serial: {
-				serviceUUID: '7a1fb359-735c-4983-8082-bdd7674c74d2',
-				characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8657'	
+			services: {
+				serial: {
+					serviceHandle: 0,
+					characteristicHandle: 0,
+					clientConfigHandle: 0,
+					serviceUUID: '7a1fb359-735c-4983-8082-bdd7674c74d2',
+					characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8658' // Notifcation Charateristic
+					// characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8657' // Indication Charateristic
+				},
+				reset: {
+					serviceHandle: 0,
+					characteristicHandle: 0,
+					serviceUUID: '35e71686-b1c3-45e7-9da6-1ca2393a41f3',
+					characteristicUUID: '5fcd52b7-4cfb-4095-aeb2-5c5511646bbe'
+				}
 			}
 		}
 		
+		var specUUIDs = {
+			clientConfiguration: "00002902-0000-1000-8000-00805f9b34fb"
+		};
+		
 		var scanSeconds = 10,
-				connected = false,
-				connectedOnce = false,
-				initialized = false,
-				reconnectAttempts = 0,
+				connected = 0,		// Holds BLE Device handle
 				discovered = {};
 		
 		
-		
-		/*
-		*
-		*/
-		function init(){
-		
-			var deferred = $q.defer();
-		
-			bluetoothle.initialize(function initializeSuccessCallback(status){
-				$rootScope.$broadcast('BluetoothService.INIT');
-				initialized = true;
-				// disconnect();
-				deferred.resolve();
-			}, function initializeErrorCallback(error){
-				$rootScope.$broadcast('BluetoothService.INIT_ERROR');
-				initialized = false;
-				deferred.reject(new Error("Failed to init bluetooth"));
-			});
-			
-			return deferred.promise;
-		}
-		
+
 		
 		/*
 		*
@@ -55,9 +42,8 @@ angular.module('cbt')
 		function scan(sw){
 			
 			if(!sw){
-				bluetoothle.stopScan(function stopScanSuccessCallback(){
-					$rootScope.$broadcast('BluetoothService.SCAN_COMPLETE');
-				}, function stopScanErrorCallback(error){});
+				evothings.ble.stopScan();
+				$rootScope.$broadcast('BluetoothService.SCAN_COMPLETE');
 				return;
 			}
 			
@@ -65,29 +51,23 @@ angular.module('cbt')
 			
 			$rootScope.$broadcast('BluetoothService.SCAN_START');
 			
-			bluetoothle.startScan(function startScanSuccessCallback(status){
-				
-				// Add to discovered array
-				if( status.status = 'scanResult' && status.address ){
-					if(!$rootScope.$$phase)
-						$rootScope.$apply(function(){
-							discovered[status.address] = status;
-						});
+			evothings.ble.startScan(
+				function(device)
+				{
+					$timeout(function(){
+						discovered[device.address] = device;
+					});
+				},
+				function(errorCode)
+				{
+					$rootScope.$broadcast('BluetoothService.SCAN_ERROR');
 				}
-				
-				
-			}, function startScanErrorCallback(status){
-				console.log("startScanErrorCallback", status );
-				$rootScope.$broadcast('BluetoothService.SCAN_ERROR');
-			}, {});
+			);
+
+			// Set timeout timer to cancel the scanning
+			$timeout( scan, scanSeconds*1000);
 			
-			$timeout(function(){
-				bluetoothle.stopScan(function stopScanSuccessCallback(){
-					$rootScope.$broadcast('BluetoothService.SCAN_COMPLETE');
-				}, function stopScanErrorCallback(error){
-					
-				});
-			}, scanSeconds*1000);
+			
 			
 		}
 	
@@ -99,83 +79,55 @@ angular.module('cbt')
 		var connectDeferred;
 		function connect(device){
 			
-			reconnectAttempts = 0;
-			
 			scan(false);
 			
 			connectDeferred = $q.defer();
 			
-			if(connectedOnce){
-				reconnect(device);
-				return connectDeferred.promise;
-				}
-			
 			$rootScope.$broadcast('BluetoothService.CONNECTING');
-			
-			bluetoothle.connect(
+			evothings.ble.connect(
+				device.address,
 				connectSuccessCallback,
-				connectErrorCallback, 
-				{ 'address': device.address });
-			
+				connectErrorCallback );
+
 			return connectDeferred.promise;
 			
 		}
 		
-		/*
-		*	Reconnect to BT
-		*	@param {Object} device
-		*/
-		function reconnect(device){
-			
-			$rootScope.$broadcast('BluetoothService.RECONNECTING');
-			bluetoothle.reconnect(
-				connectSuccessCallback,
-				connectErrorCallback
-			);
-			
-		}
 		
-		
-		/*
-		*	Callbacks used by connect and reconnect plugin methods
-		*/
-		function connectErrorCallback(error){
-			
-			if( reconnectAttempts > 3 ){
-				connectDeferred.reject();
-				$rootScope.$broadcast('BluetoothService.CONNECT_ERROR');
-				return;
-			}
-			
-			// Try reconnect method
-			
-			console.log( "Reconnect attempt ", reconnectAttempts );
-			
-			if(reconnectAttempts == 1)
-				reconnect( device );
-			else
-				disconnect().finally(function(){reconnect( device );});
 				
-			reconnectAttempts++;
-			
+		
+		
+		
+		/*
+		*	Callbacks used by connect
+		*/
+		function connectErrorCallback(errorCode){
+			$rootScope.$broadcast('BluetoothService.CONNECT_ERROR');
+			connectDeferred.reject(errorCode);
 		}
 		
-		function connectSuccessCallback( status ){
+		function connectSuccessCallback( info ){
 			
-			switch(status.status){
-				case 'connected':
+			console.log('BLE connect status for device: '
+			+ info.deviceHandle
+			+ ' state: '
+			+ info.state, evothings.ble.connectionState[info.state] );
+			
+			
+			switch(evothings.ble.connectionState[info.state]){
+				case 'STATE_CONNECTED':
 					connectDeferred.resolve();
 					$rootScope.$broadcast('BluetoothService.CONNECTED');
-					connected = true;
-					connectedOnce = true;
+					connected = info.deviceHandle;
 				break;
-				case 'disconnected':
+				case 'STATE_DISCONNECTED':
 					connectDeferred.resolve();
 					connected = false;
 					$rootScope.$broadcast('BluetoothService.DISCONNECTED');
 				break;
 		
 				}
+				
 		}
 		
 		
@@ -191,22 +143,13 @@ angular.module('cbt')
 			
 			var deferred = $q.defer();
 			
-			bluetoothle.disconnect(function disconnectSuccess(status){
-				
-				switch(status.status){
-					case 'disconnecting':
-						$rootScope.$broadcast('BluetoothService.DISCONNECTING');
-					break;
-					case 'disconnected':
-						connected = false;
-						deferred.resolve();
-						$rootScope.$broadcast('BluetoothService.DISCONNECTED');
-					break;
-				}
-				
-			}, function disconnectError(){
-				deferred.reject(new Error("Failed to init bluetooth"));
-			});
+			$timeout(function(){
+				deferred.resolve();
+			}, 5);
+			
+			console.log("disconnect ", connected);
+			evothings.ble.close(connected);
+			$rootScope.$broadcast('BluetoothService.DISCONNECTED');
 			
 			return deferred.promise;
 			
@@ -215,26 +158,41 @@ angular.module('cbt')
 		
 		
 		/*
-		*		iOS Characteristics Discovery
+		*		Characteristics Discovery
 		*/
 		function characteristics(){
 			
-			console.log( "iOS characteristics()" );
-			
 			var deferred = $q.defer();
+			var last = false;
+			var keys = 0;
 			
-			bluetoothle.characteristics(function characteristicsSuccessCallback(result){
-				console.log( "characteristicsSuccessCallback", result );
-				console.log( JSON.stringify(result) );
-				deferred.resolve(result);
-			}, function characteristicsErrorCallback(result){
-				console.log( "characteristicsErrorCallback", result );
-				deferred.reject();
-			},
-			{
-				"serviceUuid":deviceInfo.serial.serviceUUID,
-				"characteristicUuids":deviceInfo.serial.characteristicUUID
-			});
+			var process = function(characteristics)
+				{
+					for(var i = 0; i < characteristics.length; i++)
+						for( var srv in deviceInfo.services )
+							if( characteristics[i].uuid == deviceInfo.services[srv].characteristicUUID )
+								deviceInfo.services[srv].characteristicHandle = characteristics[i].handle;
+						
+					if(last) deferred.resolve(characteristics);
+					
+				}
+			
+			for( var service in deviceInfo.services ){
+				
+				keys++;
+				
+				if( Object.keys(deviceInfo.services).length == keys ) last = true;
+				
+				evothings.ble.characteristics(
+					connected,
+					deviceInfo.services[service].serviceHandle,
+					process,
+					function(errorCode)
+					{
+						$rootScope.$broadcast('BluetoothService.CHARATERISTICS_DISCOVERY_ERROR', errorCode);
+						deferred.reject();
+					});
+			}
 			
 			return deferred.promise;
 			
@@ -242,67 +200,92 @@ angular.module('cbt')
 
 		
 		/*
-		*		Android Service Discovery
+		*		Service Discovery
 		*/
 		function discover(){
 			
 			var deferred = $q.defer();
 			
-			if( device.platform == "Android" )
-				bluetoothle.discover(function discoverSuccessCallback(result){
-					deferred.resolve(result);
-				}, function discoverErrorCallback(result){
-					deferred.reject();
-				});
-				
-			if( device.platform == "iOS" )
-				bluetoothle.services(function servicesSuccessCallback(result){
-					console.log( "servicesSuccessCallback", result );
-					console.log( JSON.stringify(result) );
-					deferred.resolve(result);
-				}, function servicesErrorCallback(result){
-					console.log( "servicesErrorCallback", result );
-					deferred.reject();
+			evothings.ble.services(
+				connected,
+				function(services)
+				{
+					for(var i = 0; i < services.length; i++)
+					//if( services[i].uuid == deviceInfo.serial.serviceUUID ) deviceInfo.serial.serviceHandle = services[i].handle;
+						for( var srv in deviceInfo.services )
+							if( services[i].uuid == deviceInfo.services[srv].serviceUUID )
+								deviceInfo.services[srv].serviceHandle = services[i].handle;
+					
+					deferred.resolve(services);
 				},
-				{});
+				function(errorCode)
+				{
+					$rootScope.$broadcast('BluetoothService.SERVICES_ERROR', errorCode);
+					deferred.reject(errorCode);
+				}
+			);
 			
 			return deferred.promise;
 			
 		}
 		
+		/*
+		*		Discover Descriptors
+		*/
+		function descriptors(){
+			
+			var deferred = $q.defer();
+		
+			evothings.ble.descriptors(
+				connected,
+				deviceInfo.services.serial.characteristicHandle,
+				function(descriptors)
+				{
+					console.log('BLE descriptors: ',descriptors); 
+					
+					for (var i = 0; i < descriptors.length; i++)
+						if( descriptors[i].uuid == specUUIDs.clientConfiguration )
+							deviceInfo.services.serial.clientConfigHandle = descriptors[i].handle;
+					
+					deferred.resolve(descriptors);
+				},
+				function(errorCode)
+				{
+					console.log('BLE descriptors error: ' + errorCode);
+					deferred.reject(errorCode);
+				});
+				
+				return deferred.promise;
+		}
+		
 		
 		/*
-		*	Subscribe to charateristic
+		*		Subscribe to charateristic
 		*/
 		function subscribeToSerial(callback){
 			
 			var deferred = $q.defer();
 			
-			bluetoothle.subscribe(function subscribeSuccessCallback(result){
-				
-				console.log("subscribeSuccessCallback", JSON.stringify(result));
-				
-				switch(result.status){
-					case 'subscribedResult':
-						if(callback instanceof Function)
-							callback(result.value);
-						deferred.resolve(result);
-					break;
-					default:
-						$rootScope.$broadcast('BluetoothService.SUBSCRIBE', result.status );
-					break;
+			$rootScope.$broadcast('BluetoothService.SUBSCRIBE');
+			
+			evothings.ble.enableNotification(
+				connected,
+				deviceInfo.services.serial.characteristicHandle,
+				function(data)
+				{
+					
+					if(callback instanceof Function)
+							callback(data);
+					
+					deferred.resolve(data);
+						
+				},
+				function(errorCode)
+				{
+					$rootScope.$broadcast('BluetoothService.SUBSCRIBE_ERROR', errorCode );
+					deferred.reject(errorCode);
 				}
-				
-			}, function subscribeErrorCallback(result){
-				console.log("subscribeErrorCallback", JSON.stringify(result));
-				$rootScope.$broadcast('BluetoothService.SUBSCRIBE_ERROR', result.status );
-				deferred.reject();
-			},
-			{
-				"serviceUuid": deviceInfo.serial.serviceUUID,
-				"characteristicUuid": deviceInfo.serial.characteristicUUID,
-				"isNotification": false
-			});
+			);			
 			
 			return deferred.promise;
 			
@@ -312,24 +295,119 @@ angular.module('cbt')
 			
 			var deferred = $q.defer();
 			
-			bluetoothle.unsubscribe(function unsubscribeSuccessCallback(result){
-				switch(result.status){
-					case 'unsubscribed':
-						$rootScope.$broadcast('BluetoothService.UNSUBSCRIBE' );
-						deferred.resolve(result);
-					break;
-				}
-			}, function unsubscribeErrorCallback(result){
-				deferred.reject();
-			},
-			{
-				"serviceUuid": deviceInfo.serial.serviceUUID,
-				"characteristicUuid": deviceInfo.serial.characteristicUUID
-			});
+			evothings.ble.disableNotification(
+				connected,
+				deviceInfo.services.serial.characteristicHandle,
+				function()
+				{
+					$rootScope.$broadcast('BluetoothService.UNSUBSCRIBE' );
+					deferred.resolve();
+				},
+				function(errorCode)
+				{
+					$rootScope.$broadcast('BluetoothService.UNSUBSCRIBE_ERROR', errorCode );
+					deferred.reject(errorCode);
+				});
 			
 			return deferred.promise;
 			
 		}
+		
+		
+		
+		/* 
+		*		Write Descriptor
+		*/
+		function writeDescriptor(data){
+			
+			var deferred = $q.defer();
+			
+			if(typeof data == 'string')
+				data = new Uint8View( UtilsService.str2ab( data ) );
+			
+			/*
+			if(data instanceof Uint8Array)
+				data = data.buffer;
+				*/
+			
+			console.log(data)
+			evothings.ble.writeDescriptor(
+				connected,
+				deviceInfo.services.serial.clientConfigHandle,
+				data,
+				function(data)
+				{
+					console.log( 'BLE Write descriptor: ', arguments );
+					deferred.resolve(data);
+				},
+				function(errorCode)
+				{
+					console.log('BLE writeDescriptor error: ' + errorCode);
+					deferred.reject(errorCode);
+				});
+			
+			return deferred.promise;
+			
+		}
+		
+		
+		
+		
+		/* 
+		*		Read Descriptor
+		*/
+		function readDescriptor(){
+			
+			var deferred = $q.defer();
+			
+			evothings.ble.readDescriptor(
+				deviceHandle,
+				deviceInfo.services.serial.descriptorHandle,
+				function(data)
+				{
+					console.log('BLE descriptor data: ' + evothings.ble.fromUtf8(data));
+					deferred.resolve(data);
+				},
+				function(errorCode)
+				{
+					console.log('BLE readDescriptor error: ' + errorCode);
+					deferred.reject(errorCode);
+				});
+				
+			
+			return deferred.promise;
+			
+		}
+		
+		
+		
+		
+		
+		/*
+		*		Write indication setting to client configuration descriptor
+		*/
+		function writeSerialIndicationDescriptor(){
+			
+			var b = new ArrayBuffer(2);
+			var view = new Uint8Array(b);
+			view[0] = 0x02;
+			view[1] = 0x00;
+			
+			return writeDescriptor( view );
+			
+		}
+		
+		function writeSerialNotificationDescriptor(){
+			
+			var b = new ArrayBuffer(2);
+			var view = new Uint8Array(b);
+			view[0] = 0x01;
+			view[1] = 0x00;
+			
+			return writeDescriptor( view );
+			
+		}
+		
 		
 		
 		
@@ -340,19 +418,26 @@ angular.module('cbt')
 		
 			var deferred = $q.defer();
 			
-			bluetoothle.read(function readSuccessCallback(result){
-				deferred.resolve(result.data);
-			}, function readErrorCallback(result){
-				deferred.reject();
-			},
-			{
-				'serviceUuid': deviceInfo.serial.serviceUUID,
-				'characteristicUuid': deviceInfo.serial.serviceUUID
-			});
+			evothings.ble.readCharacteristic(
+				connected,
+				deviceInfo.services.serial.characteristicHandle,
+				function(data)
+				{
+					// console.log('BLE characteristic data: ' + evothings.ble.fromUtf8(data));
+					console.log('BLE characteristic data: ', UtilsService.ab2str(data));
+					deferred.resolve(data);
+				},
+				function(errorCode)
+				{
+					console.log('BLE readCharacteristic error: ' + errorCode);
+					deferred.reject(errorCode);
+				});
 			
 			return deferred.promise;
 			
 		}
+		
+		window.read = read;
 		
 		/*
 		*	Write to serial service
@@ -362,29 +447,67 @@ angular.module('cbt')
 			var deferred = $q.defer();
 			
 			if(typeof data == 'string')
-				data = btoa(data);
+				data = UtilsService.str2ab( data );
 				
-			if(data instanceof Uint8Array)
-				data = bluetoothle.bytesToEncodedString(data);
+			if(data instanceof ArrayBuffer)
+				data = new Uint8Array(data);
+				
+			if( !(data instanceof Uint8Array) ){
+				console.log("write requires String, ArrayBuffer, or Uint8Array");
+				return;
+			}
 			
+			console.log( "Write: ", data );
 			
-			bluetoothle.write(function writeSuccessCallback(result){
-				console.log("writeSuccessCallback",result, atob(result.value));
-				deferred.resolve(result);
-			}, function writeErrorCallback(result){
-				console.log("writeErrorCallback", JSON.stringify(result) );
-				deferred.reject(result);
-			},
-			{
-				"value": data,
-				"serviceUuid": deviceInfo.serial.serviceUUID,
-				"characteristicUuid": deviceInfo.serial.characteristicUUID
-			});
+			evothings.ble.writeCharacteristic(
+				connected,
+				deviceInfo.services.serial.characteristicHandle,
+				data,
+				function(data)
+				{
+					console.log( arguments );
+					deferred.resolve(data);
+				},
+				function(errorCode)
+				{
+					console.log('BLE writeCharacteristic error: ' + errorCode);
+					deferred.reject(errorCode);
+				});
 			
 			return deferred.promise;
+			
 		}
 		
+		window.write = write;
 		
+		
+		/*
+		*	Write to reset service to reset the MCU
+		*/
+		function reset(){
+			
+			var deferred = $q.defer();
+			
+			var resetCommand = new Uint8Array(new ArrayBuffer(1));
+			resetCommand[0] = 0x01;
+			
+			evothings.ble.writeCharacteristic(
+				connected,
+				deviceInfo.services.reset.characteristicHandle,
+				resetCommand,
+				function()
+				{
+					$timeout(function(){$rootScope.$broadcast('BluetoothService.RESET');}, 2000);
+					deferred.resolve();
+				},
+				function(errorCode)
+				{
+					deferred.reject(errorCode);
+				});
+			
+			return deferred.promise;
+			
+		}
 		
 		
 		
@@ -408,27 +531,24 @@ angular.module('cbt')
 		*/
 	  return {
 	    scan: function(sw){
-		    if(!initialized)
-		    	init().then(function(){scan(sw);});
-		    	else
-		    	scan(sw);
+		    scan(sw);
 	    },
 	    connect: function(device, readHandler){
 	    	
-		    if(!initialized)
-		    	init().then(function(){connect(device)});
-		    	else
-		    		connect(device).then(discover).then(function(){ 
-		    			if(device.platform == "Android")
-		    				subscribeToSerial(readHandler);
-		    				else
-		    					characteristics().then( function(){ subscribeToSerial(readHandler) });
-									
-		    			});
-		    	
+	  		connect(device)
+	  			.then(discover)
+	  			.then(characteristics)
+	  			.then(descriptors)
+	  			.then(writeSerialNotificationDescriptor)
+	  			// .then(writeSerialIndicationDescriptor)
+	  			.then(function(){
+  								subscribeToSerial(readHandler);
+  								});
+					
 	    },
 	    disconnect: function(){
-		    unsubscribeFromSerial().then(disconnect);
+	    	disconnect();
+		    // unsubscribeFromSerial().then(disconnect);
 	    },
 	    setDevice: function(i){ device = discovered[i] },
 	    
@@ -436,6 +556,12 @@ angular.module('cbt')
 	    write: function(data){
 				write(data);
 	    },
+	    read: function(){
+		    
+	    },
+	    reset: function(){
+		    reset();
+	    }
 	    
 	  }
 	  

@@ -226,6 +226,26 @@ angular.module('cbt')
 		
 		
 		
+		/**
+		 * Reset the CBT by connecting at 1200 baud
+		 * @return null
+		 */	
+		function reset(){
+			
+			baudRate = 1200;
+			
+			close()
+				.then(open)
+				.then(close)
+				.then(function(){
+					baudRate = 115200;
+					open();
+					$rootScope.$broadcast('SerialService.RESET' );
+			});
+			
+		}
+		
+		
 		
 		
 
@@ -240,7 +260,8 @@ angular.module('cbt')
 	    read: read,
 	    write: write,
 	    discovered: discovered,
-	    search: search
+	    search: search,
+	    reset: reset
 	  }
 	  
 	});

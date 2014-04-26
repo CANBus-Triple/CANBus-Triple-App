@@ -2,7 +2,7 @@
 
 
 angular.module('cbt')
-	.controller('DebugController', function ($scope, HardwareService) {
+	.controller('DebugController', function ($scope, FirmwareService ,HardwareService) {
 	
 	  $scope.navTitle = "Debug";
 	  
@@ -10,9 +10,26 @@ angular.module('cbt')
 	  
 	  $scope.sendTest = function(){
 		  
-		  HardwareService.send( String.fromCharCode(0x01, 0x01) + "\n" );
+		  var buffer = new ArrayBuffer(2);
+		  var v = new Uint8Array(buffer);
+		  v[0] = 0x01;
+		  v[1] = 0x01;
+		  
+		  HardwareService.send( v );
 		  
 	  };
+	  
+	  $scope.sendFirmware = function(){
+		  
+		  FirmwareService.send();
+		  
+	  }
+	  
+	  $scope.sendReset = function(){
+		  
+		  HardwareService.reset();
+		  
+	  }
 	  		
 		
 		

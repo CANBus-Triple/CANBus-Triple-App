@@ -2,7 +2,11 @@
 
 	<ion-content has-header="true" padding="true">
 		
-		<button class="button button-positive" ng-click="sendTest()">Button</button>
+		<button class="button button-positive" ng-click="sendTest()">BT Send 0101</button>
+		
+		<button class="button button-positive" ng-click="sendFirmware()">Firmware</button>
+		
+		<button class="button button-positive" ng-click="sendReset()">Reset MCU</button>
 		
 		<textarea ng-bind="debugString.data" style="height: 300px; width:100%; background-color:pink;">
 		</textarea>

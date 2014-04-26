@@ -2,7 +2,8 @@
   "name": "CANBusTripleApp",
   "version": "0.1.0",
   "dependencies": {
-    "angular-local-storage": "~0.0.1"
+    "angular-local-storage": "~0.0.1",
+    "javascript-state-machine": "~2.3.0"
   },
   "devDependencies": {}
 }
