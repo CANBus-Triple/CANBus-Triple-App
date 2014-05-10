@@ -9,10 +9,8 @@ angular.module('cbt')
 		
 		var pageSize = 128,
 				sendMaxBytes = 128,
-				intelHexEnd = ':00000001FF',
 				okCommand = 0x0D,
 				errorCommand = 0x3F,
-				hexHashMap = {},
 				hexSendIndex = 0,
 				lastState = '',
 				state = '',
@@ -300,84 +298,7 @@ angular.module('cbt')
 		
 		
 		
-		/*
-		*	Parse loaded Hex into ArrayBuffer
-		*	@param {String} hex
-		*/
-		function parseHex(hex){
-			
-			var deferred = $q.defer(),
-					checksumError = -1;
-			
-					hexHashMap = {};
-			
-			// Fix any line ending weirdness
-			hex = hex.replace(/\r?\n/g, "\r\n");
-			
-			angular.forEach(hex.split('\r\n'), function(value, key){
-      	
-      	if( value.slice(0,11) == intelHexEnd || value[0] != ':' || value.length < 1 )
-	      	return;
-      	
-      	
-      	var size = parseInt( value.slice(1,3), 16 );
-      	var address = parseInt( value.slice(3,7), 16 );
-				var buffer = new ArrayBuffer(size);
-				var view = new Uint8Array(buffer);
 				
-				for(var i=0; i<size; i++)
-					view[i] = parseInt(value.slice(9+(i*2), 11+(i*2)), 16);
-				
-				checksumError = !checksum(value) ? address : checksumError;
-				
-				hexHashMap[ address ] = view;
-				
-				
-			}, this);
-			
-			// Checksum error?
-			if(checksumError > 0){
-				console.log('checksumError', checksumError);
-				$rootScope.$broadcast('FirmwareService.INTEL_HEX_INVALID', 'invalid checksum ' );
-				deferred.reject();
-			}
-			
-			console.log(hexHashMap);
-			deferred.resolve();
-			
-			return deferred.promise;	
-		}
-		
-		
-		
-		
-		
-		/*
-		*	Verify checksum of a line from Intel Hex format.
-		*	Checksum is verified by adding all hex values, excluding the checksum byte. 
-		*	Then calculating the 2's complement and checking against the last byte of the value string
-		*	@param {String} value
-		* @return {Boolean} success / fail
-		*/
-		function checksum(value){
-			var sum = 0;
-			
-			var check = parseInt(value.slice(-2), 16);
-			value = value.slice(1, value.length-2)
-			
-			for(var i=0; i<value.length; i+=2){
-				sum += parseInt(value.slice(i, i+2), 16);
-				}
-			
-			if( parseInt((~sum + 1 >>> 0).toString(16).slice(-2), 16) == check ){
-				return true
-			}else{
-				console.log('invalid checksum:', value, check, parseInt((~sum + 1 >>> 0).toString(16).slice(-2), 16));
-				return false;
-				}
-			
-		}
-		
 		
 		
 		
@@ -405,9 +326,14 @@ angular.module('cbt')
 			
 			fetchFirmware()
 				.then( function(d){
+								/*
 								parseHex(d).then(function(){
 									startMachine();
 									});
+								*/
+								
+								var hex = new IntelHex( d );
+								
 								});
 			
 		}
