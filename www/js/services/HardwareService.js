@@ -139,7 +139,7 @@ angular.module('cbt')
 				debugString.data += UtilsService.ab2str(data);
 			});
 			
-			console.log("readHandler", UtilsService.ab2str(data) );
+			console.log("readHandler", UtilsService.ab2str(data), new Uint8Array(data) );
 			
 			for(var f in readHandlers)
 				readHandlers[f](data);

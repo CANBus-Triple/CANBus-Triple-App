@@ -10,12 +10,7 @@ angular.module('cbt')
 	  
 	  $scope.sendTest = function(){
 		  
-		  var buffer = new ArrayBuffer(2);
-		  var v = new Uint8Array(buffer);
-		  v[0] = 0x01;
-		  v[1] = 0x01;
-		  
-		  HardwareService.send( v );
+		  HardwareService.send( String.fromCharCode(0x01,0x01) );
 		  
 	  };
 	  

@@ -16,9 +16,10 @@ angular.module('cbt')
 		$scope.btDiscovered = BluetoothService.discovered;
 		$scope.serialDiscovered = SerialService.discovered;
 		
-		$timeout(function(){
-			HardwareService.search(true);
-		}, 1200);
+		if( SettingsService.getAutoconnect() == "false" )
+			$timeout(function(){
+				HardwareService.search(true);
+			}, 1200);
 	
 	
 

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('cbt')
-	.factory('SerialService', function( $q, $rootScope, $interval, UtilsService ) {
+	.factory('SerialService', function( $q, $rootScope, $interval, $timeout, UtilsService ) {
 
 		
 
@@ -22,6 +22,8 @@ angular.module('cbt')
 			
 			var deferred = $q.defer();
 			
+			if( searching ) search( false );
+			
 			function doOpen(){
 				serial.open({
 					baudRate: baudRate,
@@ -30,7 +32,7 @@ angular.module('cbt')
 					function success(){
 						serialOpened = true;
 						$rootScope.$broadcast('SerialService.OPEN');
-						deferred.resolve();
+						$timeout(function(){deferred.resolve();}, 100);
 					},
 					function error(){
 						serialOpened = false;
@@ -49,10 +51,10 @@ angular.module('cbt')
 						$rootScope.$broadcast('SerialService.PERMISSION_GRANTED');
 						doOpen();
 					},
-					function error(){
+					function error(error){
 						usbSerialPermissionGranted = false;
-						$rootScope.$broadcast('SerialService.PERMISSION_DENIED');
-						deferred.reject(new Error("Permission Denied by OS/User"));
+						$rootScope.$broadcast('SerialService.PERMISSION_DENIED', error);
+						deferred.reject(new Error(error));
 					}
 				);
 				
@@ -76,7 +78,7 @@ angular.module('cbt')
 				function success(){
 					serialOpened = false;
 					$rootScope.$broadcast('SerialService.CLOSE');
-					deferred.resolve();
+					$timeout(function(){deferred.resolve();}, 100);
 				},
 				function error(){
 					deferred.reject(new Error("Failed to close Serial port"));
@@ -93,6 +95,20 @@ angular.module('cbt')
 		 * @param {String} string data to write
 		 */	
 		function write( data ){
+			
+			
+			if( data instanceof Uint8Array )
+				data = UtilsService.ab2str( data.buffer );
+				
+			if( data instanceof ArrayBuffer )
+				data = UtilsService.ab2str( data );
+			
+			if( !( typeof data == 'string' ) ){
+				console.log('SerialService write: Data must be string or Uint8Array', typeof data );
+				return;
+			}
+			
+			console.log("SerialService Sending:", UtilsService.string2hexString(data) );
 			
 			var deferred = $q.defer();
 			serial.write(
@@ -157,7 +173,7 @@ angular.module('cbt')
 				return;
 			}
 			
-			// $rootScope.$broadcast('SerialService.READ_DATA', data);
+			$rootScope.$broadcast('SerialService.READ_DATA', data);
 			readHandler(data);
 			
 		}
@@ -170,6 +186,8 @@ angular.module('cbt')
 			
 			var view = new Uint8Array(data);
 			readBuffer += UtilsService.byteArrayToString(view);
+			
+			console.log(view);
 			
 			var line = readBuffer.split("\r\n", 1);
 			
@@ -201,25 +219,54 @@ angular.module('cbt')
 		 * @return null
 		 */	
 		function search( b ){
-			
+			/*
+
 			if(b){
 			
 				if( !serialOpened )
-					open().then(registerReadCallback);
+					open().then(function(){ registerReadCallback() }, function(e){ console.log(e); return; });
 			
 				// Clear discovered
 				readBuffer = "";
 				for(var k in discovered)
 					delete discovered[k];
 			
+				// Search for 30 seconds
 				searching = $interval( function(){
+					if(serialOpened == false) return;
 					write( String.fromCharCode(0x01, 0x01) );
-					}, 1000, 120 );
+					}, 1000, 30 );
+					
 				}
 			else{
 				$interval.cancel(searching);
 				searching = null;
 				}
+*/
+			if( !usbSerialPermissionGranted ){
+			
+				// Clear discovered 
+				for(var k in discovered)
+							delete discovered[k];
+				
+				serial.requestPermission(
+					function success(){
+						usbSerialPermissionGranted = true;
+						$rootScope.$broadcast('SerialService.PERMISSION_GRANTED');
+						
+						$rootScope.$apply(function(){
+							discovered['serial'] = {name:'CANBus Triple USB Serial'};
+						});
+						
+					},
+					function error(error){
+						usbSerialPermissionGranted = false;
+						$rootScope.$broadcast('SerialService.PERMISSION_DENIED', error);
+					}
+				);
+				
+			}
+			
 			
 		}
 		
@@ -232,15 +279,19 @@ angular.module('cbt')
 		 */	
 		function reset(){
 			
+			var oldBaudRate = baudRate;
 			baudRate = 1200;
 			
 			close()
 				.then(open)
 				.then(close)
 				.then(function(){
-					baudRate = 115200;
+					baudRate = oldBaudRate;
 					open();
-					$rootScope.$broadcast('SerialService.RESET' );
+					$timeout(function(){
+						$rootScope.$broadcast('SerialService.RESET' );
+					}, 500);
+					
 			});
 			
 		}

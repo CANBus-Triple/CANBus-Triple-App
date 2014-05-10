@@ -13,8 +13,8 @@ angular.module('cbt')
 					characteristicHandle: 0,
 					clientConfigHandle: 0,
 					serviceUUID: '7a1fb359-735c-4983-8082-bdd7674c74d2',
-					characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8658' // Notifcation Charateristic
-					// characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8657' // Indication Charateristic
+					// characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8658' // Notifcation Charateristic
+					characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8657' // Indication Charateristic
 				},
 				reset: {
 					serviceHandle: 0,
@@ -497,7 +497,7 @@ angular.module('cbt')
 				resetCommand,
 				function()
 				{
-					$timeout(function(){$rootScope.$broadcast('BluetoothService.RESET');}, 2000);
+					$timeout(function(){$rootScope.$broadcast('BluetoothService.RESET');}, 500);
 					deferred.resolve();
 				},
 				function(errorCode)
@@ -539,8 +539,8 @@ angular.module('cbt')
 	  			.then(discover)
 	  			.then(characteristics)
 	  			.then(descriptors)
-	  			.then(writeSerialNotificationDescriptor)
-	  			// .then(writeSerialIndicationDescriptor)
+	  			// .then(writeSerialNotificationDescriptor)
+	  			.then(writeSerialIndicationDescriptor)
 	  			.then(function(){
   								subscribeToSerial(readHandler);
   								});
