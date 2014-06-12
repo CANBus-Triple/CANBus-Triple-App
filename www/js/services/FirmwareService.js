@@ -8,7 +8,7 @@ angular.module('cbt')
 	.factory('FirmwareService', function($rootScope, $q, $http, $timeout, HardwareService, UtilsService){
 		
 		var pageSize = 128,
-				sendMaxBytes = 128,
+				sendMaxBytes = 16,
 				okCommand = 0x0D,
 				errorCommand = 0x3F,
 				hexSendIndex = 0,
@@ -16,7 +16,9 @@ angular.module('cbt')
 				state = '',
 				errorCount = 0,
 				opTimeoutTime = 3000,
-				opTimeout;
+				opTimeout,
+				sendDataDelay = 20,
+				hex;
 		
 		
 			
@@ -47,7 +49,7 @@ angular.module('cbt')
 										},
 										update: function(data){
 											if( data && data.buffer && UtilsService.ab2str(data.buffer) == "CANBusT" ){
-												gotoState('setPmode');
+												gotoState('getPageSize');
 											}else if( data[0] == errorCommand ){
 												$timeout(function(){
 													HardwareService.send( 'S' );
@@ -56,6 +58,15 @@ angular.module('cbt')
 											
 										}
 			},
+			getPageSize:{	 enter: function(){
+											 HardwareService.send( 'b' );
+										 },
+										 update:function(data){
+											 pageSize = (data[1] >> 8)+(data[2] & 0xFF);
+											 console.log('pageSize set to', pageSize);
+											 gotoState('setPmode');
+										 }
+										},
 			setPmode:{		enter: function(){
 											resetTimeout();
 											HardwareService.send( 'P' );
@@ -71,8 +82,7 @@ angular.module('cbt')
 			setAddress:{		enter: function(){
 												resetTimeout();
 												// Set start address
-												var startAddress = Object.keys(hexHashMap)[hexSendIndex];
-												HardwareService.send( String.fromCharCode( 0x41, (startAddress >> 8), (startAddress & 0xFF) ) );
+												HardwareService.send( String.fromCharCode( 0x41, (hex.startAddress >> 8), (hex.startAddress & 0xFF) ) );
 										 },
 										 update:function(data){
 											 if(data[0] == okCommand){
@@ -87,15 +97,15 @@ angular.module('cbt')
 										 },
 										 update:function(data){
 										 
-										 	if(data[0] == okCommand && hexHashMap[Object.keys(hexHashMap)[hexSendIndex+1]] != undefined ){
+										 	if(data[0] == okCommand && hex.length > hexSendIndex ){
 											 	
-											 	$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', hexSendIndex/Object.keys(hexHashMap).length );
+											 	$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', hexSendIndex/hex.length );
 											 	
 											 	resetTimeout();
 											 	
 										 		$timeout(function(){
 										 			sendNextFlashPage();
-										 			}, 30 );
+										 			}, sendDataDelay );
 										 		
 											 	} else if(data[0] == errorCommand){
 											 		
@@ -145,7 +155,7 @@ angular.module('cbt')
 		
 		/*
 		*	Reset timeout after a successful call to hardware.
-		*	@param {Boolean} off Switch to cancel the timeout timer, true to disable
+		*	@param {Boolean} off Switch to cancel the timeout timer, true to clear
 		*/
 		function resetTimeout(off){
 			
@@ -169,29 +179,13 @@ angular.module('cbt')
 			
 			var i = 0,
 					lines = 0,
-					linesSent = 0,
-					setAddressAfterPage = false,
 					pageLength = 0;
 			
-			console.log("sendNextFlashPage", hexSendIndex, Object.keys(hexHashMap).length);
+			console.log("sendNextFlashPage", hexSendIndex, hex.length);
 			
 			// Calculate length of the page we're about to send
-			for(lines=0; lines<pageSize/hexHashMap[Object.keys(hexHashMap)[0]].length && hexHashMap[Object.keys(hexHashMap)[hexSendIndex+lines]] != undefined; lines++){
-				
-				pageLength += hexHashMap[Object.keys(hexHashMap)[hexSendIndex+lines]].length;
-				
-				linesSent++;
-				
-				// If we have less bytes here than the first line of the hex break, so the next set of the machine can set a new address.
-				if( parseInt(Object.keys(hexHashMap)[hexSendIndex+lines])
-						+ hexHashMap[Object.keys(hexHashMap)[hexSendIndex+lines]].length
-						!= parseInt(Object.keys(hexHashMap)[hexSendIndex+lines+1]) ){
-					setAddressAfterPage = true;
-					break;
-					}
-				
-			}
-			 
+			pageLength = (hex.length - hexSendIndex) > pageSize ? pageSize : hex.length - hexSendIndex ;
+			
 			
 			// B (Write Command), 16 bit length, F (for flash E for eeprom) then Data
 			var pageArray = new Uint8Array(4);
@@ -203,14 +197,13 @@ angular.module('cbt')
 			HardwareService.send( pageArray );
 			
 			
-			
 			var page, bytesSent = 0;
-			
 			for( i=0; bytesSent < pageLength; i++){
 				
-				page = hexHashMap[Object.keys(hexHashMap)[hexSendIndex+i]];
+				page = new Uint8Array(hex.slice(hexSendIndex, hexSendIndex+pageLength));
 				
-				console.log(Object.keys(hexHashMap).length, hexSendIndex+i, page, bytesSent, pageLength);
+				if( page.length < 1 )
+					break;
 				
 				if( sendMaxBytes >= page.length ){
 					// Send all bytes at once
@@ -219,7 +212,8 @@ angular.module('cbt')
 					// Send bytes in smaller chunks
 					for(var ii=0; ii*sendMaxBytes < page.length; ii++){
 						var sub = page.buffer.slice(ii*sendMaxBytes, (ii*sendMaxBytes)+sendMaxBytes );
-						HardwareService.send( sub );
+						$timeout((function(s){return function(){ HardwareService.send(s); }})(sub), sendDataDelay*ii ); 
+						
 					}
 				}
 				
@@ -227,11 +221,7 @@ angular.module('cbt')
 				
 			}
 			
-			
-			hexSendIndex += linesSent;
-			
-			if(setAddressAfterPage && hexSendIndex < Object.keys(hexHashMap).length )
-				gotoState('setAddress');
+			hexSendIndex += pageLength;
 			
 		}
 		
@@ -284,7 +274,7 @@ angular.module('cbt')
 			
 			var deferred = $q.defer();
 			
-			$http({method: 'GET', url: '/firmware/blink.hex'}).
+			$http({method: 'GET', url: '/firmware/cbt-mazda.hex'}).
 		    success(function(data, status, headers, config) {
 					deferred.resolve(data);
 		    }).
@@ -326,14 +316,8 @@ angular.module('cbt')
 			
 			fetchFirmware()
 				.then( function(d){
-								/*
-								parseHex(d).then(function(){
-									startMachine();
-									});
-								*/
-								
-								var hex = new IntelHex( d );
-								
+								hex = new IntelHex( d );
+								startMachine();
 								});
 			
 		}

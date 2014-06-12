@@ -66,3 +66,34 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	}])
 	
 	;
+	
+	
+/*
+*		Node-Webkit Things
+*/
+/*
+
+if( require || require instanceof Function ){
+
+	var gui = require('nw.gui'),
+    win = gui.Window.get();
+	    
+	$(function(){
+	    win.show();
+	    console.log('Showing main nw window');
+	});	
+	
+}
+*/
+
+
+
+
+
+
+
+
+
+
+
+

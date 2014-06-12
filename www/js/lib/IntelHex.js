@@ -16,11 +16,13 @@ var IntelHex = (function() {
 		
 		this.buffer = {};
 		this.intelHexEnd = ':00000001FF';
+		this.startAddress = 0;
 		
 		
 		if(hexString) this.parse(hexString);
 		
 	}
+	
 	
 	
 	/*
@@ -48,7 +50,9 @@ var IntelHex = (function() {
 			}
 		}
 		
-		console.log('bufferSize',bufferSize);
+		
+		this.startAddress = parseInt( hexLines[0].slice(3,7), 16 );
+		
 		
 		// Init a new buffer to hold the data
 		this.buffer = new ArrayBuffer(bufferSize);
@@ -82,6 +86,7 @@ var IntelHex = (function() {
 			console.log('checksumError', checksumError);
 		}
 		
+		this.length = bufferSize;
 		
 	}
 	
@@ -96,6 +101,8 @@ var IntelHex = (function() {
 	IntelHex.prototype.encode = function(size){
 		// TODO
 	}
+	
+	
 	
 	
 	
@@ -135,10 +142,19 @@ var IntelHex = (function() {
 	*	@param {int} begin
 	* @param {int} end Optional
 	*/
-	IntelHex.prototype.encode = function(start, end){
+	IntelHex.prototype.slice = function(start, end){
 		return this.buffer.slice(start, end);
 	}
 	
+	
+	/*
+	*	Return buffer length
+	*	@param {int} begin
+	* @param {int} end Optional
+	*/
+	IntelHex.prototype.length = function(){
+		return this.buffer.length;
+	}
 	
 	
 	

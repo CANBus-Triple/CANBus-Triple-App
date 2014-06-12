@@ -1,11 +1,23 @@
 {
-  "name": "CANBusTripleTestServer",
-  "version": "1.0.0",
+  "name": "CANBusTriple",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "start": "node server.js"
   },
-  "dependencies": {
+  "devDependencies": {
     "connect": "*"
+  },
+  "dependencies": {
+    "serialport": "^1.4.0",
+    "noble": "^0.3.0"
+  },
+  "_comment": " * Node-Webkit Info Below * ",
+  "main": "www/index.html",
+  "window": {
+    "toolbar": true,
+    /* "show": false, */
+    "width": 800,
+    "height": 600
   }
 }
