@@ -1,16 +1,16 @@
-'use strict';  
+'use strict';
 
 
 angular.module('cbt')
 	.controller('SettingsController', function ($scope, $location, SettingsService) {
-		
+
 		$scope.navTitle = "Settings";
 		$scope.title = "Settings";
-		
+
 		$scope.itemToggle = function(index){
-			return $scope.settingsList[index].checked === false;
+			return $scope.settingsList[index].checked === true;
 		}
-		
+
 		$scope.settingsList = [
 							{
 								name: 'Autoconnect',
@@ -25,7 +25,7 @@ angular.module('cbt')
 								setter: SettingsService.setDebugMode
 							}
 						];
-													
-													
-		
+
+
+
 	});

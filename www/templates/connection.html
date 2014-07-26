@@ -1,18 +1,19 @@
-<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons" hide-back-button="true">
+<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons">
 
-  <ion-content has-header="true" padding="true" class="color-assertive">
+  <ion-content padding="true" class="color-assertive">
+
   	<span class="type-white">
       <h2 class="center type-energized italic">Let's get connected</h2>
       <p>Connect your CANBus Triple via USB. If you have a Bluetooth LE model just power it up!</p>
       <!-- <i class="icon ion-refreshing"></i> -->
   	</span>
-  	
+
   	<img id="connection-icon" class="element-center" src="img/cbt-connect.svg"/>
-  	
+
   	<device-list device-connect="deviceConnect" bt-discovered="btDiscovered" serial-discovered="serialDiscovered"></device-list>
-  	
+
   	<button class="button button-outline button-block button-light button-bottom" ng-click="search()">Scan Again</button>
-  	  
+
   </ion-content>
 
 </ion-view>

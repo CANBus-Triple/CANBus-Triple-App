@@ -1,16 +1,21 @@
 
 /*
-*	CBTSideMenu 
+*	CBTSideMenu
 */
 
-.cbt-side-menu {
+.side-menu {
 	position: relative;
 	left: 0;
 	top: 44px;
 	display: block;
 	height: 100%;
+	min-height: 100%;
 	z-index: 9900;
-	
+
+	.has-header {
+		top: 0;
+	}
+
 	#panel {
 		display: block;
 		position: absolute;
@@ -22,14 +27,14 @@
 		box-shadow: 2px 4px 5px rgba(50, 50, 50, 0.4);
 		-webkit-transform: translate3d(-300px, 0px, 0)
 	}
-	
+
 	img#logo {
 		display: block;
 		margin: 0 auto;
 		max-width: 100%;
 	}
-	
-	
+
+
 }
 
 
@@ -39,9 +44,9 @@
 */
 
 .user-info {
-	
+
 	display: table;
-	
+
 	img.avatar {
 		border-radius: 9999px;
 		border: 3px solid #f5f5f5;
@@ -50,12 +55,12 @@
 		margin: 8px;
 		display: table-cell;
 	}
-	
+
 	p {
 		display: table-cell;
 		vertical-align: middle;
 		margin: 0;
 		padding: 0;
 	}
-	
+
 }

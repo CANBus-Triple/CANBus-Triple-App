@@ -1,28 +1,28 @@
+
 angular.module('cbt')
 	.controller('AppController', function ($scope, $rootScope, $timeout, HardwareService) {
-		
+
 		$scope.navTitle = "AppController";
 		$scope.title = "AppController title";
-		
+
+
 		$scope.leftButtons = [{
-		  type: 'button-icon icon ion-navicon',
+		  type: 'button-clear',
+			content: '<i class="icon ion-navicon"></i>',
 	    tap: function(e) {
 	      $scope.cbtSideMenu.toggle();
 	    }
 		},
-		/*{
-		  type: 'button-icon icon cbt-icon',
-		}*/
 		];
-		
+
 		$scope.rightButtons = [];
-		
+
 		$scope.navShowing = false;
 		$scope.$on('CBTSideMenu.IN', navHandler);
 		$scope.$on('CBTSideMenu.OUT', navHandler);
-		
+
 		function navHandler(event){
-			
+
 			$timeout(function(){
 				switch(event.name){
 					case 'CBTSideMenu.IN':
@@ -33,15 +33,20 @@ angular.module('cbt')
 					break;
 				}
 			})
-				
+
 		}
-				
-		/* 
+
+
+		$scope.toggleMenu = function(){
+			$scope.cbtSideMenu.toggle();
+		}
+
+
+		/*
 		*	Private Methods
 		*/
-		
-		
-		
+
+
 		/*
 		*		Event Listeners
 		*
@@ -51,16 +56,16 @@ angular.module('cbt')
 		$rootScope.$on('HardwareService.RECONNECTING', statusHandler);
 		$rootScope.$on('HardwareService.DISCONNECTING', statusHandler);
 		$rootScope.$on('HardwareService.DISCONNECTED', statusHandler);
-		
-		
-		
+
+
+
 		/*
 		*		Private Methods
 		*
 		*/
-		
+
 		function statusHandler(event){
-			
+
 			$timeout(function(){
 				switch(event.name){
 					case 'HardwareService.CONNECTED':
@@ -97,10 +102,10 @@ angular.module('cbt')
 					break;
 				}
 			});
-			
-		};
-		
 
-				
-		
+		};
+
+
+
+
 	});

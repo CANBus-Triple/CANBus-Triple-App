@@ -1,5 +1,11 @@
 
 body,
+html {
+	height: 100%;
+}
+
+
+body,
 h1,
 h2,
 h3,
@@ -26,7 +32,7 @@ h1 {
 }
 
 #left-menu {
-	
+
 }
 
 #left-menu #logo {
@@ -56,11 +62,11 @@ h1 {
 *	Main Nav
 */
 
-.cbt-side-menu .icon {
+.side-menu .icon {
 	font-size: 1.6em;
 }
 
-.cbt-side-menu .item-content {
+.side-menu .item-content {
 	font-weight: bold;
 	padding: 1.5em;
 }
@@ -73,17 +79,17 @@ h1 {
 *	Header left button animation
 */
 
-header {
+ion-nav-bar {
 	-webkit-transform: translate3d(0, 0, 0);
 }
 
-.nav-showing header .left-buttons {
+ion-nav-bar.nav-showing .left-buttons {
 	margin-left: -20px;
 }
 
-header .left-buttons {
+ion-nav-bar .left-buttons {
 	margin-left: 0;
-	transition: margin-left 0.33s ease-in-out;
+	transition: margin-left 0.33s ease-out;
 }
 
 
@@ -124,7 +130,7 @@ header .left-buttons {
 
 .height-animation.ng-hide-add {
 /* 	display: block!important; */
-} 
+}
 .height-animation.ng-hide-remove {
 	display: block!important;
 }
@@ -134,17 +140,3 @@ header .left-buttons {
 /*
 *		View Specific styles
 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
