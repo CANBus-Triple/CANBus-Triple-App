@@ -18,6 +18,10 @@ angular.module('cbt')
 		$scope.rightButtons = [];
 
 		$scope.navShowing = false;
+
+		$scope.connectIcon = false;
+		$scope.connectIconDisable = false;
+
 		$scope.$on('CBTSideMenu.IN', navHandler);
 		$scope.$on('CBTSideMenu.OUT', navHandler);
 
@@ -75,6 +79,9 @@ angular.module('cbt')
 					      	HardwareService.disconnect();
 								}
 						}];
+						$scope.connectIcon = true;
+						$scope.connectIconDisable = true;
+						$scope.connectTap = function(){ HardwareService.disconnect(); }
 					break;
 					case 'HardwareService.CONNECTING':
 					case 'HardwareService.RECONNECTING':
@@ -82,12 +89,18 @@ angular.module('cbt')
 						  type: 'button-icon icon ion-ios7-circle-filled disabled',
 					    tap: function(e) {}
 						}];
+						$scope.connectIcon = true;
+						$scope.connectIconDisable = false;
+						$scope.connectTap = function(){}
 					break;
 					case 'HardwareService.DISCONNECTING':
 						$scope.rightButtons = [{
 						  type: 'button-icon icon ion-ios7-circle-outline disabled',
 					    tap: function(e) {}
 						}];
+						$scope.connectIcon = false;
+						$scope.connectIconDisable = false;
+						$scope.connectTap = function(){}
 					break;
 					case 'HardwareService.DISCONNECTED':
 						$scope.rightButtons = [{
@@ -96,9 +109,15 @@ angular.module('cbt')
 					      	HardwareService.connect();
 								}
 						}];
+						$scope.connectIcon = false;
+						$scope.connectIconDisable = true;
+						$scope.connectTap = function(){ HardwareService.connect(); }
 					break;
 					default:
 						$scope.rightButtons = [];
+						$scope.connectIcon = false;
+						$scope.connectIconDisable = true;
+						$scope.connectTap = function(){}
 					break;
 				}
 			});

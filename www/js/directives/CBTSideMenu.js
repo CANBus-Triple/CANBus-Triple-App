@@ -42,12 +42,8 @@ angular.module('cbt')
       }
 
 
-	console.log(element);
-
       element.on('touchstart', function(event) {
 
-
-console.log('touchstart');
       	intent = null;
 
       	setHeaderOffset();
@@ -171,13 +167,24 @@ console.log('touchstart');
 				this.updateState();
 	    }
 
+			controller.show = function(){
+				showing = true;
+				setHeaderOffset();
+				this.updateState();
+			}
+
+			controller.hide = function(){
+				showing = false;
+				setHeaderOffset();
+				this.updateState();
+			}
+
 
 
       controller.updateState = function(){
 
 	      panel.style["transition"] = '-webkit-transform 0.333s cubic-bezier(.50,.0,.5,.99) 0s';
 
-				var x;
 	      if(showing){
 	      	x = 0;
 					container.style['background-color'] = 'rgba(0,0,0,'+containerOutAlpha+')';

@@ -9,7 +9,7 @@ angular.module('cbt')
 		$scope.list = MenuService.all();
 
 		$scope.goTo = function(page) {
-		  $scope.cbtSideMenu.toggle();
+		  $scope.cbtSideMenu.hide();
 		  $location.url('/' + page);
 		};
 

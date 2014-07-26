@@ -66,6 +66,14 @@
           <i class="icon ion-navicon"></i>
         </button>
       </ion-nav-buttons>
+
+      <ion-nav-buttons side="right">
+        <button class="button button-clear icon"
+                ng-class="{true: 'ion-ios7-circle-filled', false: 'ion-ios7-circle-outline'}[connectIcon]"
+                ng-disabled="connectIconEnable"
+                ng-click="connectTap()"></button>
+      </ion-nav-buttons>
+
     </ion-nav-bar>
 
     <ion-nav-view animation="slide-left-right-ios7">

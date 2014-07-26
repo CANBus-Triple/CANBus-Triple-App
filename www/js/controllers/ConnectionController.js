@@ -7,7 +7,14 @@ angular.module('cbt')
 		$scope.navTitle = "Connect to your CANBus Triple";
 		$scope.title = "Connect";
 
-		
+
+$scope.rightButtons = [{
+	type: 'button-icon icon ion-ios7-circle-filled',
+	tap: function(e) {
+			HardwareService.disconnect();
+		}
+}];
+
 		/*
 		*	Init
 		*/
