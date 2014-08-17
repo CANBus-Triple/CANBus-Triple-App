@@ -33,6 +33,8 @@ angular.module('cbt')
 				connected = 0,		// Holds BLE Device handle
 				discovered = {};
 		
+		var recieveBuffer,
+				recieveBufferIndex = 0;
 		
 
 		
@@ -268,16 +270,49 @@ angular.module('cbt')
 			
 			$rootScope.$broadcast('BluetoothService.SUBSCRIBE');
 			
+			recieveBuffer = new Uint8Array(512);
+			
 			evothings.ble.enableNotification(
 				connected,
 				deviceInfo.services.serial.characteristicHandle,
-				function(data)
+				function(dataBuffer)
 				{
 					
-					if(callback instanceof Function)
-							callback(data);
+					// Read line for \r\n
 					
-					deferred.resolve(data);
+					var dataBufferView = new Uint8Array(dataBuffer);
+					
+					recieveBuffer.set( dataBufferView, recieveBufferIndex );
+					recieveBufferIndex += dataBuffer.byteLength;
+					
+					
+					for( var end=0; end<recieveBufferIndex; end++ ){
+						if( recieveBuffer[end] === 0x0D && recieveBuffer[end+1] === 0x0A ) break;
+					}
+					
+					
+					
+					// Dispatch slice before end of line, if end index was less than the incoming data length
+					if( end > 0 && end < recieveBufferIndex ){
+						
+						var data = recieveBuffer.subarray(0, end);
+						
+						recieveBufferIndex -= end+2;
+						recieveBuffer.set( recieveBuffer.subarray( end, recieveBufferIndex ) );
+						
+						// console.log(recieveBuffer, recieveBufferIndex, end);
+						
+						
+						if(callback instanceof Function)
+								callback(data);
+						
+						deferred.resolve(data);
+						
+					}else{
+						deferred.resolve();
+					}
+					
+					
 						
 				},
 				function(errorCode)
@@ -488,6 +523,15 @@ angular.module('cbt')
 			
 			var deferred = $q.defer();
 			
+			write( String.fromCharCode(0x01, 0x16) ); // CBT API Reset Hardware command
+			$timeout(function(){
+				$rootScope.$broadcast('BluetoothService.RESET');
+				deferred.resolve();
+				}, 1000);
+			
+			
+			/*
+			*	Old Hardware reset method
 			var resetCommand = new Uint8Array(new ArrayBuffer(1));
 			resetCommand[0] = 0x01;
 			
@@ -504,6 +548,7 @@ angular.module('cbt')
 				{
 					deferred.reject(errorCode);
 				});
+				*/
 			
 			return deferred.promise;
 			

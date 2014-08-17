@@ -11,6 +11,7 @@ angular.module('cbt')
 		
 		var connectionMode = null,
 				readHandlers = [],
+				packetHandlers = [],
 				ConnectionMode = {
 					USB:'usb',
 					BT:'bt'
@@ -19,13 +20,6 @@ angular.module('cbt')
 		var debugString = {data:'Derp'};
 		
 		
-		/*
-		*		CANBus Triple API Commands
-		*/
-		var commands = {
-			info: String.fromCharCode(0x01, 0x01), // Get Device Info
-			
-		}
 		
 		
 		
@@ -42,13 +36,19 @@ angular.module('cbt')
 				if(connectionMode)
 					disconnect();
 					*/
-			
-				BluetoothService.scan(true);
-				if(window.device && window.device.platform == 'Android')
+				
+				if(typeof process == 'undefined')
+					BluetoothService.scan(true);
+					
+				if(window.device && window.device.platform == 'Android' || typeof process != 'undefined' )
 					SerialService.search(true);
+					
 			}else{
-				BluetoothService.scan(false);
-				if(window.device && window.device.platform == 'Android')
+			
+				if(typeof process == 'undefined')
+					BluetoothService.scan(false);
+					
+				if(window.device && window.device.platform == 'Android' || typeof process != 'undefined' )
 					SerialService.search(false);
 			}
 			
@@ -115,17 +115,27 @@ angular.module('cbt')
 		*/
 		function registerReadHandler( callback ){
 			if( !(callback instanceof Function) ) return;
-				
-			console.log("registerReadHandler", readHandlers.indexOf(callback));
-			// NEEDS TESTINGs
 			
 			if( readHandlers.indexOf(callback) < 1 )
 				readHandlers.push(callback);
 		}
 		
 		function deregisterReadHandler( callback ){
-			//// TODO TEST
 			readHandlers.splice(readHandlers.indexOf(callback), 1);
+		}
+		
+		
+		/*
+		*	Register a callback to be called when we recieve 0x03 (CAN Packet)
+		*/
+		function registerPacketHandler( callback ){
+			if( !(typeof callback == "function") ) return;
+			if( packetHandlers.indexOf(callback) < 1 )
+				packetHandlers.push(callback);
+		}
+		
+		function deregisterPacketHandler( callback ){
+			packetHandlers.splice(packetHandlers.indexOf(callback), 1);
 		}
 		
 		
@@ -133,18 +143,25 @@ angular.module('cbt')
 		*	Read Handler
 		*	Call all read callbacks
 		*/
-		function readHandler(data){
+		function readHandler(dataBuffer){
 			
-			$timeout(function(){
-				debugString.data += UtilsService.ab2str(data);
-			});
+			var data = new Uint8Array(dataBuffer);			
 			
-			console.log("readHandler", UtilsService.ab2str(data), new Uint8Array(data) );
-			
-			for(var f in readHandlers)
-				readHandlers[f](data);
-			
+			// Check packet for 0x03 prefix, which is a CAN Packet
+			if( data[0] === 0x03 ){
+				console.log('packet', data);
+				var packet = new CANPacket( data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13] );
+				for(var p in packetHandlers)
+					packetHandlers[p](packet);
+			}else{
+				console.log('raw data', data);
+				// Otherwise dispatch raw packet
+				for(var f in readHandlers)
+					readHandlers[f](dataBuffer);
+				
 			}
+			
+		}
 		
 		
 		
@@ -253,7 +270,9 @@ angular.module('cbt')
 		    },
 		  reset: function(){ resetHardware(); },
 		  registerReadHandler: registerReadHandler,
-		  deregisterReadHandler: deregisterReadHandler
+		  deregisterReadHandler: deregisterReadHandler,
+		  registerPacketHandler: registerPacketHandler,
+		  deregisterPacketHandler: deregisterPacketHandler
 		  
 	    }
 	   

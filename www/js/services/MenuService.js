@@ -9,8 +9,9 @@ angular.module('cbt')
 	    all: function() {
 	    
 	    	var menuItems = [
-		      { text: 'Dashboard', iconClass: 'icon ion-model-s', link: 'dashboard'},
-		      { text: 'Connection', iconClass: 'icon ion-usb', link: 'connection'},
+		      { text: 'Dashboard', iconClass: 'icon ion-speedometer', link: 'dashboard'},
+		      { text: 'Packet Logger', iconClass: 'icon ion-settings', link: 'logger'},
+		      { text: 'Hardware', iconClass: 'icon ion-usb', link: 'hardware'},
 		      { text: 'Settings', iconClass: 'icon ion-gear-b', link: 'settings'}
 			  ];
 			  

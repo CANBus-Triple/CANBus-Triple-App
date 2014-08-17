@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "dependencies": {
     "angular-local-storage": "~0.0.1",
-    "ionic": "driftyco/ionic-bower#1.0.0-beta.10"
+    "ionic": "driftyco/ionic-bower#1.0.0-beta.11",
+    "underscore": "~1.6.0"
   },
   "devDependencies": {}
 }

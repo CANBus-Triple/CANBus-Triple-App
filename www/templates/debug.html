@@ -1,5 +1,9 @@
 <ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons" hide-back-button="true">
 
+	<ion-nav-buttons side="left">
+    <button class="button" ng-click="showSendCommandModal()">Serial Command</button>
+  </ion-nav-buttons>
+
 	<ion-content padding="true">
 
 		<button class="button button-positive" ng-click="sendTest()">BT Send 0101</button>
@@ -8,7 +12,7 @@
 
 		<button class="button button-positive" ng-click="sendReset()">Reset MCU</button>
 
-		<textarea ng-bind="debugString.data" style="height: 300px; width:100%; background-color:pink;">
+		<textarea ng-bind="debugString" style="height: 300px; width:100%; background-color:pink;">
 		</textarea>
 
 

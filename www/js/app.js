@@ -23,7 +23,32 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	  });
 		*/
 	})
-
+	.run(function(SerialService){
+	
+		/*
+		*		Node-Webkit Setup
+		*/
+		
+		if( typeof require != "undefined" ){
+		
+			var gui = require('nw.gui'),
+		    	win = gui.Window.get();
+		
+		  console.log('Showing main nw window');
+		  win.show();
+		  
+		  
+		  win.on('close', function() {
+			  this.hide(); // Pretend to be closed already
+			  console.log("We're closing...");
+			  SerialService.close();
+			  this.close(true);
+			});
+			
+				  
+		}
+		
+	})
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
 			// Ionic uses AngularUI Router which uses the concept of states
@@ -32,8 +57,8 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    // Each state's controller can be found in controllers.js
 	    $stateProvider
 
-	        .state('connection', {
-	            url: '/connection',
+	        .state('hardware', {
+	            url: '/hardware',
 	            controller: 'ConnectionController',
 	            templateUrl: 'templates/connection.html'
 	        })
@@ -42,6 +67,27 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	            controller: 'DashboardController',
 	            templateUrl: 'templates/dashboard.html'
 	        })
+	        .state('logger', {
+	            url: '/logger',
+	            controller: 'LoggerController',
+	            templateUrl: 'templates/logger.html'
+	        })
+	        .state('logger.view', {
+				      url: "/view",
+				      views: {
+				        'home-tab': {
+				          templateUrl: 'templates/pidfinder.view.html'
+				        }
+				      }
+				  })
+	        /*
+
+	        .state('pidfinder.view', {
+	            url: '/view',
+	            controller: 'PIDViewController',
+	            templateUrl: 'templates/pidfinder.view.html'
+	        })
+*/
 	        .state('settings', {
 	            url: '/settings',
 	            controller: 'SettingsController',
@@ -54,7 +100,7 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	        });
 
 	    // $urlRouterProvider.otherwise('/dashboard');
-	    $urlRouterProvider.otherwise('/connection');
+	    $urlRouterProvider.otherwise('/hardware');
 
 	    // Set local storage prefix
 	    localStorageServiceProvider.setPrefix('CBTSettings');
@@ -85,20 +131,15 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	;
 
 
-/*
-*		Node-Webkit Things
-*/
-/*
 
-if( require || require instanceof Function ){
 
-	var gui = require('nw.gui'),
-    win = gui.Window.get();
 
-	$(function(){
-	    win.show();
-	    console.log('Showing main nw window');
-	});
 
-}
-*/
+
+
+
+
+
+
+
+

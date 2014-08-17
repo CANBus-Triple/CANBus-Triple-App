@@ -72,6 +72,25 @@ angular.module('cbt')
 		};
 		
 		
+		/**
+		 * Converts a hex string into an Uint8Array.
+		 * @param {string} hexString Hex string of 16-bit integers (two characters
+		 *     per integer).
+		 * @return {!Uint8Array.<number>} Uint8Array of {0,255} integers for the given string.
+		 */
+		Util.hexToUint8Array = function(hexString) {
+		  if(hexString.length % 2 != 0){
+		    throw 'Key string length must be multiple of 2';
+		    return false;
+		    }
+		  var buf = new ArrayBuffer(hexString.length/2);
+		  var bufView = new Uint8Array(buf);
+		  for (var i = 0; i < hexString.length; i += 2) {
+		    bufView[i/2] = parseInt(hexString.substring(i, i + 2), 16);
+		  }
+		  return bufView;
+		};
+		
 		
 		Util.ab2str = function(buf) {
 		  return String.fromCharCode.apply(null, new Uint8Array(buf));

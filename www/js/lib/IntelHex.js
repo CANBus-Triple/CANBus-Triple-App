@@ -180,54 +180,57 @@ var IntelHex = (function() {
 
 
 /*
-		*	Parse loaded Hex into ArrayBuffer
-		*	@param {String} hex
-		*/
-		function parseHex(hex){
-			
-			var deferred = $q.defer(),
-					checksumError = -1;
-			
-					hexHashMap = {};
-			
-			// Fix any line ending weirdness
-			hex = hex.replace(/\r?\n/g, "\r\n");
-			
-			angular.forEach(hex.split('\r\n'), function(value, key){
-      	
-      	if( value.slice(0,11) == intelHexEnd || value[0] != ':' || value.length < 1 )
-	      	return;
-      	
-      	
-      	var size = parseInt( value.slice(1,3), 16 );
-      	var address = parseInt( value.slice(3,7), 16 );
-				var buffer = new ArrayBuffer(size);
-				var view = new Uint8Array(buffer);
-				
-				for(var i=0; i<size; i++)
-					view[i] = parseInt(value.slice(9+(i*2), 11+(i*2)), 16);
-				
-				checksumError = !checksum(value) ? address : checksumError;
-				
-				hexHashMap[ address ] = view;
-				
-				
-			}, this);
-			
-			// Checksum error?
-			if(checksumError > 0){
-				console.log('checksumError', checksumError);
-				$rootScope.$broadcast('FirmwareService.INTEL_HEX_INVALID', 'invalid checksum ' );
-				deferred.reject();
-			}
-			
-			console.log(hexHashMap);
-			deferred.resolve();
-			
-			return deferred.promise;	
-		}
+*	Parse loaded Hex into ArrayBuffer
+*	@param {String} hex
+*/
+/*
+
+function parseHex(hex){
+	
+	var deferred = $q.defer(),
+			checksumError = -1;
+	
+			hexHashMap = {};
+	
+	// Fix any line ending weirdness
+	hex = hex.replace(/\r?\n/g, "\r\n");
+	
+	angular.forEach(hex.split('\r\n'), function(value, key){
+  	
+  	if( value.slice(0,11) == intelHexEnd || value[0] != ':' || value.length < 1 )
+    	return;
+  	
+  	
+  	var size = parseInt( value.slice(1,3), 16 );
+  	var address = parseInt( value.slice(3,7), 16 );
+		var buffer = new ArrayBuffer(size);
+		var view = new Uint8Array(buffer);
+		
+		for(var i=0; i<size; i++)
+			view[i] = parseInt(value.slice(9+(i*2), 11+(i*2)), 16);
+		
+		checksumError = !checksum(value) ? address : checksumError;
+		
+		hexHashMap[ address ] = view;
 		
 		
+	}, this);
+	
+	// Checksum error?
+	if(checksumError > 0){
+		console.log('checksumError', checksumError);
+		$rootScope.$broadcast('FirmwareService.INTEL_HEX_INVALID', 'invalid checksum ' );
+		deferred.reject();
+	}
+	
+	console.log(hexHashMap);
+	deferred.resolve();
+	
+	return deferred.promise;	
+}
+*/
+
+
 		
 		
 		

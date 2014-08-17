@@ -46,7 +46,9 @@
   .side-menu img#logo {
     display: block;
     margin: 0 auto;
-    max-width: 100%; }
+    max-width: 100%;
+    width: 8em;
+    height: 8em; }
 
 /*
 *	CBTUserInfo
@@ -88,6 +90,13 @@ h1 {
 #left-menu #logo {
   display: block;
   margin: 0 auto; }
+
+/*
+*	Hide Input number spinner
+*/
+form input[type='number']::-webkit-outer-spin-button, form input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0; }
 
 /*
 *	Ionic Framework Overrides
@@ -152,3 +161,20 @@ ion-nav-bar .left-buttons {
 /*
 *		View Specific styles
 */
+/*
+*		Module Styles
+*/
+table.pid-table {
+  width: 100%;
+  border: solid 1px #efefef;
+  background-color: #f8f8f8;
+  text-align: left; }
+  table.pid-table th {
+    font-size: 1.5em;
+    font-weight: light;
+    padding: 0.3em;
+    color: #b1b1b1; }
+  table.pid-table td {
+    padding: 0.5em;
+    border: solid 1px #efefef;
+    color: #5a6065; }

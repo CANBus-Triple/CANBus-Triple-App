@@ -2,11 +2,9 @@
 
 
 angular.module('cbt')
-	.controller('DebugController', function ($scope, FirmwareService ,HardwareService) {
+	.controller('DebugController', function ($scope, $timeout, FirmwareService, HardwareService, UtilsService) {
 	
 	  $scope.navTitle = "Debug";
-	  
-	  $scope.debugString = HardwareService.debugString;
 	  
 	  $scope.sendTest = function(){
 		  
@@ -25,6 +23,26 @@ angular.module('cbt')
 		  HardwareService.reset();
 		  
 	  }
+	  
+	  
+	  $scope.debugString = 'Debug Output';
+	  $scope.readHandler = function(data){
+			
+			$timeout( function(){ $scope.debugString += UtilsService.ab2str(data); }, 10);
+			
+			console.log( UtilsService.ab2str(data) );
+			
+		}
+		
+	
+		HardwareService.registerReadHandler($scope.readHandler);
+		$scope.$on("$destroy", function() {
+    	HardwareService.deregisterReadHandler($scope.readHandler);	
+    });
+	  
+	  
+	  
+	  
 	  		
 		
 		

@@ -9,8 +9,8 @@ angular.module('cbt')
 		$scope.list = MenuService.all();
 
 		$scope.goTo = function(page) {
-		  $scope.cbtSideMenu.hide();
 		  $location.url('/' + page);
+		  $scope.cbtSideMenu.hide();
 		};
 
 
@@ -23,7 +23,9 @@ angular.module('cbt')
 			}
 
 		});
-
+		
+		
+		$scope.listPlugins = [{ text: 'Mazda', iconClass: 'icon ion-model-s', link: 'mazda'}];
 
 
 
