@@ -14,7 +14,7 @@
 
     <!-- ionic/angularjs scripts -->
     <script src="components/ionic/js/ionic.bundle.js"></script>
-    
+
     <!-- cordova script (this will be a 404 during development) -->
     <script src="cordova.js"></script>
 
@@ -35,6 +35,7 @@
     <script src="js/controllers/AppController.js"></script>
     <script src="js/controllers/DashboardController.js"></script>
     <script src="js/controllers/ConnectionController.js"></script>
+    <script src="js/controllers/HWStatusController.js"></script>
     <script src="js/controllers/MenuController.js"></script>
     <script src="js/controllers/LoggerController.js"></script>
     <script src="js/controllers/PIDViewController.js"></script>
@@ -44,15 +45,20 @@
     <script src="js/directives/DeviceListDirective.js"></script>
     <script src="js/directives/GaugeDirective.js"></script>
     <script src="js/directives/CBTUserInfo.js"></script>
+
+    <!-- TEMP -->
+    <script src="js/controllers/KickstarterController.js"></script>
+    <script src="js/controllers/VWController.js"></script>
+
   </head>
 
-  <body ng-app="cbt" ng-controller="AppController">
+  <body ng-app="cbt" ng-controller="AppController" class="platform-android platform-cordova platform-webview" style="-webkit-app-region: drag;">
 
 		<cbt-side-menu>
 			<ion-view>
 		    <ion-content ng-controller="MenuController">
 		      <ion-list>
-		      	<cbt-user-info name="'Derek K'" email="'etx313@gmail.com'"></cbt-user-info>
+<!-- 		      	<cbt-user-info name="'Derek K'" email="'etx313@gmail.com'"></cbt-user-info> -->
 		      	<div class="item item-divider">
 					    Settings
 					  </div>
@@ -74,6 +80,7 @@
 		</cbt-side-menu>
 
     <ion-nav-bar class="bar-assertive nav-title-slide-ios7" ng-class="{'nav-showing': navShowing}">
+
       <ion-nav-buttons side="left">
         <button class="button button-clear" ng-click="toggleMenu()">
           <i class="icon ion-navicon"></i>
@@ -86,6 +93,10 @@
                 ng-disabled="connectIconEnable"
                 ng-click="connectTap()"></button>
       </ion-nav-buttons>
+
+      <ion-nav-back-button class="button-clear">
+        <i class="ion-arrow-left-c"></i> Back
+      </ion-nav-back-button>
 
     </ion-nav-bar>
 

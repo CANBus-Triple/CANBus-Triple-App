@@ -155,6 +155,9 @@ ion-nav-bar .left-buttons {
 .height-animation.ng-hide {
   max-height: 0px; }
 
+.height-animation.ng-hide-add {
+  /* 	display: block!important; */ }
+
 .height-animation.ng-hide-remove {
   display: block !important; }
 

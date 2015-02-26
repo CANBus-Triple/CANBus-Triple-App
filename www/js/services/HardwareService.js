@@ -11,6 +11,7 @@ angular.module('cbt')
 		
 		var connectionMode = null,
 				readHandlers = [],
+				rawHandlers = [],
 				packetHandlers = [],
 				ConnectionMode = {
 					USB:'usb',
@@ -66,9 +67,9 @@ angular.module('cbt')
 			var device = SettingsService.getDevice();
 			
 			if(device.address == 'serial')
-				SerialService.open(readHandler);
+				SerialService.open(device, readHandler, rawHandler);
 			else
-				BluetoothService.connect(device, readHandler);
+				BluetoothService.connect(device, readHandler, rawHandler);
 			
 		}
 		
@@ -111,7 +112,7 @@ angular.module('cbt')
 		
 		
 		/*
-		*	Register a callback to be called when we recieve data
+		*	Register a callback to be called when we recieve read line data
 		*/
 		function registerReadHandler( callback ){
 			if( !(callback instanceof Function) ) return;
@@ -123,6 +124,23 @@ angular.module('cbt')
 		function deregisterReadHandler( callback ){
 			readHandlers.splice(readHandlers.indexOf(callback), 1);
 		}
+		
+		
+		
+		/*
+		*	Register a callback to be called when we recieve raw data
+		*/
+		function registerRawHandler( callback ){
+			if( !(callback instanceof Function) ) return;
+			
+			if( readHandlers.indexOf(callback) < 1 )
+				rawHandlers.push(callback);
+		}
+		
+		function deregisterRawHandler( callback ){
+			rawHandlers.splice(rawHandlers.indexOf(callback), 1);
+		}
+		
 		
 		
 		/*
@@ -140,21 +158,37 @@ angular.module('cbt')
 		
 		
 		/*
-		*	Read Handler
+		*	Read Line Handler
 		*	Call all read callbacks
 		*/
 		function readHandler(dataBuffer){
 			
-			var data = new Uint8Array(dataBuffer);			
+			var data = new Uint8Array(dataBuffer);
 			
 			// Check packet for 0x03 prefix, which is a CAN Packet
 			if( data[0] === 0x03 ){
-				console.log('packet', data);
+				// console.log('packet', data);
 				var packet = new CANPacket( data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13] );
 				for(var p in packetHandlers)
 					packetHandlers[p](packet);
+					
+			}else if( data[0] === 123 ){
+				
+				// Dispatch an event with the JSON object
+				
+				var eventObject;
+				try{
+					eventObject = JSON.parse( UtilsService.ab2str( data ) );
+				}catch(e){
+					
+				}
+				
+				if( eventObject ) $rootScope.$broadcast('hardwareEvent', eventObject);
+				
+				// console.log("JSON Event Recieved ", eventObject );
+				
 			}else{
-				console.log('raw data', data);
+				// console.log('raw data', data);
 				// Otherwise dispatch raw packet
 				for(var f in readHandlers)
 					readHandlers[f](dataBuffer);
@@ -162,6 +196,18 @@ angular.module('cbt')
 			}
 			
 		}
+		
+		
+		
+		/*
+		*	Raw Data Handler
+		*	Call all read callbacks
+		*/
+		function rawHandler(dataBuffer){
+			for(var f in rawHandlers)
+				rawHandlers[f](dataBuffer);
+		}
+		
 		
 		
 		
@@ -209,9 +255,37 @@ angular.module('cbt')
 		/*
 		*	Reset Connected CBT Hardware
 		*/
-		// TODO: Finish
 		function resetHardware(){
 			
+			console.log( 'HardwareService sending reset' );
+			
+			// CBT API Reset Hardware command
+			write( String.fromCharCode(0x01, 0x16) );
+				
+				$timeout(function(){
+					SerialService.reconnect();
+				}, 100);
+				
+				
+				
+				
+				
+				
+			/*
+			$timeout(function(){
+				
+				if(connectionMode == ConnectionMode.USB){
+					SerialService.reset();
+					$timeout(function(){ $rootScope.$broadcast('HardwareService.RESET'); }, 500);
+				}else{
+					$rootScope.$broadcast('HardwareService.RESET');
+				}
+				
+			}, 500);
+			*/
+			
+			
+			/*
 			switch( connectionMode ){
 				case ConnectionMode.BT:
 					BluetoothService.reset();
@@ -223,6 +297,7 @@ angular.module('cbt')
 					$rootScope.$broadcast( 'HardwareService.RESET_FAIL', 'Not Connected' );
 				break;
 			}
+			*/
 			
 		}
 		
@@ -272,7 +347,9 @@ angular.module('cbt')
 		  registerReadHandler: registerReadHandler,
 		  deregisterReadHandler: deregisterReadHandler,
 		  registerPacketHandler: registerPacketHandler,
-		  deregisterPacketHandler: deregisterPacketHandler
+		  deregisterPacketHandler: deregisterPacketHandler,
+		  registerRawHandler: registerRawHandler,
+		  deregisterRawHandler: deregisterRawHandler
 		  
 	    }
 	   

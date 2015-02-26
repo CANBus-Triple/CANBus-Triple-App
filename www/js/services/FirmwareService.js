@@ -24,7 +24,6 @@ angular.module('cbt')
 			
 		/*
 		*	State Machine States
-		* Not the greatest implementation, TODO make mo betta.
 		*/
 		var states = {
 			
@@ -138,7 +137,7 @@ angular.module('cbt')
 									  update:function(data){
 									  	resetTimeout(true);
 									  	HardwareService.send( 'E' );
-										  HardwareService.deregisterReadHandler( readHandler );
+										  HardwareService.deregisterRawHandler( readHandler );
 										  $rootScope.$broadcast('FirmwareService.FLASH_SUCCESS');
 									  }
 									 },
@@ -164,6 +163,7 @@ angular.module('cbt')
 			if( off != true )
 				opTimeout = $timeout(function(){
 					$rootScope.$broadcast('FirmwareService.FLASH_TIMEOUT');
+					HardwareService.deregisterRawHandler( readHandler );
 					gotoState('wait');
 				}, opTimeoutTime );
 			
@@ -274,7 +274,7 @@ angular.module('cbt')
 			
 			var deferred = $q.defer();
 			
-			$http({method: 'GET', url: '/firmware/cbt-mazda.hex'}).
+			$http({method: 'GET', url: '/firmware/CANBusTriple_Mazda.cpp.hex'}).
 		    success(function(data, status, headers, config) {
 					deferred.resolve(data);
 		    }).
@@ -298,6 +298,7 @@ angular.module('cbt')
 		*	@param {String} data
 		*/
 		function readHandler(data){
+			console.log('FirmwareService readHandler', new Uint8Array(data));
 			machineRun(new Uint8Array(data));
 		}
 		
@@ -312,7 +313,7 @@ angular.module('cbt')
 		*/
 		function send(){
 			
-			HardwareService.registerReadHandler( readHandler );
+			HardwareService.registerRawHandler( readHandler );
 			
 			fetchFirmware()
 				.then( function(d){

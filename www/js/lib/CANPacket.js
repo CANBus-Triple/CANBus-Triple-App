@@ -44,10 +44,10 @@ var CANPacket = (function() {
 	
 	
 	/*
-	*	Return a string of payload data
+	*	Return a string of payload data in hex format
 	* @return {String} String of Hex formatted CAN Data
 	*/
-	CANPacket.prototype.getPayloadString = function(){
+	CANPacket.prototype.getPayloadHexString = function(){
 	
 		var dataString = '';
 		for(var i=2;i<this.payload.length;i++)
@@ -55,6 +55,23 @@ var CANPacket = (function() {
 	
 		return dataString;
 	}
+	
+	
+	/*
+	*	Return a string of payload data
+	* @return {String} String
+	*/
+	CANPacket.prototype.getPayloadString = function(){
+		
+		var dataString = '';
+		for(var i=2;i<this.payload.length;i++)
+			dataString += String.fromCharCode( this.payload[i] );
+	
+		return dataString;
+		
+	}
+	
+	
 	
 	
 	/*

@@ -8,12 +8,12 @@ angular.module('cbt')
 		$scope.title = "Connect";
 
 
-$scope.rightButtons = [{
-	type: 'button-icon icon ion-ios7-circle-filled',
-	tap: function(e) {
-			HardwareService.disconnect();
-		}
-}];
+		$scope.rightButtons = [{
+			type: 'button-icon icon ion-ios7-circle-filled',
+			tap: function(e) {
+					HardwareService.disconnect();
+				}
+		}];
 
 		/*
 		*	Init

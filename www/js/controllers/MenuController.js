@@ -24,9 +24,10 @@ angular.module('cbt')
 
 		});
 		
-		
-		$scope.listPlugins = [{ text: 'Mazda', iconClass: 'icon ion-model-s', link: 'mazda'}];
+		$scope.listPlugins = MenuService.allPlugins();
 
+
+		
 
 
 	});

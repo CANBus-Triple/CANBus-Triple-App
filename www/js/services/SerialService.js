@@ -17,49 +17,11 @@ angular.module('cbt')
 				baudRate = 115200,
 				searching = null,
 				readBuffer = "",
-				discovered = {};
+				discovered = {},
+				serialPath = '';
 				
-		
-		
-		function readLine(){
-			
-			var recieveBuffer = new Uint8Array( new ArrayBuffer(4 * 1024) ),
-					recieveBufferIndex = 0;
-			
-			return function(emitter, dataBuffer){
+		var rawCallback;
 				
-				// Read line for \r\n
-				
-				var dataBufferView = new Uint8Array(dataBuffer.length);
-				dataBufferView.set(dataBuffer);
-				
-				recieveBuffer.set( dataBufferView, recieveBufferIndex );
-				recieveBufferIndex += dataBuffer.byteLength;
-				
-				console.log(recieveBuffer);
-				return;
-				
-				for( var end=0; end<recieveBufferIndex; end++ ){
-					if( recieveBuffer[end] === 0x0D && recieveBuffer[end+1] === 0x0A ) break;
-				}
-				
-				var data = recieveBuffer.subarray(0, end+2);
-				
-				
-				recieveBuffer = recieveBuffer.buffer.slice( 0, end+2 );
-				recieveBufferIndex = recieveBufferIndex - (end+2);
-				
-				console.log(data);
-				
-				// emitter.emit('data', data);
-				
-				// ADD LOOP TO FIND MULTIPLE PARTS
-				
-			}
-			
-		}
-		
-		
 		
 
 		/**
@@ -71,8 +33,7 @@ angular.module('cbt')
 			
 			if( searching ) search( false );
 			
-			// TODO: Make this select the correct port!!
-			serialPort = new SerialPort("/dev/tty.usbmodem26211", {
+			serialPort = new SerialPort(serialPath, {
 			  baudrate: baudRate,
 			  databits: 8,
 				stopbits: 1,
@@ -81,9 +42,8 @@ angular.module('cbt')
 				xany: true,
 				flowControl: true,
 				buffersize: 1024,
-			  parser: serialport.parsers.readline("\r\n", "binary"),
-			  /// parser: readLine(),
-			  // dataCallback: function(data){ console.log( 'dataCallback', data ); }
+			  parser: parser,
+			  disconnectedCallback: close
 			}, false);
 			
 			serialPort.open(function(err){
@@ -102,6 +62,22 @@ angular.module('cbt')
 			return deferred.promise;
 			
 		}
+		
+		
+		/*
+		*		Serial Data callback
+		*/
+		
+		var readline = serialport.parsers.readline("\r", "binary");
+		
+		function parser(obj, data){
+			
+			if(typeof rawCallback === "function") rawCallback(data);
+			
+			readline(obj, data);			
+			}
+		
+		
 
 
 		/**
@@ -167,7 +143,7 @@ angular.module('cbt')
 			return deferred.promise;
 			
 		}
-		
+		//window.write = write;
 		
 		/**
 		 * Manually read from serial port
@@ -189,12 +165,12 @@ angular.module('cbt')
 		function registerReadCallback(callback){
 			
 			serialPort.on('data', function(data){
-			
-				// TODO Write a new parser for SerialPort that converts directly to ArrayBuffer.
+				// TODO Write a new parser for SerialPort that converts directly to ArrayBuffer. Take note of the realline wrapper function above.s
 				callback( UtilsService.str2ab(data) );
 			});
 			
 		}
+		
 		
 		
 		
@@ -213,7 +189,7 @@ angular.module('cbt')
 			serialPort.list(function (err, ports) {
 			  ports.forEach(function(port) {			    
 			    $rootScope.$apply(function(){
-						discovered[port.comName] = {name:'CANBus Triple Serial '+port.comName};
+						discovered[port.comName] = {name:'CANBus Triple Serial '+port.comName, port:port.comName, address:'serial'};
 					});
 			    
 			  });
@@ -249,6 +225,23 @@ angular.module('cbt')
 		}
 		
 		
+		/**
+		 * Reconnect to serial
+		 * @return null
+		 */	
+		function reconnect(){
+			
+			close()
+			.then(function(){
+				open();
+				$timeout(function(){
+						$rootScope.$broadcast('SerialService.RESET' );
+					}, 500);
+			});
+				
+		}
+		
+		
 		
 		
 
@@ -256,10 +249,13 @@ angular.module('cbt')
 		*	Return Interface
 		*/
 	  return {
-	    open: function openConnection(callback){
-		    open().then(function(){ registerReadCallback(callback) });
+	    open: function openConnection(device, callback, rCallback){
+	    	serialPath = device.port;
+	    	console.log(device);
+		    open().then(function(){ registerReadCallback(callback); rawCallback = rCallback });
 	    },
 	    close: close,
+	    reconnect: reconnect,
 	    read: read,
 	    write: write,
 	    discovered: discovered,
@@ -534,7 +530,7 @@ angular.module('cbt')
 						$rootScope.$broadcast('SerialService.PERMISSION_GRANTED');
 						
 						$rootScope.$apply(function(){
-							discovered['serial'] = {name:'CANBus Triple USB Serial'};
+							discovered['serial'] = {name:'CANBus Triple USB Serial', address:'serial'};
 						});
 						
 					},
@@ -576,6 +572,27 @@ angular.module('cbt')
 		}
 		
 		
+		/**
+		 * Reconnect to serial
+		 * @return null
+		 */	
+		function reconnect(){
+			
+			close()
+			.then(function(){
+				$timeout(function(){
+					open();
+					$timeout(function(){
+							$rootScope.$broadcast('SerialService.RESET' );
+						}, 500);
+				}, 2000);
+			});
+				
+		}
+		
+		
+		
+		
 		
 		
 
@@ -583,16 +600,17 @@ angular.module('cbt')
 		*	Return Interface
 		*/
 	  return {
-	    open: function openConnection(callback){
+	    open: function openConnection(devicem, callback, rawCallback){
 		    open().then(function(){ registerReadCallback(callback) });
 	    },
 	    close: close,
+	    reconnect: reconnect,
 	    read: read,
 	    write: write,
 	    discovered: discovered,
 	    search: search,
 	    reset: reset
-	  }
+	 	  }
 	  
 	});
 	

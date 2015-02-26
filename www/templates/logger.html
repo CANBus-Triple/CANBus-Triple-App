@@ -10,24 +10,32 @@
 		
 		<div ng-show="hardwareConnected">
 			<div class="button-bar">
-			  <a class="button button-outline button-energized" ng-click="openPopover($event)">CAN Bus 1</a>
-			  <a class="button button-outline button-energized" ng-click="openPopover($event)">CAN Bus 2</a>
+			  <a class="button button-outline button-energized" ng-click="openPopover($event)">Bus Settings</a>
+			  <!--
+				<a class="button button-outline button-energized" ng-click="openPopover($event)">CAN Bus 2</a>
 			  <a class="button button-outline button-energized" ng-click="openPopover($event)">CAN Bus 3</a>
+				-->
+			  <a class="button button-outline button-calm" ng-click="switchMode($event)" ng-disabled="modeSwitchDisabled">Mode: {{viewMode}}</a>
 			</div>
-			
+			<br/>
 			<table class='pid-table'>
 			  <thead>
 			    <tr>
 			      <th>Bus</th>
 			      <th>Message ID</th>
-			      <th>Payload</th>
+			      <th>Payload Hex</th>
+			      <th>String</th>
+			      <th>Length</th>
+			      <!-- <th><i class="ion-pinpoint"></i></th> -->
 			    </tr>
 			  </thead>
 			  <tbody>
-			    <tr ng-repeat="item in midBuffer" ng-click="viewPid(item.pid)">
+			    <tr ng-repeat="item in midBuffer" ng-click="toggleIntrest(item.mid, $event)" ng-class="{true:'selected'}[isInterested(item.mid)]">
 			      <td>{{item.packet.busId}}</td>
 			      <td>{{numberToHexString(item.packet.messageId)}}</td>
+			      <td>{{item.packet.getPayloadHexString()}}</td>
 			      <td>{{item.packet.getPayloadString()}}</td>
+			      <td>{{item.packet.length}}</td>
 			    </tr>
 			  </tbody>
 			</table>
@@ -43,10 +51,40 @@
 <script id="popover.html" type="text/ng-template">
   <ion-popover-view>
     <ion-header-bar>
-      <h1 class="title">Popover Title</h1>
+      <h1 class="title">Bus Settings</h1>
     </ion-header-bar>
     <ion-content>
-      Hello!
+    
+      <ul class="list">
+			  <li class="item item-toggle">
+			     CAN Bus 1 Logging Output
+			     <label class="toggle toggle-assertive">
+			       <input type="checkbox" ng-model="busSettings.can1log">
+			       <div class="track">
+			         <div class="handle"></div>
+			       </div>
+			     </label>
+			  </li>
+			  <li class="item item-toggle">
+			     CAN Bus 2 Logging Output
+			     <label class="toggle toggle-assertive">
+			       <input type="checkbox" ng-model="busSettings.can2log">
+			       <div class="track">
+			         <div class="handle"></div>
+			       </div>
+			     </label>
+			  </li>
+			  <li class="item item-toggle">
+			     CAN Bus 3 Logging Output
+			     <label class="toggle toggle-assertive">
+			       <input type="checkbox" ng-model="busSettings.can3log">
+			       <div class="track">
+			         <div class="handle"></div>
+			       </div>
+			     </label>
+			  </li>
+			</ul>
+			
     </ion-content>
   </ion-popover-view>
 </script>

@@ -28,16 +28,16 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 		/*
 		*		Node-Webkit Setup
 		*/
-		
-		if( typeof require != "undefined" ){
-		
+		if(typeof require != 'undefined'){
+			
 			var gui = require('nw.gui'),
-		    	win = gui.Window.get();
+		  		win = gui.Window.get();
 		
-		  console.log('Showing main nw window');
-		  win.show();
-		  
-		  
+		  var nativeMenuBar = new gui.Menu({ type: "menubar" });
+			nativeMenuBar.createMacBuiltin("CANBus Triple");
+			nativeMenuBar.append(new gui.MenuItem({ label: 'Item A' }));
+			win.menu = nativeMenuBar;
+			
 		  win.on('close', function() {
 			  this.hide(); // Pretend to be closed already
 			  console.log("We're closing...");
@@ -45,7 +45,33 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 			  this.close(true);
 			});
 			
-				  
+			
+			
+/*
+			// Create an empty menu
+			var menu = new gui.Menu();
+			
+			// Add some items
+			menu.append(new gui.MenuItem({ label: 'Item A' }));
+			menu.append(new gui.MenuItem({ label: 'Item B' }));
+			menu.append(new gui.MenuItem({ type: 'separator' }));
+			menu.append(new gui.MenuItem({ label: 'Item C' }));
+			
+			// Remove one item
+			//menu.removeAt(1);
+			
+			// Popup as context menu
+			menu.popup(10, 10);
+			
+			// Iterate menu's items
+			for (var i = 0; i < menu.items.length; ++i) {
+			  console.log(menu.items[i]);
+			}
+*/
+			
+					
+			
+			win.show();
 		}
 		
 	})
@@ -58,9 +84,20 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    $stateProvider
 
 	        .state('hardware', {
-	            url: '/hardware',
+	          url: '/hardware',
+            abstract: true,
+            templateUrl: 'templates/hardware/main.html'
+	        })
+	        .state('hardware.status', {
+            url: '',
+            controller: 'HWStatusController',
+            templateUrl: 'templates/hardware/hw-status.html'
+	        })
+	        
+	        .state('hardware.connect', {
+	            url: '/connect',
 	            controller: 'ConnectionController',
-	            templateUrl: 'templates/connection.html'
+	            templateUrl: 'templates/hardware/connection.html'
 	        })
 	        .state('dashboard', {
 	            url: '/dashboard',
@@ -88,6 +125,7 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	            templateUrl: 'templates/pidfinder.view.html'
 	        })
 */
+					
 	        .state('settings', {
 	            url: '/settings',
 	            controller: 'SettingsController',
@@ -106,7 +144,7 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    localStorageServiceProvider.setPrefix('CBTSettings');
 
 	})
-
+	/*
 	.config(['$provide', function ($provide) {
 	  $provide.decorator('$rootScope', function ($delegate) {
 
@@ -127,7 +165,7 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 
 	  });
 	}])
-
+	*/
 	;
 
 

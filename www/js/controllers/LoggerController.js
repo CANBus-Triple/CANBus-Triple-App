@@ -13,11 +13,69 @@ angular.module('cbt')
 		  $location.url('/pidfinder/view');
 	  }
 	  
+	  
+	  $scope.busSettings = {
+		  can1log: true,
+		  can2log: false,
+		  can3log: false
+	  }
+	  
+	  $scope.$watchCollection(
+	    "busSettings",
+	    function( newValue, oldValue ) {
+				console.log(newValue);
+	    }
+    );
+	  
+	  
+	  
+	  $scope.interestMids = [];
+	  $scope.toggleIntrest = function(mid, event){
+	  	
+		  if( $scope.interestMids.indexOf(mid) > -1 ){
+		  	$scope.interestMids.splice( $scope.interestMids.indexOf(mid), 1 );
+		  	//event.target.parentElement.bgColor = '';
+		  }else{
+				$scope.interestMids.push(mid);
+				//event.target.parentElement.bgColor = '#dbdbdb';
+				}
+			
+			$timeout(function(){
+				$scope.modeSwitchDisabled = !($scope.interestMids.length > 0);
+				},5);
+				
+	  }
+	  $scope.isInterested = function(mid){
+		  if( $scope.interestMids.indexOf(mid) > -1 )
+		  	return true;
+	  }
+	  
+	  
+	  $scope.modeSwitchDisabled = true;
+	  
+	  $scope.viewMode = "Compact";
+	  $scope.switchMode = function(event){
+			
+			switch($scope.viewMode){
+				case 'Compact':
+					$scope.viewMode = "Chronological";
+				break;
+				case 'Chronological':
+					$scope.viewMode = "Compact";
+				break;
+			}
+			
+			$scope.clearBuffer();
+			
+	  }
 		
 	  
 	  
 	  	  
-	  $scope.midBuffer = [];	  
+	  $scope.midBuffer = [];
+	  $scope.clearBuffer = function(){
+		  $scope.midBuffer.splice(0, $scope.midBuffer.length);
+	  }
 	  
 	  	  
 	  $scope.numberToHexString = function(n){
@@ -27,14 +85,25 @@ angular.module('cbt')
 	
 		$scope.readHandler = function(packet){
 			
-			// console.log( packet.toString() );
+			// Cron mode
+			if( $scope.viewMode === "Chronological" ){
+				
+				if( $scope.interestMids.indexOf(packet.messageId) > -1 )
+					$scope.midBuffer.unshift({mid: packet.messageId, packet: packet});
+				
+				$timeout(function(){}, 1);
+				
+				return;
+			}
+			
+			// Compact mode
 			
 			var obj = _.find($scope.midBuffer, function(obj){ return obj.mid == packet.messageId });
 
 			if( obj )
 				obj['packet'] = packet;
 			else
-				$scope.midBuffer.push({mid: packet.messageId, packet: packet});
+				$scope.midBuffer.unshift({mid: packet.messageId, packet: packet});
 			
 
 			$timeout(function(){}, 1);

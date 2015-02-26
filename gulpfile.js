@@ -6,12 +6,16 @@ var sass = require('gulp-sass');
 var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
 var sh = require('shelljs');
+var NwBuilder = require('node-webkit-builder');
 
 var paths = {
-  sass: ['./www/sass/**/*.scss']
+  sass: ['./www/sass/**/*.scss'],
+  nwjs: ['package.json','./www/**/**', './node_modules/serialport/build/serialport/**/**']
 };
 
-gulp.task('default', ['sass']);
+gulp.task('default', ['sass', 'watch']);
+
+gulp.task('build', ['install', 'sass', 'nw-build']);
 
 gulp.task('sass', function(done) {
   gulp.src('./www/sass/base.scss')
@@ -23,6 +27,10 @@ gulp.task('sass', function(done) {
     .pipe(rename({ extname: '.min.css' }))
     .pipe(gulp.dest('./www/css/'))
     .on('end', done);
+});
+
+gulp.task('nw-watch', function() {
+  gulp.watch(paths.nwjs, ['sass', 'nw-build']);
 });
 
 gulp.task('watch', function() {
@@ -47,4 +55,28 @@ gulp.task('git-check', function(done) {
     process.exit(1);
   }
   done();
+});
+
+
+gulp.task('nw-build', function(done){
+	
+	var nw = new NwBuilder({
+			appName: 'CANBus Triple',
+	    files: paths.nwjs, // use the glob format
+	    platforms: ['osx64'],//, 'win64','linux64'],
+	    macIcns: 'build_assets/nw.icns',
+	});
+	
+	//Log stuff you want
+	
+	nw.on('log',  console.log);
+	
+	// Build returns a promise
+	nw.build().then(function () {
+	   console.log('all done!');
+	}).catch(function (error) {
+	    console.error(error);
+	});
+	
+	done();
 });

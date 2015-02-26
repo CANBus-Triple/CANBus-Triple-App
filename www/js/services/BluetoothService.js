@@ -16,7 +16,7 @@ angular.module('cbt')
 					// characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8658' // Notifcation Charateristic
 					characteristicUUID: 'b0d6c9fe-e38a-4d31-9272-b8b3e93d8657' // Indication Charateristic
 				},
-				reset: {
+				wakeup: {
 					serviceHandle: 0,
 					characteristicHandle: 0,
 					serviceUUID: '35e71686-b1c3-45e7-9da6-1ca2393a41f3',
@@ -35,6 +35,8 @@ angular.module('cbt')
 		
 		var recieveBuffer,
 				recieveBufferIndex = 0;
+				
+		var rawCallback;
 		
 
 		
@@ -278,6 +280,10 @@ angular.module('cbt')
 				function(dataBuffer)
 				{
 					
+					// Send raw first
+					if(typeof rawCallback == "function") rawCallback(dataBuffer);
+					
+					
 					// Read line for \r\n
 					
 					var dataBufferView = new Uint8Array(dataBuffer);
@@ -287,21 +293,16 @@ angular.module('cbt')
 					
 					
 					for( var end=0; end<recieveBufferIndex; end++ ){
-						if( recieveBuffer[end] === 0x0D && recieveBuffer[end+1] === 0x0A ) break;
+						if( recieveBuffer[end] === 0x0D /* && recieveBuffer[end+1] === 0x0A  */) break;
 					}
-					
-					
 					
 					// Dispatch slice before end of line, if end index was less than the incoming data length
 					if( end > 0 && end < recieveBufferIndex ){
 						
 						var data = recieveBuffer.subarray(0, end);
 						
-						recieveBufferIndex -= end+2;
+						recieveBufferIndex -= end;
 						recieveBuffer.set( recieveBuffer.subarray( end, recieveBufferIndex ) );
-						
-						// console.log(recieveBuffer, recieveBufferIndex, end);
-						
 						
 						if(callback instanceof Function)
 								callback(data);
@@ -516,28 +517,21 @@ angular.module('cbt')
 		window.write = write;
 		
 		
+
 		/*
-		*	Write to reset service to reset the MCU
+		*	Write to wakeup service to wakeup the MCU
 		*/
-		function reset(){
+		function wakeup(){
 			
 			var deferred = $q.defer();
 			
-			write( String.fromCharCode(0x01, 0x16) ); // CBT API Reset Hardware command
-			$timeout(function(){
-				$rootScope.$broadcast('BluetoothService.RESET');
-				deferred.resolve();
-				}, 1000);
 			
-			
-			/*
-			*	Old Hardware reset method
 			var resetCommand = new Uint8Array(new ArrayBuffer(1));
 			resetCommand[0] = 0x01;
 			
 			evothings.ble.writeCharacteristic(
 				connected,
-				deviceInfo.services.reset.characteristicHandle,
+				deviceInfo.services.wakeup.characteristicHandle,
 				resetCommand,
 				function()
 				{
@@ -548,7 +542,6 @@ angular.module('cbt')
 				{
 					deferred.reject(errorCode);
 				});
-				*/
 			
 			return deferred.promise;
 			
@@ -578,7 +571,9 @@ angular.module('cbt')
 	    scan: function(sw){
 		    scan(sw);
 	    },
-	    connect: function(device, readHandler){
+	    connect: function(device, readHandler, rawCb){
+	    	
+	    	rawCallback = rawCb;
 	    	
 	  		connect(device)
 	  			.then(discover)
@@ -604,8 +599,8 @@ angular.module('cbt')
 	    read: function(){
 		    
 	    },
-	    reset: function(){
-		    reset();
+	    wakeup: function(){
+		    wakeup();
 	    }
 	    
 	  }

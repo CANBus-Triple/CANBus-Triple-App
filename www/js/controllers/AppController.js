@@ -66,7 +66,7 @@ angular.module('cbt')
 
 			if( typeof command != 'string' ) return;
 			
-			command = command.replace(/[^0-9\.]/g,'');
+			command = command.replace(/\s/g,'');
 			
 			if( command.length < 1 ) return;
 			
