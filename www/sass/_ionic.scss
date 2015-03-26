@@ -1,0 +1,47 @@
+/*
+*	Ionic Framework Overrides
+*/
+
+
+.card {
+	margin-left: 0;
+	margin-right: 0;
+	-webkit-transform: translate3d(0, 0, 0);
+	-webkit-backface-visibility: hidden;
+	-webkit-perspective: 1000;
+}
+
+
+/*
+*	Main Nav
+*/
+
+.side-menu .icon {
+	font-size: 1.6em;
+}
+
+.side-menu .item-content {
+	font-weight: bold;
+	padding: 1.5em;
+}
+
+
+
+
+
+/*
+*	Header left button animation
+*/
+
+ion-nav-bar {
+	-webkit-transform: translate3d(0, 0, 0);
+}
+
+ion-nav-bar.nav-showing .left-buttons {
+	margin-left: -20px;
+}
+
+ion-nav-bar .left-buttons {
+	margin-left: 0;
+	transition: margin-left 0.33s ease-out;
+}

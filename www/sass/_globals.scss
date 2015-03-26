@@ -1,0 +1,59 @@
+
+body,
+html {
+	height: 100%;
+}
+
+ion-nav-bar {
+	-webkit-app-region: drag;
+}
+
+ion-nav-view {
+	-webkit-app-region: no-drag;
+}
+
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5 {
+	font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, "Lucida Grande";
+}
+
+h1 {
+	font-weight: bold;
+}
+
+.italic {
+	font-style: italic;
+}
+
+.center {
+	text-align: center;
+}
+
+.element-center {
+	display: block;
+	margin: 0 auto;
+}
+
+#left-menu {
+
+}
+
+#left-menu #logo {
+	display: block;
+	margin: 0 auto;
+}
+
+
+/*
+*	Hide Input number spinner
+*/
+form input[type='number']::-webkit-outer-spin-button,
+form input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

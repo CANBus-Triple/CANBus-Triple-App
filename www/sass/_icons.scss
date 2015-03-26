@@ -1,0 +1,15 @@
+/*
+*	Graphics
+*/
+
+#connection-icon {
+	max-width: 100%;
+}
+
+.cbt-icon {
+	margin-top: 0.2em;
+	height: 2em;
+	width: 2.2em;
+	background: transparent url($img-cbt-outline-white) no-repeat !important;
+	background-size: contain !important;
+}

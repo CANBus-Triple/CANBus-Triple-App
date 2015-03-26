@@ -52,7 +52,7 @@
 
   </head>
 
-  <body ng-app="cbt" ng-controller="AppController" class="platform-android platform-cordova platform-webview" style="-webkit-app-region: drag;">
+  <body ng-app="cbt" ng-controller="AppController" class="platform-android platform-cordova platform-webview">
 
 		<cbt-side-menu>
 			<ion-view>
@@ -83,13 +83,13 @@
 
       <ion-nav-buttons side="left">
         <button class="button button-clear" ng-click="toggleMenu()">
-          <i class="icon ion-navicon"></i>
+          <i class="icon ion-navicon-round"></i>
         </button>
       </ion-nav-buttons>
 
       <ion-nav-buttons side="right">
         <button class="button button-clear icon"
-                ng-class="{true: 'ion-ios7-circle-filled', false: 'ion-ios7-circle-outline'}[connectIcon]"
+                ng-class="{true: 'ion-ios-circle-filled', false: 'ion-ios-circle-outline'}[connectIcon]"
                 ng-disabled="connectIconEnable"
                 ng-click="connectTap()"></button>
       </ion-nav-buttons>

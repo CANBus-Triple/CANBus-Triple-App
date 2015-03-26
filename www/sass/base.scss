@@ -1,6 +1,6 @@
 
 /*
-*		Base Sass 
+*		Base Sass
 * 	CANBus Triple App
 *		Derek K etx313@gmail.com
 */
@@ -8,5 +8,16 @@
 
 @import "variables";
 @import "colors";
-@import "directives";
-@import "app";
+@import "globals";
+@import "ionic";
+@import "icons";
+@import "animation";
+
+// Modules
+@import "modules/table";
+
+// Views
+
+// Angular Directives
+@import "directives/cbt-user-info";
+@import "directives/side-menu";

@@ -1,5 +1,5 @@
 /*
-*		Base Sass 
+*		Base Sass
 * 	CANBus Triple App
 *		Derek K etx313@gmail.com
 */
@@ -20,56 +20,14 @@
 .type-energized {
   color: #f0b840; }
 
-/*
-*	CBTSideMenu
-*/
-.side-menu {
-  position: relative;
-  left: 0;
-  top: 44px;
-  display: block;
-  height: 100%;
-  min-height: 100%;
-  z-index: 9900; }
-  .side-menu .has-header {
-    top: 0; }
-  .side-menu #panel {
-    display: block;
-    position: absolute;
-    left: 0;
-    height: 100%;
-    width: 80%;
-    max-width: 380px;
-    z-index: 9901;
-    box-shadow: 2px 4px 5px rgba(50, 50, 50, 0.4);
-    -webkit-transform: translate3d(-300px, 0px, 0); }
-  .side-menu img#logo {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-    width: 8em;
-    height: 8em; }
-
-/*
-*	CBTUserInfo
-*/
-.user-info {
-  display: table; }
-  .user-info img.avatar {
-    border-radius: 9999px;
-    border: 3px solid #f5f5f5;
-    max-height: 64px;
-    max-width: 64px;
-    margin: 8px;
-    display: table-cell; }
-  .user-info p {
-    display: table-cell;
-    vertical-align: middle;
-    margin: 0;
-    padding: 0; }
-
 body, html {
   height: 100%; }
+
+ion-nav-bar {
+  -webkit-app-region: drag; }
+
+ion-nav-view {
+  -webkit-app-region: no-drag; }
 
 body, h1, h2, h3, h4, h5 {
   font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, "Lucida Grande"; }
@@ -162,9 +120,6 @@ ion-nav-bar .left-buttons {
   display: block !important; }
 
 /*
-*		View Specific styles
-*/
-/*
 *		Module Styles
 */
 table.pid-table {
@@ -181,3 +136,51 @@ table.pid-table {
     padding: 0.5em;
     border: solid 1px #efefef;
     color: #5a6065; }
+
+/*
+*	CBTUserInfo
+*/
+.user-info {
+  display: table; }
+  .user-info img.avatar {
+    border-radius: 9999px;
+    border: 3px solid #f5f5f5;
+    max-height: 64px;
+    max-width: 64px;
+    margin: 8px;
+    display: table-cell; }
+  .user-info p {
+    display: table-cell;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0; }
+
+/*
+*	CBTSideMenu
+*/
+.side-menu {
+  position: absolute;
+  left: 0;
+  top: 44px;
+  display: block;
+  height: 100%;
+  min-height: 100%;
+  z-index: 9900; }
+  .side-menu .has-header {
+    top: 0; }
+  .side-menu #panel {
+    display: block;
+    position: absolute;
+    left: 0;
+    height: 100%;
+    width: 80%;
+    max-width: 380px;
+    z-index: 9901;
+    box-shadow: 2px 4px 5px rgba(50, 50, 50, 0.4);
+    -webkit-transform: translate3d(-300px, 0px, 0); }
+  .side-menu img#logo {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    width: 8em;
+    height: 8em; }

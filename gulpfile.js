@@ -7,17 +7,38 @@ var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
 var sh = require('shelljs');
 var NwBuilder = require('node-webkit-builder');
+var browserSync = require('browser-sync');
+var reload      = browserSync.reload;
 
 var paths = {
   sass: ['./www/sass/**/*.scss'],
-  nwjs: ['package.json','./www/**/**', './node_modules/serialport/build/serialport/**/**']
+  nwjs: ['package.json','./www/**/**', './node_modules/serialport/**/**', './node_modules/noble/**/**']
 };
 
-gulp.task('default', ['sass', 'watch']);
+gulp.task('default', ['sass', 'serve']);
 
-gulp.task('build', ['install', 'sass', 'nw-build']);
+gulp.task('build', ['install', 'sass-build', 'nw-build']);
 
-gulp.task('sass', function(done) {
+// Static Server + watching scss/html files
+gulp.task('serve', ['sass'], function() {
+
+    browserSync({
+        server: "./www"
+    });
+
+    gulp.watch("www/sass/**/*.scss", ['sass']);
+    gulp.watch("www/templates/**/*.html").on('change', reload);
+});
+
+// Compile sass into CSS & auto-inject into browsers
+gulp.task('sass', function() {
+    return gulp.src('./www/sass/base.scss')
+        .pipe(sass())
+        .pipe(gulp.dest("./www/css"))
+        .pipe(reload({stream: true}));
+});
+
+gulp.task('sass-build', function(done) {
   gulp.src('./www/sass/base.scss')
     .pipe(sass())
     .pipe(gulp.dest('./www/css/'))
@@ -59,24 +80,24 @@ gulp.task('git-check', function(done) {
 
 
 gulp.task('nw-build', function(done){
-	
+
 	var nw = new NwBuilder({
 			appName: 'CANBus Triple',
 	    files: paths.nwjs, // use the glob format
-	    platforms: ['osx64'],//, 'win64','linux64'],
+	    platforms: ['osx64', 'win64','linux64'],
 	    macIcns: 'build_assets/nw.icns',
 	});
-	
+
 	//Log stuff you want
-	
+
 	nw.on('log',  console.log);
-	
+
 	// Build returns a promise
 	nw.build().then(function () {
 	   console.log('all done!');
 	}).catch(function (error) {
 	    console.error(error);
 	});
-	
+
 	done();
 });

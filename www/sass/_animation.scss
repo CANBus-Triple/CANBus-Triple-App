@@ -1,0 +1,21 @@
+/*
+*	Animation
+*/
+
+
+.height-animation {
+  -webkit-transition: 1.5s linear max-height;
+  transition: 1.5s linear max-height;
+	max-height: 1200px;
+}
+
+.height-animation.ng-hide {
+  max-height: 0px;
+}
+
+.height-animation.ng-hide-add {
+/* 	display: block!important; */
+}
+.height-animation.ng-hide-remove {
+	display: block !important;
+}

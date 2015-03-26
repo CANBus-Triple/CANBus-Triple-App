@@ -1,0 +1,24 @@
+/*
+*		Module Styles
+*/
+
+table.pid-table {
+	width: 100%;
+	border: solid 1px #efefef;
+	background-color: #f8f8f8;
+	text-align: left;
+
+	th {
+		font-size: 1.5em;
+		font-weight: light;
+		padding: 0.3em;
+		color: #b1b1b1
+	}
+
+	td {
+		padding: 0.5em;
+		border: solid 1px #efefef;
+		color: #5a6065
+	}
+
+}
