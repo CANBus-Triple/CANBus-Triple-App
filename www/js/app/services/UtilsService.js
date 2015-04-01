@@ -2,9 +2,9 @@
 
 angular.module('cbt')
 	.factory('UtilsService', function(){
-		
+
 		var Util = {};
-		
+
 		/**
 		 * Turns a string into an array of bytes; a "byte" being a JS number in the
 		 * range 0-255.
@@ -24,8 +24,8 @@ angular.module('cbt')
 		  }
 		  return output;
 		};
-		
-		
+
+
 		/**
 		 * Turns an array of numbers into the string given by the concatenation of the
 		 * characters to which the numbers correspond.
@@ -35,8 +35,8 @@ angular.module('cbt')
 		Util.byteArrayToString = function(array) {
 		  return String.fromCharCode.apply(null, array);
 		};
-		
-		
+
+
 		/**
 		 * Turns an array of numbers into the hex string given by the concatenation of
 		 * the hex values to which the numbers correspond.
@@ -51,8 +51,8 @@ angular.module('cbt')
 		  }
 		  return a.join('');
 		};
-		
-		
+
+
 		/**
 		 * Converts a hex string into an integer array.
 		 * @param {string} hexString Hex string of 16-bit integers (two characters
@@ -70,8 +70,8 @@ angular.module('cbt')
 		  }
 		  return arr;
 		};
-		
-		
+
+
 		/**
 		 * Converts a hex string into an Uint8Array.
 		 * @param {string} hexString Hex string of 16-bit integers (two characters
@@ -90,12 +90,12 @@ angular.module('cbt')
 		  }
 		  return bufView;
 		};
-		
-		
+
+
 		Util.ab2str = function(buf) {
 		  return String.fromCharCode.apply(null, new Uint8Array(buf));
 		}
-		
+
 		Util.str2ab = function(str) {
 		  var buf = new ArrayBuffer(str.length);
 		  var bufView = new Uint8Array(buf);
@@ -104,61 +104,61 @@ angular.module('cbt')
 		  }
 		  return buf;
 		}
-		
+
 		Util.ab2hexString = function(buf) {
-		
+
 			var b = '';
-			
+
 			for(var i=0; i<buf.length; i++)
 				b += buf[i].toString(16) + ' ';
-		
+
 			return b;
 
 		}
-		
+
 		Util.string2hexString = function(str) {
-		
+
 			var b = '';
-			
+
 			for(var i=0; i<str.length; i++){
 				var v = str.charCodeAt(i).toString(16).toUpperCase();
 				if(v.length < 2) v = '0'+v;
 				// b += '0x'+v+ ' ';
 				b += v+ ' ';
 				}
-		
+
 			return b;
 
 		}
 
 
-		
+
 		Util.md5 = md5lib;
-		
-		
-		
+
+
+
 		return Util;
 
-		
-		
-		
-		
+
+
+
+
 	});
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
 /*!
  * Joseph Myer's md5() algorithm wrapped in a self-invoked function to prevent
  * global namespace polution, modified to hash unicode characters as UTF-8.
- *  
+ *
  * Copyright 1999-2010, Joseph Myers, Paul Johnston, Greg Holt, Will Bond <will@wbond.net>
  * http://www.myersdaily.org/joseph/javascript/md5-text.html
  * http://pajhome.org.uk/crypt/md5
- * 
+ *
  * Released under the BSD license
  * http://www.opensource.org/licenses/bsd-license
  */
@@ -331,9 +331,6 @@ var md5lib = (function() {
 			return (msw << 16) | (lsw & 0xFFFF);
 		}
 	}
-	
+
 	return md5;
 })();
-
-
-

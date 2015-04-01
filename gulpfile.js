@@ -15,9 +15,9 @@ var paths = {
   nwjs: ['package.json','./www/**/**', './node_modules/serialport/**/**', './node_modules/noble/**/**']
 };
 
-gulp.task('default', ['sass', 'serve']);
+gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'nw-build']);
+gulp.task('build', ['install', 'sass-build', 'scripts', 'nw-build']);
 
 // Static Server + watching scss/html files
 gulp.task('serve', ['sass'], function() {
@@ -26,7 +26,7 @@ gulp.task('serve', ['sass'], function() {
         server: "./www"
     });
 
-    gulp.watch("www/js/**/*").on('change', reload);;
+    gulp.watch("www/js/**/*", ['scripts']).on('change', reload);;
     gulp.watch("www/sass/**/*.scss", ['sass']);
     gulp.watch("www/templates/**/*.html").on('change', reload);
 });
@@ -37,6 +37,12 @@ gulp.task('sass', function() {
         .pipe(sass())
         .pipe(gulp.dest("./www/css"))
         .pipe(reload({stream: true}));
+});
+
+gulp.task('scripts', function() {
+  return gulp.src('./www/js/app/**/*.js')
+    .pipe(concat('scripts.js'))
+    .pipe(gulp.dest('./www/js'));
 });
 
 gulp.task('sass-build', function(done) {

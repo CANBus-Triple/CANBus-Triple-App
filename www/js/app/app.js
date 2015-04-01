@@ -6,7 +6,7 @@
 */
 
 
-angular.module('cbt', ['ionic', 'LocalStorageModule'])
+angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 
 	.run(function($ionicPlatform) {
 		/*

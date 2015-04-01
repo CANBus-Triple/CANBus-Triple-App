@@ -7,7 +7,4 @@ angular.module('cbt')
 	  $scope.navTitle = "Diagnostics";
 
 
-
-
-
 });
