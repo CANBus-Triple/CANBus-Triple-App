@@ -24,113 +24,90 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 		*/
 	})
 	.run(function(SerialService){
-	
+
 		/*
 		*		Node-Webkit Setup
 		*/
 		if(typeof require != 'undefined'){
-			
+
 			var gui = require('nw.gui'),
 		  		win = gui.Window.get();
-		
+
 		  var nativeMenuBar = new gui.Menu({ type: "menubar" });
 			nativeMenuBar.createMacBuiltin("CANBus Triple");
 			nativeMenuBar.append(new gui.MenuItem({ label: 'Item A' }));
 			win.menu = nativeMenuBar;
-			
+
 		  win.on('close', function() {
 			  this.hide(); // Pretend to be closed already
 			  console.log("We're closing...");
 			  SerialService.close();
 			  this.close(true);
 			});
-			
-			
-			
-/*
-			// Create an empty menu
-			var menu = new gui.Menu();
-			
-			// Add some items
-			menu.append(new gui.MenuItem({ label: 'Item A' }));
-			menu.append(new gui.MenuItem({ label: 'Item B' }));
-			menu.append(new gui.MenuItem({ type: 'separator' }));
-			menu.append(new gui.MenuItem({ label: 'Item C' }));
-			
-			// Remove one item
-			//menu.removeAt(1);
-			
-			// Popup as context menu
-			menu.popup(10, 10);
-			
-			// Iterate menu's items
-			for (var i = 0; i < menu.items.length; ++i) {
-			  console.log(menu.items[i]);
-			}
-*/
-			
-					
-			
+
 			win.show();
 		}
-		
+
 	})
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
-			// Ionic uses AngularUI Router which uses the concept of states
+		// Ionic uses AngularUI Router which uses the concept of states
 	    // Learn more here: https://github.com/angular-ui/ui-router
 	    // Set up the various states which the app can be in.
 	    // Each state's controller can be found in controllers.js
 	    $stateProvider
 
 	        .state('hardware', {
-	          url: '/hardware',
-            abstract: true,
-            templateUrl: 'templates/hardware/main.html'
+	         	url: '/hardware',
+	            abstract: true,
+	            templateUrl: 'templates/hardware/main.html'
+		    })
+
+			.state('hardware.status', {
+	            url: '',
+	            controller: 'HWStatusController',
+	            templateUrl: 'templates/hardware/hw-status.html'
 	        })
-	        .state('hardware.status', {
-            url: '',
-            controller: 'HWStatusController',
-            templateUrl: 'templates/hardware/hw-status.html'
-	        })
-	        
+
 	        .state('hardware.connect', {
 	            url: '/connect',
 	            controller: 'ConnectionController',
 	            templateUrl: 'templates/hardware/connection.html'
 	        })
+
 	        .state('dashboard', {
 	            url: '/dashboard',
 	            controller: 'DashboardController',
 	            templateUrl: 'templates/dashboard.html'
 	        })
+
 	        .state('logger', {
 	            url: '/logger',
 	            controller: 'LoggerController',
 	            templateUrl: 'templates/logger.html'
 	        })
-	        .state('logger.view', {
-				      url: "/view",
-				      views: {
-				        'home-tab': {
-				          templateUrl: 'templates/pidfinder.view.html'
-				        }
-				      }
-				  })
-	        /*
 
-	        .state('pidfinder.view', {
-	            url: '/view',
-	            controller: 'PIDViewController',
-	            templateUrl: 'templates/pidfinder.view.html'
+			.state('diagnostics', {
+	            url: '/diagnostics',
+	            controller: 'DiagController',
+	            templateUrl: 'templates/diagnostics.html'
 	        })
-*/
-					
+
+	        .state('logger.view', {
+				url: "/view",
+				views: {
+				'home-tab': {
+					templateUrl: 'templates/pidfinder.view.html'
+					}
+				}
+			})
+
 	        .state('settings', {
 	            url: '/settings',
 	            controller: 'SettingsController',
 	            templateUrl: 'templates/settings.html'
 	        })
+
 	        .state('debug', {
 	            url: '/debug',
 	            controller: 'DebugController',
@@ -144,7 +121,7 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 	    localStorageServiceProvider.setPrefix('CBTSettings');
 
 	})
-	/*
+
 	.config(['$provide', function ($provide) {
 	  $provide.decorator('$rootScope', function ($delegate) {
 
@@ -165,19 +142,5 @@ angular.module('cbt', ['ionic', 'LocalStorageModule'])
 
 	  });
 	}])
-	*/
+
 	;
-
-
-
-
-
-
-
-
-
-
-
-
-
-

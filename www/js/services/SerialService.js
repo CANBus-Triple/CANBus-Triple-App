@@ -22,6 +22,15 @@ angular.module('cbt')
 
 		var rawCallback;
 
+
+		/**
+		 *	Cleanup serial when window reloads or closes
+		 */
+		window.addEventListener('beforeunload', function() {
+			close();
+		}, false);
+
+
 		/**
 		 * Open serial port
 		 */
@@ -32,16 +41,17 @@ angular.module('cbt')
 			if( searching ) search( false );
 
 			serialPort = new SerialPort(serialPath, {
-			  baudrate: baudRate,
-			  databits: 8,
+				// encoding: 'ascii', //Buffer utf8 utf16le ucs2 ascii hex.
+			  	baudrate: baudRate,
+			  	databits: 8,
 				stopbits: 1,
 				parity: 'none',
-				rtscts: true,
+				rtscts: false,
 				xany: true,
-				flowControl: true,
+				flowControl: false,
 				buffersize: 1024,
-			  parser: parser,
-			  disconnectedCallback: close
+			  	parser: parser,
+			  	disconnectedCallback: close
 			}, false);
 
 			serialPort.open(function(err){
@@ -55,6 +65,10 @@ angular.module('cbt')
 					$rootScope.$broadcast('SerialService.OPEN');
 					$timeout(function(){deferred.resolve();}, 20);
 			  }
+			});
+
+			serialPort.on('close', function(){
+				console.info("Serial Port Closed");
 			});
 
 			return deferred.promise;
@@ -109,7 +123,7 @@ angular.module('cbt')
 		 */
 		function write( data ){
 
-
+			/*
 			if( data instanceof Uint8Array )
 				data = UtilsService.ab2str( data.buffer );
 
@@ -120,8 +134,15 @@ angular.module('cbt')
 				console.log('SerialService write: Data must be string or Uint8Array', typeof data );
 				return;
 			}
+			*/
 
-			console.log("SerialService Sending:", UtilsService.string2hexString(data) );
+			if( data instanceof ArrayBuffer )
+				data = new Uint8Array(data);
+
+			if( data instanceof String )
+				data = UtilsService.stringToByteArray( data );
+
+			console.log("SerialService Sending:", data, UtilsService.ab2str(data) );
 
 			var deferred = $q.defer();
 			serialPort.write(
@@ -141,7 +162,6 @@ angular.module('cbt')
 			return deferred.promise;
 
 		}
-		//window.write = write;
 
 		/**
 		 * Manually read from serial port
@@ -163,7 +183,6 @@ angular.module('cbt')
 		function registerReadCallback(callback){
 
 			serialPort.on('data', function(data){
-				console.info('serialPort.on data ::: ', data);
 				// TODO Write a new parser for SerialPort that converts directly to ArrayBuffer. Take note of the realline wrapper function above.
 				callback( UtilsService.str2ab(data) );
 			});
@@ -232,10 +251,11 @@ angular.module('cbt')
 
 			close()
 			.then(function(){
-				open();
 				$timeout(function(){
+					open().then(function(){
 						$rootScope.$broadcast('SerialService.RESET' );
-					}, 500);
+					});
+				}, 500);
 			});
 
 		}
@@ -250,8 +270,7 @@ angular.module('cbt')
 	  return {
 	    open: function openConnection(device, callback, rCallback){
 	    	serialPath = device.port;
-	    	console.log(device);
-		    open().then(function(){ registerReadCallback(callback); rawCallback = rCallback });
+		    return open().then(function(){ registerReadCallback(callback); rawCallback = rCallback });
 	    },
 	    close: close,
 	    reconnect: reconnect,
@@ -600,7 +619,7 @@ angular.module('cbt')
 		*/
 	  return {
 	    open: function openConnection(devicem, callback, rawCallback){
-		    open().then(function(){ registerReadCallback(callback) });
+		    return open().then(function(){ registerReadCallback(callback) });
 	    },
 	    close: close,
 	    reconnect: reconnect,

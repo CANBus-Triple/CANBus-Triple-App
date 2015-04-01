@@ -3,12 +3,12 @@
 /*
 *		Derek K etx313@gmail.com
 *		HardwareService manages Bluetooth LE and Serial Connections into a common API
-*	
+*
 */
 
 angular.module('cbt')
 	.factory('HardwareService', function( $rootScope, $q, $timeout, SettingsService, SerialService, BluetoothService, UtilsService ) {
-		
+
 		var connectionMode = null,
 				readHandlers = [],
 				rawHandlers = [],
@@ -17,45 +17,49 @@ angular.module('cbt')
 					USB:'usb',
 					BT:'bt'
 				};
-		
-		var debugString = {data:'Derp'};
-		
-		
-		
-		
-		
+
+		var debugString = {data:''};
+
+		var commands = {
+			'info':[0x01, 0x01],
+		};
+
+
+
+
+
 		/*
 		*	Enable/Disable hardware search
 		*	@param {Boolean} b
 		*/
 		function searchForDevices(b){
-			
+
 			if(b){
-			
+
 				// Disconnect if connected
 				/*
 				if(connectionMode)
 					disconnect();
 					*/
-				
+
 				if(typeof process == 'undefined')
 					BluetoothService.scan(true);
-					
+
 				if(window.device && window.device.platform == 'Android' || typeof process != 'undefined' )
 					SerialService.search(true);
-					
+
 			}else{
-			
+
 				if(typeof process == 'undefined')
 					BluetoothService.scan(false);
-					
+
 				if(window.device && window.device.platform == 'Android' || typeof process != 'undefined' )
 					SerialService.search(false);
 			}
-			
+
 		}
-		
-		
+
+
 		/*
 		*	Connect to a device
 		*	@param {?} ?
@@ -65,19 +69,21 @@ angular.module('cbt')
 			*		Get selected device from Local storage and connect
 			*/
 			var device = SettingsService.getDevice();
-			
+
 			if(device.address == 'serial')
-				SerialService.open(device, readHandler, rawHandler);
+				SerialService.open(device, readHandler, rawHandler).then(function(){
+					command( 'info' );
+				});
 			else
 				BluetoothService.connect(device, readHandler, rawHandler);
-			
+
 		}
-		
+
 		/*
 		*	Disconnect from a device
 		*/
 		function disconnect(){
-			
+
 			switch(connectionMode){
 				case ConnectionMode.BT:
 					BluetoothService.disconnect();
@@ -85,8 +91,8 @@ angular.module('cbt')
 				case ConnectionMode.USB:
 					SerialService.close();
 				break;
-			}				
-			
+			}
+
 		}
 
 
@@ -94,55 +100,67 @@ angular.module('cbt')
 		*	Write to connected service
 		*/
 		function write(data){
-			
+
 			switch(connectionMode){
 				case null:
 					console.log("HardwareService cannot write, not connected");
 					return;
 				case ConnectionMode.BT:
-					BluetoothService.write(data);
+					return BluetoothService.write(data);
 				break;
 				case ConnectionMode.USB:
-					SerialService.write(data);
+					return SerialService.write(data);
 				break;
 			}
-			
-			
+
+
 		}
-		
-		
+
+
+		/*
+		*	Send a CBT command with additional data
+		*/
+		function command(name, props){
+
+			if( commands[name] )
+				write( props ? commands[name].concat(props) : commands[name]  );
+			else
+				throw new Error( 'HardwareService Command not found '+name );
+		}
+
+
 		/*
 		*	Register a callback to be called when we recieve read line data
 		*/
 		function registerReadHandler( callback ){
 			if( !(callback instanceof Function) ) return;
-			
+
 			if( readHandlers.indexOf(callback) < 1 )
 				readHandlers.push(callback);
 		}
-		
+
 		function deregisterReadHandler( callback ){
 			readHandlers.splice(readHandlers.indexOf(callback), 1);
 		}
-		
-		
-		
+
+
+
 		/*
 		*	Register a callback to be called when we recieve raw data
 		*/
 		function registerRawHandler( callback ){
 			if( !(callback instanceof Function) ) return;
-			
+
 			if( readHandlers.indexOf(callback) < 1 )
 				rawHandlers.push(callback);
 		}
-		
+
 		function deregisterRawHandler( callback ){
 			rawHandlers.splice(rawHandlers.indexOf(callback), 1);
 		}
-		
-		
-		
+
+
+
 		/*
 		*	Register a callback to be called when we recieve 0x03 (CAN Packet)
 		*/
@@ -151,54 +169,54 @@ angular.module('cbt')
 			if( packetHandlers.indexOf(callback) < 1 )
 				packetHandlers.push(callback);
 		}
-		
+
 		function deregisterPacketHandler( callback ){
 			packetHandlers.splice(packetHandlers.indexOf(callback), 1);
 		}
-		
-		
+
+
 		/*
 		*	Read Line Handler
 		*	Call all read callbacks
 		*/
 		function readHandler(dataBuffer){
-			
+
 			var data = new Uint8Array(dataBuffer);
-			
+
 			// Check packet for 0x03 prefix, which is a CAN Packet
 			if( data[0] === 0x03 ){
 				// console.log('packet', data);
 				var packet = new CANPacket( data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13] );
 				for(var p in packetHandlers)
 					packetHandlers[p](packet);
-					
+
 			}else if( data[0] === 123 ){
-				
+
 				// Dispatch an event with the JSON object
-				
+
 				var eventObject;
 				try{
 					eventObject = JSON.parse( UtilsService.ab2str( data ) );
 				}catch(e){
-					
+
 				}
-				
+
 				if( eventObject ) $rootScope.$broadcast('hardwareEvent', eventObject);
-				
+
 				// console.log("JSON Event Recieved ", eventObject );
-				
+
 			}else{
 				// console.log('raw data', data);
 				// Otherwise dispatch raw packet
 				for(var f in readHandlers)
 					readHandlers[f](dataBuffer);
-				
+
 			}
-			
+
 		}
-		
-		
-		
+
+
+
 		/*
 		*	Raw Data Handler
 		*	Call all read callbacks
@@ -207,16 +225,16 @@ angular.module('cbt')
 			for(var f in rawHandlers)
 				rawHandlers[f](dataBuffer);
 		}
-		
-		
-		
-		
-		
+
+
+
+
+
 		/*
 		*	Store and broadcast connected event
 		*/
 		function serviceStatusHandler( event ){
-		
+
 			$timeout(function(){
 				switch(event.name){
 					case "BluetoothService.CONNECTED":
@@ -244,65 +262,33 @@ angular.module('cbt')
 					case "BluetoothService.RESET":
 					case "SerialService.RESET":
 						$rootScope.$broadcast( 'HardwareService.RESET' );
-					break;	
+					break;
 				}
-				
+
 			});
-			
+
 		}
-		
-		
+
+
 		/*
 		*	Reset Connected CBT Hardware
 		*/
 		function resetHardware(){
-			
-			console.log( 'HardwareService sending reset' );
-			
+
 			// CBT API Reset Hardware command
 			write( String.fromCharCode(0x01, 0x16) );
-				
-				$timeout(function(){
-					SerialService.reconnect();
-				}, 100);
-				
-				
-				
-				
-				
-				
-			/*
-			$timeout(function(){
-				
-				if(connectionMode == ConnectionMode.USB){
-					SerialService.reset();
-					$timeout(function(){ $rootScope.$broadcast('HardwareService.RESET'); }, 500);
-				}else{
-					$rootScope.$broadcast('HardwareService.RESET');
-				}
-				
-			}, 500);
-			*/
-			
-			
-			/*
-			switch( connectionMode ){
-				case ConnectionMode.BT:
-					BluetoothService.reset();
-				break;
-				case ConnectionMode.USB:
-					SerialService.reset();
-				break;
-				default:
-					$rootScope.$broadcast( 'HardwareService.RESET_FAIL', 'Not Connected' );
-				break;
-			}
-			*/
-			
-		}
-		
+			//disconnect();
 
-		
+			$timeout(function(){
+				SerialService.reconnect();
+				// SerialService.open();
+				// connect();
+			}, 100);
+
+		}
+
+
+
 		/*
 		*	Connect to last device
 		*/
@@ -312,9 +298,9 @@ angular.module('cbt')
 		}, 1500);
 
 
-		
-		
-		
+
+
+
 		/*
 		*	Event Listeners
 		*/
@@ -327,39 +313,30 @@ angular.module('cbt')
 		$rootScope.$on('BluetoothService.RESET', serviceStatusHandler);
 		$rootScope.$on('SerialService.RESET', serviceStatusHandler);
 
-		
-		
-		
-		
-	  return {
-	    /* Interface Properties */
-	    connectionMode: function(){ return connectionMode; },
-	    debugString: debugString,
-	    
-	    /* Interface Methods */
-	    search: searchForDevices,
-	    connect: connect,
-	    disconnect: disconnect,
-	    send: function(s){
-		    write(s);
-		    },
-		  reset: function(){ resetHardware(); },
-		  registerReadHandler: registerReadHandler,
-		  deregisterReadHandler: deregisterReadHandler,
-		  registerPacketHandler: registerPacketHandler,
-		  deregisterPacketHandler: deregisterPacketHandler,
-		  registerRawHandler: registerRawHandler,
-		  deregisterRawHandler: deregisterRawHandler
-		  
+
+
+
+
+		return {
+			/* Interface Properties */
+			connectionMode: function(){ return connectionMode; },
+			debugString: debugString,
+
+			/* Interface Methods */
+			search: searchForDevices,
+			connect: connect,
+			disconnect: disconnect,
+			send: function(s){
+				return write(s);
+				},
+			command: command,
+			reset: function(){ resetHardware(); },
+			registerReadHandler: registerReadHandler,
+			deregisterReadHandler: deregisterReadHandler,
+			registerPacketHandler: registerPacketHandler,
+			deregisterPacketHandler: deregisterPacketHandler,
+			registerRawHandler: registerRawHandler,
+			deregisterRawHandler: deregisterRawHandler
 	    }
-	   
+
 	});
-	
-	
-	
-	
-	
-	
-	
-	
-	

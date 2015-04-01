@@ -37,8 +37,9 @@ angular.module('cbt')
 			var panel = element[0].childNodes[0],
 					container = element[0];
 
+			
       function init(){
-    		controller.updateState();
+    		// controller.updateState();
       }
 
 
@@ -59,7 +60,7 @@ angular.module('cbt')
         startY = event.touches[0].pageY - y;
         // startY = event.pageY - y;
         $document.on('touchmove', mousemove);
-        $document.on('touchend', mouseup);
+				$document.on('touchend', mouseup);
         $document.on('touchleave', mouseup);
         $document.on('touchcancel', mouseup);
 
@@ -192,19 +193,16 @@ angular.module('cbt')
 					container.style['width'] = '100%';
 					panel.style['webkitTransform'] = 'translate3d('+x+'px, 0, 0)';
 					scope.$broadcast('CBTSideMenu.IN');
-	      	}else{
+	      }else{
 	      	x = -panel.offsetWidth - peek;
 					container.style['background-color'] = 'rgba(0,0,0,0)';
 					container.style['transition'] = 'background 0.2s cubic-bezier(.50,.0,.5,.99), width 1ms ease 0.2s';
 					container.style['width'] = peek+'px';
 					panel.style['webkitTransform'] = 'translate3d('+x+'px, 0, 0)';
 					scope.$broadcast('CBTSideMenu.OUT');
-	      	}
+	      }
 
-
-
-
-      }
+			}
 
 
 
