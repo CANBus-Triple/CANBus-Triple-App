@@ -5,10 +5,11 @@ angular.module('cbt')
 
 
 	  var menuItems = [
-      { text: 'Dashboard', iconClass: 'icon ion-speedometer', link: 'dashboard'},
-      { text: 'Diagnostics', iconClass: 'icon ion-ios-pulse', link: 'diagnostics'},
+      //{ text: 'Dashboard', iconClass: 'icon ion-speedometer', link: 'dashboard'},
+      //{ text: 'Diagnostics', iconClass: 'icon ion-ios-pulse', link: 'diagnostics'},
       { text: 'Packet Logger', iconClass: 'icon ion-settings', link: 'logger'},
       { text: 'Hardware', iconClass: 'icon ion-usb', link: 'hardware'},
+			{ text: 'Firmware', iconClass: 'icon ion-code-download', link: 'firmware'},
       { text: 'Settings', iconClass: 'icon ion-gear-b', link: 'settings'}
 	  ];
 

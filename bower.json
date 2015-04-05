@@ -4,7 +4,8 @@
   "dependencies": {
     "angular-local-storage": "~0.0.1",
     "ionic": "driftyco/ionic-bower#v1.0.0-rc.1-nightly-1157",
-    "underscore": "~1.6.0"
+    "underscore": "~1.6.0",
+    "angular-material": "~0.8.3"
   },
   "devDependencies": {},
   "resolutions": {

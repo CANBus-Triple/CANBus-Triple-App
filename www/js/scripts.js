@@ -51,74 +51,94 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 	})
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
-		// Ionic uses AngularUI Router which uses the concept of states
+			// Ionic uses AngularUI Router which uses the concept of states
 	    // Learn more here: https://github.com/angular-ui/ui-router
 	    // Set up the various states which the app can be in.
 	    // Each state's controller can be found in controllers.js
 	    $stateProvider
 
-	        .state('hardware', {
-	         	url: '/hardware',
-	            abstract: true,
-	            templateUrl: 'templates/hardware/main.html'
+				.state('home', {
+					url: '/',
+					templateUrl: 'templates/home.html'
+				})
+
+	      .state('hardware', {
+					url: '/hardware',
+					abstract: true,
+					templateUrl: 'templates/hardware/main.html'
 		    })
 
-			.state('hardware.status', {
-	            url: '',
-	            controller: 'HWStatusController',
-	            templateUrl: 'templates/hardware/hw-status.html'
-	        })
+				.state('hardware.status', {
+          url: '',
+          controller: 'HWStatusController',
+          templateUrl: 'templates/hardware/hw-status.html'
+        })
 
-	        .state('hardware.connect', {
-	            url: '/connect',
-	            controller: 'ConnectionController',
-	            templateUrl: 'templates/hardware/connection.html'
-	        })
+				.state('firmware', {
+          url: '/firmware',
+          controller: 'BuildsController',
+          templateUrl: 'templates/firmware.html',
+        })
 
-	        .state('dashboard', {
-	            url: '/dashboard',
-	            controller: 'DashboardController',
-	            templateUrl: 'templates/dashboard.html'
-	        })
+	      .state('hardware.connect', {
+          url: '/connect',
+          controller: 'ConnectionController',
+          templateUrl: 'templates/hardware/connection.html'
+	      })
 
-	        .state('logger', {
-	            url: '/logger',
-	            controller: 'LoggerController',
-	            templateUrl: 'templates/logger.html'
-	        })
+	      .state('dashboard', {
+	          url: '/dashboard',
+	          controller: 'DashboardController',
+	          templateUrl: 'templates/dashboard.html'
+	      })
 
-			.state('diagnostics', {
-	            url: '/diagnostics',
-	            controller: 'DiagController',
-	            templateUrl: 'templates/diagnostics.html'
-	        })
+	      .state('logger', {
+	          url: '/logger',
+	          controller: 'LoggerController',
+	          templateUrl: 'templates/logger.html'
+	      })
 
-	        .state('logger.view', {
-				url: "/view",
-				views: {
-				'home-tab': {
-					templateUrl: 'templates/pidfinder.view.html'
-					}
-				}
-			})
+				.state('diagnostics', {
+	          url: '/diagnostics',
+	          controller: 'DiagController',
+	          templateUrl: 'templates/diagnostics.html'
+	      })
 
-	        .state('settings', {
-	            url: '/settings',
-	            controller: 'SettingsController',
-	            templateUrl: 'templates/settings.html'
-	        })
+		    // .state('logger.view', {
+				// 	url: "/view",
+				// 	views: {
+				// 	'home-tab': {
+				// 		templateUrl: 'templates/pidfinder.view.html'
+				// 		}
+				// 	}
+				// })
 
-	        .state('debug', {
-	            url: '/debug',
-	            controller: 'DebugController',
-	            templateUrl: 'templates/debug.html'
-	        });
+	      .state('settings', {
+	          url: '/settings',
+	          controller: 'SettingsController',
+	          templateUrl: 'templates/settings.html'
+	      })
+
+	      .state('debug', {
+	          url: '/debug',
+	          controller: 'DebugController',
+	          templateUrl: 'templates/debug.html'
+	      });
+
 
 	    // $urlRouterProvider.otherwise('/dashboard');
-	    $urlRouterProvider.otherwise('/hardware');
+	    $urlRouterProvider.otherwise('/');
 
 	    // Set local storage prefix
 	    localStorageServiceProvider.setPrefix('CBTSettings');
+
+	})
+
+	.config(function($mdThemingProvider) {
+
+		$mdThemingProvider.theme('default')
+	    .primaryPalette('deep-orange')
+	    .accentPalette('grey');
 
 	})
 
@@ -147,20 +167,22 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 
 
 angular.module('cbt')
-	.controller('AppController', function ($scope, $rootScope, $timeout, $ionicModal, HardwareService, UtilsService) {
+	.controller('AppController', function ($scope, $rootScope, $timeout, $ionicModal, $mdDialog, HardwareService, UtilsService) {
 
 		$scope.navTitle = "AppController";
 		$scope.title = "AppController title";
 
+		$scope.hwState = {};
+
 
 		$scope.leftButtons = [{
-		  type: 'button-clear',
+		 	type: 'button-clear',
 			content: '<i class="icon ion-navicon"></i>',
 	    tap: function(e) {
-	      $scope.cbtSideMenu.toggle();
-	    }
-		},
-		];
+      		$scope.cbtSideMenu.toggle();
+    		}
+		}];
+
 
 		$scope.rightButtons = [];
 
@@ -168,6 +190,8 @@ angular.module('cbt')
 
 		$scope.connectIcon = false;
 		$scope.connectIconDisable = false;
+
+		$scope.showCommandButton = false;
 
 		$scope.$on('CBTSideMenu.IN', navHandler);
 		$scope.$on('CBTSideMenu.OUT', navHandler);
@@ -192,11 +216,14 @@ angular.module('cbt')
 			$scope.cbtSideMenu.toggle();
 		}
 
+		$scope.showCmdBtn = function(){
+			$scope.showCommandButton = true;
+		}
 
 
 
 		/*
-		*		Send Command Modal 
+		*		Send Command Modal
 		*/
 
 		$scope.recentCommands = [
@@ -205,28 +232,28 @@ angular.module('cbt')
 			'03 02 01 0000 0000',
 			'03 03 01 0000 0000',
 		];
-		
-		
+
+
 		$scope.sendCommand = function(command){
-		
+
 			$scope.commandInput = command;
 
 			if( typeof command != 'string' ) return;
-			
+
 			command = command.replace(/\s/g,'');
-			
+
 			if( command.length < 1 ) return;
-			
+
 			if( $scope.recentCommands.indexOf(command) == -1 )
 				$scope.recentCommands.unshift(command);
-			
+
 			HardwareService.send( UtilsService.hexToUint8Array( command ) );
-			
+
 		}
-		
+
 		$scope.showSendCommandModal = function(){
-			
-			$ionicModal.fromTemplateUrl('templates/sendCommandModal.html', {
+
+			$ionicModal.fromTemplateUrl('templates/modals/sendCommand.html', {
 		    scope: $scope,
 		    animation: 'slide-in-up'
 		  }).then(function(modal) {
@@ -248,15 +275,15 @@ angular.module('cbt')
 		  $scope.$on('modal.removed', function() {
 		    // Execute action
 		  });
-			
+
 		}
-		
-		
-		
-		
-		
-		
-		
+
+
+
+
+
+
+
 		/*
 		*	Watch HardwareService connection status
 		*/
@@ -267,10 +294,32 @@ angular.module('cbt')
         $scope.hardwareConnected = newVal;
       }
     )
-    
-    
-    
-		
+
+
+		/*
+		*	Watch Hardware state for access from all controllers
+		*/
+		$rootScope.$on( 'hardwareEvent', hardwareEventHandler );
+		function hardwareEventHandler( eventName, eventObject ){
+
+			$timeout(function(){
+				switch(eventObject.event){
+					case 'busdbg':
+						if( typeof $scope.hwState[eventObject.event] == 'undefined' ) $scope.hwState[eventObject.event] = {};
+						$scope.hwState[eventObject.event][eventObject.name] = eventObject;
+						break;
+					default:
+						$scope.hwState[eventObject.event] = eventObject;
+						break;
+				}
+
+			});
+
+		}
+
+
+
+
 
 
 		/*
@@ -360,7 +409,106 @@ angular.module('cbt')
 
 
 angular.module('cbt')
-	.controller('ConnectionController', function ($scope, $timeout, HardwareService, BluetoothService, SerialService, SettingsService) {
+	.controller('BuildsController', function ($scope, $state, $timeout, $ionicModal, BuildsService, FirmwareService){
+
+		$scope.navTitle = "Firmware Update";
+		$scope.title = "Firmware Update";
+
+
+
+
+		$scope.builds = BuildsService.getSources();
+
+		$scope.$watch(function(){
+			return BuildsService.getSources();
+		},
+		function(newVal, oldVal){
+			$scope.builds = newVal;
+		});
+
+
+		$scope.selectedBuild = '';
+		$scope.$watch('selectedBuild', function(newVal, oldVal){
+			console.info(arguments);
+		});
+
+
+
+
+		$scope.flashProgress = 0;
+		$scope.flashComplete = false;
+
+		$scope.showFlashModal = function(){
+
+			$ionicModal.fromTemplateUrl('templates/modals/flash.html', {
+		    scope: $scope,
+		    animation: 'slide-in-up',
+				backdropClickToClose: false,
+				hardwareBackButtonClose: false
+		  }).then(function(modal) {
+		    $scope.modal = modal;
+		    $scope.modal.show();
+		  });
+		  $scope.closeModal = function() {
+		    $scope.modal.hide();
+		  };
+		  //Cleanup the modal when we're done with it!
+		  $scope.$on('$destroy', function() {
+		    $scope.modal.remove();
+		  });
+		  // Execute action on hide modal
+		  $scope.$on('modal.hidden', function() {
+		    // Execute action
+		  });
+		  // Execute action on remove modal
+		  $scope.$on('modal.removed', function() {
+		    // Execute action
+		  });
+
+		}
+
+		$scope.flash = function( file ){
+			$scope.showFlashModal();
+			$timeout(function(){
+				FirmwareService.send( BuildsService.rootPath + file );
+			}, 2000);
+		}
+
+		$scope.$on('FirmwareService.FLASH_PROGRESS', function(event, data){
+
+				$scope.flashProgress = Math.ceil(data * 100);
+
+			console.log($scope.flashProgress);
+		});
+
+		$scope.$on('FirmwareService.FLASH_SUCCESS', function(event, data){
+			$scope.flashComplete = true;
+		});
+
+		$scope.$on('FirmwareService.FLASH_ERROR', function(event, data){
+			$scope.flashComplete = true;
+		});
+
+
+
+
+		/*
+		*	Event Listeners
+		*/
+
+		$scope.$on('$destroy', function(){
+    	HardwareService.search(false);
+		});
+
+
+
+	});
+
+'use strict';
+
+
+angular.module('cbt')
+	.controller('ConnectionController', function ($scope, $state, $timeout, HardwareService, BluetoothService, SerialService, SettingsService) {
 
 		$scope.navTitle = "Connect to your CANBus Triple";
 		$scope.title = "Connect";
@@ -381,10 +529,10 @@ angular.module('cbt')
 		$scope.btDiscovered = BluetoothService.discovered;
 		$scope.serialDiscovered = SerialService.discovered;
 
-		if( SettingsService.getAutoconnect() == "false" )
+		//if( SettingsService.getAutoconnect() == "false" )
 			$timeout(function(){
 				HardwareService.search(true);
-			}, 1200);
+			}, 400);
 
 
 
@@ -412,6 +560,12 @@ angular.module('cbt')
 		*	Event Listeners
 		*/
 
+		$scope.$on('HardwareService.CONNECTED',function(){
+			$timeout(function(){
+				$state.go('hardware.status');
+			}, 1000);
+		});
+
 		$scope.$on('$destroy', function(){
     	HardwareService.search(false);
 		});
@@ -433,7 +587,7 @@ angular.module('cbt')
 		
 		
 	});
-'use strict';  
+'use strict';
 
 
 angular.module('cbt')
@@ -441,15 +595,17 @@ angular.module('cbt')
 
 	  $scope.navTitle = "Debug";
 
+		$scope.showCmdBtn();
+
 	  $scope.sendTest = function(){
 
-		  HardwareService.send( String.fromCharCode(0x01,0x01) );
+		  HardwareService.command( 'info' );
 
 	  };
 
-	  $scope.sendFirmware = function(){
+	  $scope.autobaud = function(){
 
-		  FirmwareService.send();
+			HardwareService.command( 'autobaud', [1] );
 
 	  }
 
@@ -460,17 +616,21 @@ angular.module('cbt')
 	  }
 
 
-	  $scope.debugString = 'Debug Output';
+	  $scope.debugString = '';
+
 	  $scope.readHandler = function(data){
-
-			$timeout( function(){ $scope.debugString += UtilsService.ab2str(data); }, 10);
-
-			console.log( UtilsService.ab2str(data) );
-
+			$timeout( function(){ $scope.debugString += UtilsService.ab2str(data)+"\n"; }, 10);
 		}
+
+		$scope.$on('hardwareEvent', function(event, data){
+			$timeout( function(){
+				$scope.debugString += JSON.stringify(data)+"\n";
+			});
+		});
 
 
 		HardwareService.registerReadHandler($scope.readHandler);
+
 		$scope.$on("$destroy", function() {
     	HardwareService.deregisterReadHandler($scope.readHandler);
     });
@@ -490,62 +650,66 @@ angular.module('cbt')
 
 });
 
-'use strict';  
+'use strict';
 
 
 angular.module('cbt')
-	.controller('HWStatusController', function ($rootScope, $scope, $http, $interval, HardwareService) {
-  
-    $scope.navTitle = "Connect to your CANBus Triple";
+	.controller('HWStatusController', function ($rootScope, $scope, $state, $http, $interval, $timeout, HardwareService) {
+
+    $scope.navTitle = "Hardware";
 		$scope.title = "Connect";
 
-/*
-
-		$scope.rightButtons = [{
-			type: 'button-icon icon ion-ios7-circle-filled',
-			tap: function(e) {
-					HardwareService.disconnect();
-				}
-		}];
-*/
+		var updateIndex = 0,
+				updateFrequency = 500,
+				commandMap = ['info', 'bus1status', 'bus2status', 'bus3status'],
+				speeds = [10,20,50,83,100,125,250,500,800,1000];
 
 
+		if( !$scope.hardwareConnected ) $state.go('hardware.connect');
 
-	$rootScope.$on( 'hardwareEvent', hardwareEventHandler );
-	
-	
-	function hardwareEventHandler( eventName, eventObject ){
-		
-		console.log( eventObject );
-		
-	}
-	
-	
-	
-	
-	$scope.updateStatus = function(){
-		// Send bus one status inquiry
-		HardwareService.send( String.fromCharCode(0x01, 0x10, 0x01) );
-	}
-	
-	
-	
+		$scope.speeds = speeds;
+		$scope.bus1speed = 1;
+		$scope.bus2speed = 1;
+		$scope.bus3speed = 1;
+
+		$scope.autoBaud = function(bus){
+			cleanup();
+			HardwareService.command('autobaud', [parseInt(bus)]);
+		}
+
+		$scope.updateStatus = function(){
+
+			if(!$scope.hardwareConnected) return;
+
+			HardwareService.command( commandMap[updateIndex++] );
+			updateIndex = updateIndex <= 3 ? updateIndex : 0;
+		}
+
+		var intPromise = $interval($scope.updateStatus, updateFrequency);
+		function cleanup(){
+			if(intPromise) $interval.cancel(intPromise);
+		}
+
+		$scope.$on('$destroy', function(){
+			console.log("DESTROY DESTROY DESTROY DESTROY DESTROY DESTROY DESTROY ");
+			cleanup();
+		});
 
 
-  
+
 	});
 
-'use strict';  
+'use strict';
 
 
 angular.module('cbt')
 
 	.run(function($templateCache, MenuService){
-		
+
 		/*
 	  *	Template
 	  */
-	  
+
 	  $templateCache.put('templates/plugins/kickstarter.html', '<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons" hide-back-button="true">'+
 																															'	<ion-nav-buttons side="left">'+
 																															'    <button class="button" ng-click="showSendCommandModal()">Serial Command</button>'+
@@ -557,40 +721,40 @@ angular.module('cbt')
 																																																		'</div>'+
 																															'	</ion-content>'+
 																															'</ion-view>');
-												
-												
+
+
 		/*
 		*	Add to Menu
 		*/
-		
-		MenuService.addPlugin('Kickstarter', 'ion-happy	', 'kickstarter');
-		
-	  
-		
+
+		// MenuService.addPlugin('Kickstarter', 'ion-happy	', 'kickstarter');
+
+
+
 	})
-	
+
 	.config(function($stateProvider){
-		
+
 		/*
 		*	Add Route
 		*/
-		
+
 		$stateProvider.state('kickstarter', {
 			url: '/kickstarter',
 			controller: 'KickstarterController',
 			templateUrl: 'templates/plugins/kickstarter.html'
     });
-		
+
 	})
 
 	.controller('KickstarterController', function ($scope, $http, $interval, HardwareService) {
-	
+
 	  $scope.navTitle = "Kickstarter";
-	  
+
 	  $scope.backers = 0;
 	  $scope.dollars = 0;
-	  
-	  
+
+
 	  var query = {
 		    url: 'http://www.kickstarter.com/projects/etx/canbus-triple-the-car-hacking-platform',
 		    type: 'html',
@@ -600,88 +764,108 @@ angular.module('cbt')
 		  uriQuery = encodeURIComponent(JSON.stringify(query)),
 		  request  = 'http://example.noodlejs.com/?q=' +
 		             uriQuery + '&callback=JSON_CALLBACK';
-		
-	  
-	  
+
+
+
 	  $scope.updateData = function(){
-		  
+
 		  $http({method: 'JSONP', url: request}).
 		    success(function(data, status, headers, config) {
 		      // this callback will be called asynchronously
 		      // when the response is available
-		      
+
 		      $scope.backers = data[0].results[2];
 		      $scope.dollars = data[0].results[4];
-		      
+
 		      var message = "             "+$scope.backers+" Backers!!     "+$scope.dollars+" 50 Percent Funded!   ";
 		      console.log(message);
-		      
+
 		      var i=0;
-		      
+
 		      var p;
 		      p = $interval(function(){
 		      	console.log(message.substr(i, 12));
 			      HardwareService.send( String.fromCharCode(0x16) + message.substr(i, 12) );
 			      i++;
-			      
+
 			      if(i>message.length)
 			      	$interval.cancel(p);
-			      
+
 		      }, 500);
-		      
-		      
-		      
+
+
+
 		    }).
 		    error(function(data, status, headers, config) {
 		      // called asynchronously if an error occurs
 		      // or server returns response with an error status.
-		      
+
 		      console.log( 'Error: ', arguments );
-		      
+
 		    });
-		  
+
 	  };
-	  	  
-	  
-	  		
-		
-		
+
+
+
+
+
 	});
 
 'use strict';
 
 
 angular.module('cbt')
-	.controller('LoggerController', function ($scope, $location, $timeout, $ionicPopover, HardwareService, UtilsService) {
+	.controller('LoggerController', function ($scope, $state, $location, $timeout, $ionicPopover, HardwareService, UtilsService) {
 
 		$scope.title = "CANBus Triple";
-		
 		$scope.navTitle = "Packet Logger";
-	  
+
+		$scope.showCmdBtn();
+
 	  $scope.viewPid = function(id){
 	  	$scope.selectedPid = id;
 		  $location.url('/pidfinder/view');
+			// use $state
 	  }
-	  
-	  
+
+
 	  $scope.busSettings = {
-		  can1log: true,
+		  can1log: false,
 		  can2log: false,
 		  can3log: false
 	  }
-	  
+
 	  $scope.$watchCollection(
-	    "busSettings",
+	    "busSettings.can1log",
 	    function( newValue, oldValue ) {
-				console.log(newValue);
+				if($scope.hardwareConnected) HardwareService.command('bus1log'+(newValue?'On':'Off'),[0,0,0,0]);
 	    }
     );
-	  
-	  
-	  
+		$scope.$watchCollection(
+			"busSettings.can2log",
+			function( newValue, oldValue ) {
+				if($scope.hardwareConnected) HardwareService.command('bus2log'+(newValue?'On':'Off'),[0,0,0,0]);
+			}
+		);
+		$scope.$watchCollection(
+	    "busSettings.can3log",
+	    function( newValue, oldValue ) {
+				if($scope.hardwareConnected) HardwareService.command('bus3log'+(newValue?'On':'Off'),[0,0,0,0]);
+	    }
+    );
+
+		$scope.$watchCollection(
+	    "hardwareConnected",
+	    function( newValue, oldValue ) {
+				console.log(arguments);
+	    }
+    );
+
+
 	  $scope.interestMids = [];
 	  $scope.toggleIntrest = function(mid, event){
-	  	
+
 		  if( $scope.interestMids.indexOf(mid) > -1 ){
 		  	$scope.interestMids.splice( $scope.interestMids.indexOf(mid), 1 );
 		  	//event.target.parentElement.bgColor = '';
@@ -689,23 +873,23 @@ angular.module('cbt')
 				$scope.interestMids.push(mid);
 				//event.target.parentElement.bgColor = '#dbdbdb';
 				}
-			
+
 			$timeout(function(){
 				$scope.modeSwitchDisabled = !($scope.interestMids.length > 0);
 				},5);
-				
+
 	  }
 	  $scope.isInterested = function(mid){
 		  if( $scope.interestMids.indexOf(mid) > -1 )
 		  	return true;
 	  }
-	  
-	  
+
+
 	  $scope.modeSwitchDisabled = true;
-	  
+
 	  $scope.viewMode = "Compact";
 	  $scope.switchMode = function(event){
-			
+
 			switch($scope.viewMode){
 				case 'Compact':
 					$scope.viewMode = "Chronological";
@@ -714,60 +898,60 @@ angular.module('cbt')
 					$scope.viewMode = "Compact";
 				break;
 			}
-			
+
 			$scope.clearBuffer();
-			
+
 	  }
-		
-	  
-	  
-	  	  
+
+
+
+
 	  $scope.midBuffer = [];
 	  $scope.clearBuffer = function(){
 		  $scope.midBuffer.splice(0, $scope.midBuffer.length);
 	  }
-	  
-	  	  
+
+
 	  $scope.numberToHexString = function(n){
 	  	if(typeof n == 'undefined')return 'null';
 		  return n.toString(16).toUpperCase();
 	  }
-	
+
 		$scope.readHandler = function(packet){
-			
+
 			// Cron mode
 			if( $scope.viewMode === "Chronological" ){
-				
+
 				if( $scope.interestMids.indexOf(packet.messageId) > -1 )
 					$scope.midBuffer.unshift({mid: packet.messageId, packet: packet});
-				
+
 				$timeout(function(){}, 1);
-				
+
 				return;
 			}
-			
+
 			// Compact mode
-			
+
 			var obj = _.find($scope.midBuffer, function(obj){ return obj.mid == packet.messageId });
 
 			if( obj )
 				obj['packet'] = packet;
 			else
 				$scope.midBuffer.unshift({mid: packet.messageId, packet: packet});
-			
+
 
 			$timeout(function(){}, 1);
-				
-				
+
+
 		}
-	
+
 		HardwareService.registerPacketHandler($scope.readHandler);
 		$scope.$on("$destroy", function() {
-    	HardwareService.deregisterPacketHandler($scope.readHandler);	
+    	HardwareService.deregisterPacketHandler($scope.readHandler);
     });
 
 
-	  
+
 	  $ionicPopover.fromTemplateUrl('popover.html', {
 	    scope: $scope,
 	  }).then(function(popover) {
@@ -791,8 +975,8 @@ angular.module('cbt')
 	  $scope.$on('popover.removed', function() {
 	    // Execute action
 	  });
-		
-		
+
+
 	});
 
 'use strict';
@@ -878,17 +1062,17 @@ angular.module('cbt')
 
 	});
 
-'use strict';  
+'use strict';
 
 
 angular.module('cbt')
 
 	.run(function($templateCache, MenuService){
-		
+
 		/*
 	  *	Template
 	  */
-	  
+
 	  $templateCache.put('templates/plugins/volkswagen.html', '<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons" hide-back-button="true">'+
 												'	<ion-nav-buttons side="left">'+
 												'    <button class="button" ng-click="showSendCommandModal()">Serial Command</button>'+
@@ -901,69 +1085,69 @@ angular.module('cbt')
 												'		<button class="button button-positive" ng-click="bothUp()">Both Windows Up</button>'+
 												'	</ion-content>'+
 												'</ion-view>');
-												
-												
+
+
 		/*
 		*	Add to Menu
 		*/
-		
-		MenuService.addPlugin('Volkswagen', 'ion-model-s', 'vw');
-		
-	  
-		
+
+		// MenuService.addPlugin('Volkswagen', 'ion-model-s', 'vw');
+
+
+
 	})
-	
+
 	.config(function($stateProvider){
-		
+
 		/*
 		*	Add Route
 		*/
-		
+
 		$stateProvider.state('vw', {
 			url: '/vw',
 			controller: 'VWController',
 			templateUrl: 'templates/plugins/volkswagen.html'
     });
-		
+
 	})
 
 	.controller('VWController', function ($scope, $interval, HardwareService) {
-	
+
 	  $scope.navTitle = "VW";
-	  
-	  
+
+
 	  $scope.windowDown = function(){
 		  HardwareService.send( String.fromCharCode(0x02, 0x02, 0x01, 0x81, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 ) );
 	  }
-	  
+
 	  $scope.windowUp = function(){
 		  HardwareService.send( String.fromCharCode(0x02, 0x02, 0x01, 0x81, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 ) );
 	  }
-	  
-	  
+
+
 	  $scope.windowDownBack = function(){
 		  HardwareService.send( String.fromCharCode(0x02, 0x02, 0x01, 0x81, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 ) );
 	  }
-	  
+
 	  $scope.windowUpBack = function(){
 		  HardwareService.send( String.fromCharCode(0x02, 0x02, 0x01, 0x81, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 ) );
 	  }
-	  
+
 	  $scope.bothUp = function(){
 		  HardwareService.send( String.fromCharCode(0x02, 0x02, 0x01, 0x81, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 ) );
 	  }
-	  
-	  
+
+
 	  $scope.lock = function(){
 		  HardwareService.send( String.fromCharCode(0x02, 0x02, 0x03, 0x91, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03 ) );
 	  }
-	  
+
 	  $scope.unlock = function(){
 		  HardwareService.send( String.fromCharCode(0x02, 0x02, 0x03, 0x91, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03 ) );
 	  }
-	  		
-		
-		
+
+
+
 	});
 
 
@@ -2014,6 +2198,42 @@ angular.module('cbt')
 
 'use strict';
 
+angular.module('cbt')
+	.factory('BuildsService', function($rootScope, $timeout, $http, HardwareService){
+
+    // https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple/master/builds/builds.json
+    var rootPath = 'https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple/master/builds/',
+        sources = [];
+
+
+
+    function updateSources(){
+
+      $http({method: 'GET', url: rootPath+'builds.json'})
+		    .success(function(data, status, headers, config) {
+          sources = data;
+          $rootScope.$broadcast('BuildsService.LOAD', data);
+		    })
+		    .error(function(data, status, headers, config) {
+          throw new Error( "BuildsService: Error loading sources "+status );
+		    });
+
+    }
+
+    updateSources();
+
+    HardwareService.command( 'info' );
+
+
+		return {
+      rootPath: rootPath,
+      getSources: function(){ return sources },
+		};
+
+	});
+
+'use strict';
+
 /*
 *		A FSM for uploading firmware to the CBT via the HardwareService
 */
@@ -2375,6 +2595,16 @@ angular.module('cbt')
 
 		var commands = {
 			'info':[0x01, 0x01],
+			'bus1status':[0x01, 0x10, 0x01],
+			'bus2status':[0x01, 0x10, 0x02],
+			'bus3status':[0x01, 0x10, 0x03],
+			'bus1logOn': [0x03, 0x01, 0x01],
+			'bus2logOn': [0x03, 0x02, 0x01],
+			'bus3logOn': [0x03, 0x03, 0x01],
+			'bus1logOff': [0x03, 0x01, 0x00],
+			'bus2logOff': [0x03, 0x02, 0x00],
+			'bus3logOff': [0x03, 0x03, 0x00],
+			'autobaud': [0x01, 0x08],
 		};
 
 
@@ -2534,6 +2764,8 @@ angular.module('cbt')
 		*/
 		function readHandler(dataBuffer){
 
+			// console.log('serial data', new Uint8Array(dataBuffer));
+
 			var data = new Uint8Array(dataBuffer);
 
 			// Check packet for 0x03 prefix, which is a CAN Packet
@@ -2543,7 +2775,7 @@ angular.module('cbt')
 				for(var p in packetHandlers)
 					packetHandlers[p](packet);
 
-			}else if( data[0] === 123 ){
+			}else if( data[0] === 123 || data[1] === 123 ){
 
 				// Dispatch an event with the JSON object
 
@@ -2674,6 +2906,7 @@ angular.module('cbt')
 			/* Interface Properties */
 			connectionMode: function(){ return connectionMode; },
 			debugString: debugString,
+			commands: commands,
 
 			/* Interface Methods */
 			search: searchForDevices,
@@ -2701,10 +2934,11 @@ angular.module('cbt')
 
 
 	  var menuItems = [
-      { text: 'Dashboard', iconClass: 'icon ion-speedometer', link: 'dashboard'},
-      { text: 'Diagnostics', iconClass: 'icon ion-ios-pulse', link: 'diagnostics'},
+      //{ text: 'Dashboard', iconClass: 'icon ion-speedometer', link: 'dashboard'},
+      //{ text: 'Diagnostics', iconClass: 'icon ion-ios-pulse', link: 'diagnostics'},
       { text: 'Packet Logger', iconClass: 'icon ion-settings', link: 'logger'},
       { text: 'Hardware', iconClass: 'icon ion-usb', link: 'hardware'},
+			{ text: 'Firmware', iconClass: 'icon ion-code-download', link: 'firmware'},
       { text: 'Settings', iconClass: 'icon ion-gear-b', link: 'settings'}
 	  ];
 
@@ -2780,8 +3014,8 @@ angular.module('cbt')
 
 			serialPort = new SerialPort(serialPath, {
 				// encoding: 'ascii', //Buffer utf8 utf16le ucs2 ascii hex.
-			  	baudrate: baudRate,
-			  	databits: 8,
+		  	baudrate: baudRate,
+		  	databits: 8,
 				stopbits: 1,
 				parity: 'none',
 				rtscts: false,

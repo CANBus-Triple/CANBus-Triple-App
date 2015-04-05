@@ -22,6 +22,16 @@ angular.module('cbt')
 
 		var commands = {
 			'info':[0x01, 0x01],
+			'bus1status':[0x01, 0x10, 0x01],
+			'bus2status':[0x01, 0x10, 0x02],
+			'bus3status':[0x01, 0x10, 0x03],
+			'bus1logOn': [0x03, 0x01, 0x01],
+			'bus2logOn': [0x03, 0x02, 0x01],
+			'bus3logOn': [0x03, 0x03, 0x01],
+			'bus1logOff': [0x03, 0x01, 0x00],
+			'bus2logOff': [0x03, 0x02, 0x00],
+			'bus3logOff': [0x03, 0x03, 0x00],
+			'autobaud': [0x01, 0x08],
 		};
 
 
@@ -181,6 +191,8 @@ angular.module('cbt')
 		*/
 		function readHandler(dataBuffer){
 
+			// console.log('serial data', new Uint8Array(dataBuffer));
+
 			var data = new Uint8Array(dataBuffer);
 
 			// Check packet for 0x03 prefix, which is a CAN Packet
@@ -190,7 +202,7 @@ angular.module('cbt')
 				for(var p in packetHandlers)
 					packetHandlers[p](packet);
 
-			}else if( data[0] === 123 ){
+			}else if( data[0] === 123 || data[1] === 123 ){
 
 				// Dispatch an event with the JSON object
 
@@ -321,6 +333,7 @@ angular.module('cbt')
 			/* Interface Properties */
 			connectionMode: function(){ return connectionMode; },
 			debugString: debugString,
+			commands: commands,
 
 			/* Interface Methods */
 			search: searchForDevices,

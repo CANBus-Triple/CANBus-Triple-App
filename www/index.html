@@ -14,6 +14,7 @@
 
     <!-- ionic/angularjs scripts -->
     <script src="components/ionic/js/ionic.bundle.js"></script>
+    <link rel="stylesheet" href="components/angular-material/angular-material.min.css">
 
     <!-- cordova script (this will be a 404 during development) -->
     <script src="cordova.js"></script>
@@ -23,38 +24,38 @@
     <script src="js/lib/CANPacket.js"></script>
     <script src="js/lib/XGauge.js"></script>
     <script src="components/angular-local-storage/angular-local-storage.min.js"></script>
+    <script src="components/angular-aria/angular-aria.min.js"></script>
+    <script src="components/angular-material/angular-material.min.js"></script>
     <script src="js/scripts.js"></script>
 
-    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/angular_material/0.6.1/angular-material.min.css">
-    <script src="//ajax.googleapis.com/ajax/libs/angular_material/0.6.1/angular-material.min.js"></script>
   </head>
 
   <body ng-app="cbt" ng-controller="AppController" class="platform-android platform-cordova platform-webview">
 
-		<cbt-side-menu>
-			<ion-view>
-		    <ion-content ng-controller="MenuController">
-		      <ion-list>
+	<cbt-side-menu>
+		<ion-view>
+	    <ion-content ng-controller="MenuController">
+	      <ion-list>
 <!-- 		      	<cbt-user-info name="'Derek K'" email="'etx313@gmail.com'"></cbt-user-info> -->
-		      	<div class="item item-divider">
-					    Settings
-					  </div>
-		        <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in list">
-		          <i ng-class="item.iconClass"></i>
-		          {{item.text}}
-		        </ion-item>
-		        <div class="item item-divider">
-					    Plugins
-					  </div>
-					  <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in listPlugins">
-		          <i ng-class="item.iconClass"></i>
-		          {{item.text}}
-		        </ion-item>
-		      </ion-list>
-		     <img id='logo' src="img/cbt-outline.svg"/>
-		    </ion-content>
-		   </ion-view>
-		</cbt-side-menu>
+	      	<div class="item item-divider">
+				    Settings
+				  </div>
+	        <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in list">
+	          <i ng-class="item.iconClass"></i>
+	          {{item.text}}
+	        </ion-item>
+	        <div class="item item-divider">
+				    Plugins
+				  </div>
+				  <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in listPlugins">
+	          <i ng-class="item.iconClass"></i>
+	          {{item.text}}
+	        </ion-item>
+	      </ion-list>
+	     <img id='logo' src="img/cbt-outline.svg"/>
+	    </ion-content>
+	   </ion-view>
+	</cbt-side-menu>
 
     <ion-nav-bar class="bar-assertive nav-title-slide-ios7" ng-class="{'nav-showing': navShowing}">
 
@@ -62,6 +63,7 @@
         <button class="button button-clear" ng-click="toggleMenu()">
           <i class="icon ion-navicon-round"></i>
         </button>
+        <button ng-if="showCommandButton == true" class="button" ng-click="showSendCommandModal()">Serial Command</button>
       </ion-nav-buttons>
 
       <ion-nav-buttons side="right">

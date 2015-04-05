@@ -2,7 +2,7 @@
 
 
 angular.module('cbt')
-	.controller('ConnectionController', function ($scope, $timeout, HardwareService, BluetoothService, SerialService, SettingsService) {
+	.controller('ConnectionController', function ($scope, $state, $timeout, HardwareService, BluetoothService, SerialService, SettingsService) {
 
 		$scope.navTitle = "Connect to your CANBus Triple";
 		$scope.title = "Connect";
@@ -23,10 +23,10 @@ angular.module('cbt')
 		$scope.btDiscovered = BluetoothService.discovered;
 		$scope.serialDiscovered = SerialService.discovered;
 
-		if( SettingsService.getAutoconnect() == "false" )
+		//if( SettingsService.getAutoconnect() == "false" )
 			$timeout(function(){
 				HardwareService.search(true);
-			}, 1200);
+			}, 400);
 
 
 
@@ -53,6 +53,12 @@ angular.module('cbt')
 		/*
 		*	Event Listeners
 		*/
+
+		$scope.$on('HardwareService.CONNECTED',function(){
+			$timeout(function(){
+				$state.go('hardware.status');
+			}, 1000);
+		});
 
 		$scope.$on('$destroy', function(){
     	HardwareService.search(false);

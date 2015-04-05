@@ -1,13 +1,10 @@
-<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons" hide-back-button="true">
-	
-	<ion-nav-buttons side="left">
-    <button class="button" ng-click="showSendCommandModal()">Command</button>
-  </ion-nav-buttons>
-	
+<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons">
+
+
 	<ion-content padding="true" scroll="true">
-		
+
 		<div class="slide-left-right-ios7" ng-hide="hardwareConnected" ng-include src="'templates/connectionMessage.html'"></div>
-		
+
 		<div ng-show="hardwareConnected">
 			<div class="button-bar">
 			  <a class="button button-outline button-energized" ng-click="openPopover($event)">Bus Settings</a>
@@ -39,9 +36,9 @@
 			    </tr>
 			  </tbody>
 			</table>
-		
+
 		</div>
-		
+
 	</ion-content>
 
 </ion-view>
@@ -54,16 +51,16 @@
       <h1 class="title">Bus Settings</h1>
     </ion-header-bar>
     <ion-content>
-    
+
       <ul class="list">
 			  <li class="item item-toggle">
 			     CAN Bus 1 Logging Output
-			     <label class="toggle toggle-assertive">
-			       <input type="checkbox" ng-model="busSettings.can1log">
-			       <div class="track">
-			         <div class="handle"></div>
-			       </div>
-			     </label>
+					<label class="toggle toggle-assertive">
+						<input type="checkbox" ng-model="busSettings.can1log">
+						<div class="track">
+							<div class="handle"></div>
+						</div>
+					</label>
 			  </li>
 			  <li class="item item-toggle">
 			     CAN Bus 2 Logging Output
@@ -84,7 +81,7 @@
 			     </label>
 			  </li>
 			</ul>
-			
+			<button class="button" ui-sref="hardware.status">Hardware Settings</button>
     </ion-content>
   </ion-popover-view>
 </script>

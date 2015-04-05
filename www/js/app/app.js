@@ -51,74 +51,94 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 	})
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
-		// Ionic uses AngularUI Router which uses the concept of states
+			// Ionic uses AngularUI Router which uses the concept of states
 	    // Learn more here: https://github.com/angular-ui/ui-router
 	    // Set up the various states which the app can be in.
 	    // Each state's controller can be found in controllers.js
 	    $stateProvider
 
-	        .state('hardware', {
-	         	url: '/hardware',
-	            abstract: true,
-	            templateUrl: 'templates/hardware/main.html'
+				.state('home', {
+					url: '/',
+					templateUrl: 'templates/home.html'
+				})
+
+	      .state('hardware', {
+					url: '/hardware',
+					abstract: true,
+					templateUrl: 'templates/hardware/main.html'
 		    })
 
-			.state('hardware.status', {
-	            url: '',
-	            controller: 'HWStatusController',
-	            templateUrl: 'templates/hardware/hw-status.html'
-	        })
+				.state('hardware.status', {
+          url: '',
+          controller: 'HWStatusController',
+          templateUrl: 'templates/hardware/hw-status.html'
+        })
 
-	        .state('hardware.connect', {
-	            url: '/connect',
-	            controller: 'ConnectionController',
-	            templateUrl: 'templates/hardware/connection.html'
-	        })
+				.state('firmware', {
+          url: '/firmware',
+          controller: 'BuildsController',
+          templateUrl: 'templates/firmware.html',
+        })
 
-	        .state('dashboard', {
-	            url: '/dashboard',
-	            controller: 'DashboardController',
-	            templateUrl: 'templates/dashboard.html'
-	        })
+	      .state('hardware.connect', {
+          url: '/connect',
+          controller: 'ConnectionController',
+          templateUrl: 'templates/hardware/connection.html'
+	      })
 
-	        .state('logger', {
-	            url: '/logger',
-	            controller: 'LoggerController',
-	            templateUrl: 'templates/logger.html'
-	        })
+	      .state('dashboard', {
+	          url: '/dashboard',
+	          controller: 'DashboardController',
+	          templateUrl: 'templates/dashboard.html'
+	      })
 
-			.state('diagnostics', {
-	            url: '/diagnostics',
-	            controller: 'DiagController',
-	            templateUrl: 'templates/diagnostics.html'
-	        })
+	      .state('logger', {
+	          url: '/logger',
+	          controller: 'LoggerController',
+	          templateUrl: 'templates/logger.html'
+	      })
 
-	        .state('logger.view', {
-				url: "/view",
-				views: {
-				'home-tab': {
-					templateUrl: 'templates/pidfinder.view.html'
-					}
-				}
-			})
+				.state('diagnostics', {
+	          url: '/diagnostics',
+	          controller: 'DiagController',
+	          templateUrl: 'templates/diagnostics.html'
+	      })
 
-	        .state('settings', {
-	            url: '/settings',
-	            controller: 'SettingsController',
-	            templateUrl: 'templates/settings.html'
-	        })
+		    // .state('logger.view', {
+				// 	url: "/view",
+				// 	views: {
+				// 	'home-tab': {
+				// 		templateUrl: 'templates/pidfinder.view.html'
+				// 		}
+				// 	}
+				// })
 
-	        .state('debug', {
-	            url: '/debug',
-	            controller: 'DebugController',
-	            templateUrl: 'templates/debug.html'
-	        });
+	      .state('settings', {
+	          url: '/settings',
+	          controller: 'SettingsController',
+	          templateUrl: 'templates/settings.html'
+	      })
+
+	      .state('debug', {
+	          url: '/debug',
+	          controller: 'DebugController',
+	          templateUrl: 'templates/debug.html'
+	      });
+
 
 	    // $urlRouterProvider.otherwise('/dashboard');
-	    $urlRouterProvider.otherwise('/hardware');
+	    $urlRouterProvider.otherwise('/');
 
 	    // Set local storage prefix
 	    localStorageServiceProvider.setPrefix('CBTSettings');
+
+	})
+
+	.config(function($mdThemingProvider) {
+
+		$mdThemingProvider.theme('default')
+	    .primaryPalette('deep-orange')
+	    .accentPalette('grey');
 
 	})
 

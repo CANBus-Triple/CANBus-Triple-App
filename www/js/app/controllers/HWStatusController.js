@@ -1,44 +1,48 @@
-'use strict';  
+'use strict';
 
 
 angular.module('cbt')
-	.controller('HWStatusController', function ($rootScope, $scope, $http, $interval, HardwareService) {
-  
-    $scope.navTitle = "Connect to your CANBus Triple";
+	.controller('HWStatusController', function ($rootScope, $scope, $state, $http, $interval, $timeout, HardwareService) {
+
+    $scope.navTitle = "Hardware";
 		$scope.title = "Connect";
 
-/*
-
-		$scope.rightButtons = [{
-			type: 'button-icon icon ion-ios7-circle-filled',
-			tap: function(e) {
-					HardwareService.disconnect();
-				}
-		}];
-*/
+		var updateIndex = 0,
+				updateFrequency = 500,
+				commandMap = ['info', 'bus1status', 'bus2status', 'bus3status'],
+				speeds = [10,20,50,83,100,125,250,500,800,1000];
 
 
+		if( !$scope.hardwareConnected ) $state.go('hardware.connect');
 
-	$rootScope.$on( 'hardwareEvent', hardwareEventHandler );
-	
-	
-	function hardwareEventHandler( eventName, eventObject ){
-		
-		console.log( eventObject );
-		
-	}
-	
-	
-	
-	
-	$scope.updateStatus = function(){
-		// Send bus one status inquiry
-		HardwareService.send( String.fromCharCode(0x01, 0x10, 0x01) );
-	}
-	
-	
-	
+		$scope.speeds = speeds;
+		$scope.bus1speed = 1;
+		$scope.bus2speed = 1;
+		$scope.bus3speed = 1;
+
+		$scope.autoBaud = function(bus){
+			cleanup();
+			HardwareService.command('autobaud', [parseInt(bus)]);
+		}
+
+		$scope.updateStatus = function(){
+
+			if(!$scope.hardwareConnected) return;
+
+			HardwareService.command( commandMap[updateIndex++] );
+			updateIndex = updateIndex <= 3 ? updateIndex : 0;
+		}
+
+		var intPromise = $interval($scope.updateStatus, updateFrequency);
+		function cleanup(){
+			if(intPromise) $interval.cancel(intPromise);
+		}
+
+		$scope.$on('$destroy', function(){
+			console.log("DESTROY DESTROY DESTROY DESTROY DESTROY DESTROY DESTROY ");
+			cleanup();
+		});
 
 
-  
+
 	});

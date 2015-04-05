@@ -1,4 +1,4 @@
-'use strict';  
+'use strict';
 
 
 angular.module('cbt')
@@ -6,15 +6,17 @@ angular.module('cbt')
 
 	  $scope.navTitle = "Debug";
 
+		$scope.showCmdBtn();
+
 	  $scope.sendTest = function(){
 
-		  HardwareService.send( String.fromCharCode(0x01,0x01) );
+		  HardwareService.command( 'info' );
 
 	  };
 
-	  $scope.sendFirmware = function(){
+	  $scope.autobaud = function(){
 
-		  FirmwareService.send();
+			HardwareService.command( 'autobaud', [1] );
 
 	  }
 
@@ -25,17 +27,21 @@ angular.module('cbt')
 	  }
 
 
-	  $scope.debugString = 'Debug Output';
+	  $scope.debugString = '';
+
 	  $scope.readHandler = function(data){
-
-			$timeout( function(){ $scope.debugString += UtilsService.ab2str(data); }, 10);
-
-			console.log( UtilsService.ab2str(data) );
-
+			$timeout( function(){ $scope.debugString += UtilsService.ab2str(data)+"\n"; }, 10);
 		}
+
+		$scope.$on('hardwareEvent', function(event, data){
+			$timeout( function(){
+				$scope.debugString += JSON.stringify(data)+"\n";
+			});
+		});
 
 
 		HardwareService.registerReadHandler($scope.readHandler);
+
 		$scope.$on("$destroy", function() {
     	HardwareService.deregisterReadHandler($scope.readHandler);
     });

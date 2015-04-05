@@ -42,8 +42,8 @@ angular.module('cbt')
 
 			serialPort = new SerialPort(serialPath, {
 				// encoding: 'ascii', //Buffer utf8 utf16le ucs2 ascii hex.
-			  	baudrate: baudRate,
-			  	databits: 8,
+		  	baudrate: baudRate,
+		  	databits: 8,
 				stopbits: 1,
 				parity: 'none',
 				rtscts: false,

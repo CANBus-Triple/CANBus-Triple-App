@@ -2,6 +2,11 @@
 body,
 html {
 	height: 100%;
+	-webkit-user-select: text;
+}
+
+.scroll {
+	-webkit-user-select: text;
 }
 
 ion-nav-bar {
