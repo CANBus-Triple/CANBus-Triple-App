@@ -32,55 +32,65 @@
 
   <body ng-app="cbt" ng-controller="AppController" class="platform-android platform-cordova platform-webview">
 
-	<cbt-side-menu>
-		<ion-view>
-	    <ion-content ng-controller="MenuController">
-	      <ion-list>
-<!-- 		      	<cbt-user-info name="'Derek K'" email="'etx313@gmail.com'"></cbt-user-info> -->
-	      	<div class="item item-divider">
-				    Settings
-				  </div>
-	        <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in list">
-	          <i ng-class="item.iconClass"></i>
-	          {{item.text}}
-	        </ion-item>
-	        <div class="item item-divider">
-				    Plugins
-				  </div>
-				  <ion-item ng-click="goTo(item.link)" class="item item-icon-left" ng-repeat="item in listPlugins">
-	          <i ng-class="item.iconClass"></i>
-	          {{item.text}}
-	        </ion-item>
-	      </ion-list>
-	     <img id='logo' src="img/cbt-outline.svg"/>
-	    </ion-content>
-	   </ion-view>
-	</cbt-side-menu>
-
     <ion-nav-bar class="bar-assertive nav-title-slide-ios7" ng-class="{'nav-showing': navShowing}">
-
       <ion-nav-buttons side="left">
-        <button class="button button-clear" ng-click="toggleMenu()">
+        <button class="button button-clear scale-up" ng-click="toggleMenu()" ng-show="uiLarge">
           <i class="icon ion-navicon-round"></i>
         </button>
-        <button ng-if="showCommandButton == true" class="button" ng-click="showSendCommandModal()">Serial Command</button>
+        <button ng-if="showCommandButton" class="button" ng-click="showSendCommandModal()">Serial Command</button>
       </ion-nav-buttons>
-
       <ion-nav-buttons side="right">
         <button class="button button-clear icon"
                 ng-class="{true: 'ion-ios-circle-filled', false: 'ion-ios-circle-outline'}[connectIcon]"
                 ng-disabled="connectIconEnable"
                 ng-click="connectTap()"></button>
       </ion-nav-buttons>
-
       <ion-nav-back-button class="button-clear">
         <i class="ion-arrow-left-c"></i> Back
       </ion-nav-back-button>
-
     </ion-nav-bar>
 
-    <ion-nav-view animation="slide-left-right-ios7">
-    </ion-nav-view>
+    <cbt-side-menu>
+      <span ng-include="'navigation'"></span>
+    </cbt-side-menu>
+
+    <ion-side-menus>
+      <!-- Center content -->
+      <ion-side-menu-content>
+        <ion-nav-view></ion-nav-view>
+      </ion-side-menu-content>
+
+      <!-- Left menu -->
+      <ion-side-menu expose-aside-when="large">
+        <span ng-include="'navigation'"></span>
+      </ion-side-menu>
+    </ion-side-menus>
+
+
+<!-- templates -->
+<script type="text/ng-template" id="navigation">
+  <ion-view>
+    <ion-content ng-controller="MenuController">
+      <ion-list>
+        <div class="item item-divider">
+          Utilities
+        </div>
+        <ion-item ui-sref="{{item.link}}" class="item item-icon-left" ng-repeat="item in list">
+          <i ng-class="item.iconClass"></i>
+          {{item.text}}
+        </ion-item>
+        <div class="item item-divider">
+          Plugins
+        </div>
+        <ion-item ui-sref="{{item.link}}" class="item item-icon-left" ng-repeat="item in listPlugins">
+          <i ng-class="item.iconClass"></i>
+          {{item.text}}
+        </ion-item>
+      </ion-list>
+     <img id='logo' src="img/cbt-outline.svg"/>
+    </ion-content>
+   </ion-view>
+</script>
 
   </body>
 </html>

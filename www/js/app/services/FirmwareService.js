@@ -271,15 +271,18 @@ angular.module('cbt')
 		/*
 		*	Load Hex file for parsing into ArrayBuffer
 		*/
-		function fetchFirmware(){
+		function fetchFirmware(s){
 
 			var deferred = $q.defer();
 
-			$http({method: 'GET', url: 'https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple/master/builds/CANBusTriple.cpp.hex'}).
+			$rootScope.$broadcast('FirmwareService.HEX_LOAD_START');
+			$http({method: 'GET', url: s}).
 		    success(function(data, status, headers, config) {
-				deferred.resolve(data);
+					$rootScope.$broadcast('FirmwareService.HEX_LOAD_COMPLETE');
+					deferred.resolve(data);
 		    }).
 		    error(function(data, status, headers, config) {
+					$rootScope.$broadcast('FirmwareService.HEX_LOAD_ERROR', status);
 		     	deferred.reject(status);
 		    });
 
@@ -313,9 +316,9 @@ angular.module('cbt')
 		*	Send firmware to Hardware.
 		* Registers a read callback with the HwardwareService, Resets hardware to Bootloader, then parses hex and sends it.
 		*/
-		function send(){
+		function send(s){
 
-			fetchFirmware()
+			fetchFirmware(s)
 				.then( function(d){
 					HardwareService.registerRawHandler( readHandler );
 					hex = new IntelHex( d );
@@ -332,7 +335,7 @@ angular.module('cbt')
 
 
 		return {
-			send: function(n){ send(n) },
+			send: function(s){ send(s) },
 		};
 
 	});

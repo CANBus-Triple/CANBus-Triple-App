@@ -3,8 +3,7 @@
 angular.module('cbt')
 	.factory('BuildsService', function($rootScope, $timeout, $http, HardwareService){
 
-    // https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple/master/builds/builds.json
-    var rootPath = 'https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple/master/builds/',
+    var rootPath = 'https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple-Builds/master/',
         sources = [];
 
 

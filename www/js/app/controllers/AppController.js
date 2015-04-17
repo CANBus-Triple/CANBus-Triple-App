@@ -1,20 +1,28 @@
 
 angular.module('cbt')
-	.controller('AppController', function ($scope, $rootScope, $timeout, $ionicModal, $mdDialog, HardwareService, UtilsService) {
+	.controller('AppController', function ($window, $scope, $rootScope, $timeout, $ionicModal, $mdDialog, HardwareService, UtilsService) {
 
 		$scope.navTitle = "AppController";
 		$scope.title = "AppController title";
 
 		$scope.hwState = {};
 
+		$scope.comLock = false;
 
-		$scope.leftButtons = [{
-		 	type: 'button-clear',
-			content: '<i class="icon ion-navicon"></i>',
-	    tap: function(e) {
-      		$scope.cbtSideMenu.toggle();
-    		}
-		}];
+		$scope.uiLarge = false;
+
+		angular.element($window).bind('resize', function() {
+			$scope.uiLarge = !$window.matchMedia("(min-width:768px)").matches;
+		})
+
+
+		// $scope.leftButtons = [{
+		//  	type: 'button-clear',
+		// 	content: '<i class="icon ion-navicon"></i>',
+	  //   tap: function(e) {
+    //   		$scope.cbtSideMenu.toggle();
+    // 		}
+		// }];
 
 
 		$scope.rightButtons = [];

@@ -8,12 +8,13 @@
 
   <ion-content padding="true" scroll="true">
 
-    <h1>{{flashProgress}}</h1>
-
-    <md-progress-circular class="md-hue-1" md-mode="determinate" value="{{flashProgress}}">
-      {{flashProgress}}
-    </md-progress-circular>
-    <button ng-if="flashComplete" ng-click="closeModal()" class="button">Close</button>
+    <div style="position: absolute; left:50%; width:6em; margin-left:-3em;">
+      <h1>{{flashProgress}}</h1>
+      <md-progress-circular class="md-hue-1" md-mode="determinate" value="{{flashProgress}}">
+        {{flashProgress}}
+      </md-progress-circular>
+      <button ng-if="flashComplete" ng-click="closeModal()" class="button">Close</button>
+    </div>
 
   </ion-content>
 

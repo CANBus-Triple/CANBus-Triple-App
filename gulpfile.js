@@ -12,7 +12,7 @@ var reload      = browserSync.reload;
 
 var paths = {
   sass: ['./www/sass/**/*.scss'],
-  nwjs: ['package.json','./www/**/**', './node_modules/serialport/**/**', './node_modules/noble/**/**']
+  nwbuild: ['./package.json','./www/**/*', './node_modules/cbt-wireshark/**/*', './node_modules/serialport/**/*', './node_modules/noble/**/*']
 };
 
 gulp.task('default', ['sass', 'scripts', 'serve']);
@@ -85,12 +85,11 @@ gulp.task('git-check', function(done) {
   done();
 });
 
-
 gulp.task('nw-build', function(done){
 
 	var nw = new NwBuilder({
 			appName: 'CANBus Triple',
-	    files: paths.nwjs, // use the glob format
+	    files: paths.nwbuild,
 	    platforms: ['osx64', 'win64','linux64'],
 	    macIcns: 'build_assets/nw.icns',
 	});

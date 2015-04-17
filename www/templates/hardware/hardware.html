@@ -2,30 +2,21 @@
 
   <ion-content padding="true" class="color-assertive" hide-back-button="true">
 
-    <md-grid-list md-cols-sm="1" md-cols-md="3" md-cols-gt-sm="3" md-row-height-gt-md="1:1" md-row-height="2:2" md-gutter="24px" md-gutter-gt-sm="12px" >
+    <!-- {{hwState}} -->
 
-        <md-grid-tile class="gray" md-rowspan="1" md-colspan="1" ng-click="updateStatus()" style="background: url(/img/cbt-outline-white.svg) center center no-repeat; background-size:contain; color:white; font-size:150%; text-align:center;">
-          <p ng-if="hwState.version.name"><b>{{ hwState.version.name }}<br>{{ hwState.version.version }}</b></p>
+    <md-grid-list md-cols-sm="2" md-cols-gt-sm="6" md-row-height-gt-md="1:1" md-row-height="2:2" md-gutter="24px" md-gutter-gt-sm="12px" >
+
+        <md-grid-tile class="gray" md-rowspan="1" md-colspan="1" md-colspan-sm="2" ng-click="updateStatus()" style="background: url(/img/cbt-outline-white.svg) center center no-repeat; background-size:contain; color:white; font-size:150%; text-align:center;">
+          <p ng-if="hwState.version.name" style="line-height:1.1em; margin-bottom:0; padding:0 0.6em;">{{ hwState.version.name }}<br>{{ hwState.version.version }}</p>
           <md-progress-circular ng-if="!hwState.version.name && hardwareConnected" class="md-accent" md-mode="indeterminate"></md-progress-circular>
           <p ng-if="!hwState.version.name && !hardwareConnected"><b>Not Connected</b></p>
         </md-grid-tile>
 
-        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="2" md-colspan-sm="1">
-          <md-grid-tile-header>
-            <h3>Device Information</h3>
-          </md-grid-tile-header>
-
-            <ul>
-              <li><b>Firmware:</b> {{ hwState.version.name }}</li>
-              <li><b>Build:</b> {{ hwState.version.version }}</li>
-              <li><b>Free Memory:</b> {{ hwState.version.memory }}</li>
-            </ul>
-            <br>
-            <button class="button" ui-sref="firmware">Update FW</button>
-
+        <md-grid-tile class="md-whiteframe-z2" md-rowspan="3" md-colspan="3" md-colspan-sm="2">
+          <ui-view name="pane" animation="slide-left-right-ios7"></ui-view>
         </md-grid-tile>
 
-        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="1" ng-click="updateStatus()">
+        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="2" md-colspan-sm="2">
           <md-grid-tile-header>
             <h3>CAN Bus 1</h3>
           </md-grid-tile-header>
@@ -36,14 +27,13 @@
             <li><b>Error:</b> {{ hwState.busdbg['Bus 1'].error }}</li>
           </ul>
 
-          <md-select placeholder="" ng-model="bus1speed">
-            <md-option ng-repeat="speed in speeds" value="{{$index}}">{{speed}} kbps</md-option>
+          <md-select placeholder="Bus Speed Unknown" ng-model="bus1speed" ng-change="setRate(1, bus1speed)">
+            <md-option ng-repeat="speed in speeds" value="{{$index}}">{{speed}} {{$last?'':'kbps'}}</md-option>
           </md-select>
-          <button class="button" ng-click="autoBaud(1)">Detect Bus Speed</button>
 
         </md-grid-tile>
 
-        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="1">
+        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="2" md-colspan-sm="2">
           <md-grid-tile-header>
             <h3>CAN Bus 2</h3>
           </md-grid-tile-header>
@@ -54,14 +44,13 @@
             <li><b>Error:</b> {{ hwState.busdbg['Bus 2'].error }}</li>
           </ul>
 
-          <md-select placeholder="" ng-model="bus2speed">
+          <md-select placeholder="Bus Speed Unknown" ng-model="bus2speed" ng-change="setRate(2, bus2speed)">
             <md-option ng-repeat="speed in speeds" value="{{$index}}">{{speed}} kbps</md-option>
           </md-select>
-          <button class="button" ng-click="autoBaud(2)">Detect Bus Speed</button>
 
         </md-grid-tile>
 
-        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="1">
+        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="2">
           <md-grid-tile-header>
             <h3>CAN Bus 3</h3>
           </md-grid-tile-header>
@@ -72,10 +61,9 @@
             <li><b>Error:</b> {{ hwState.busdbg['Bus 3'].error }}</li>
           </ul>
 
-          <md-select placeholder="" ng-model="bus3speed">
+          <md-select placeholder="Bus Speed Unknown" ng-model="bus3speed" ng-change="setRate(3, bus3speed)">
             <md-option ng-repeat="speed in speeds" value="{{$index}}">{{speed}} kbps</md-option>
           </md-select>
-          <button class="button" ng-click="autoBaud(3)">Detect Bus Speed</button>
 
         </md-grid-tile>
 

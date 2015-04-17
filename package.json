@@ -1,6 +1,6 @@
 {
   "name": "CANBusTriple",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "private": true,
   "scripts": {
     "start": "node server.js"
@@ -13,20 +13,21 @@
     "gulp-concat": "^2.2.0",
     "gulp-minify-css": "^0.3.0",
     "gulp-rename": "^1.2.0",
-    "gulp-sass": "^0.7.1",
+    "gulp-sass": "^1.3.3",
     "gulp-util": "^2.2.14",
-    "node-webkit-builder": "^1.0.10"
+    "node-sass": "^2.0.1",
+    "node-webkit-builder": "^1.1.0",
+    "shelljs": "^0.4.0"
   },
   "dependencies": {
-    "gulp-sass": "^1.3.3",
+    "cbt-wireshark": "^0.1.1",
     "noble": "^0.3.0",
-    "node-sass": "^2.0.1",
-    "serialport": "^1.5.0"
+    "serialport": "1.6.3"
   },
   "_comment": " * Node-Webkit Info Below * ",
-  "main": "www/index.html",
-  "__main": "http://localhost:8000/",
-  "node-remote": "<local>",
+  "_main": "www/index.html",
+  "main": "http://192.168.11.9:3000/",
+  "node-remote": "<local>,*",
   "window": {
     "show": true,
     "width": 1280,

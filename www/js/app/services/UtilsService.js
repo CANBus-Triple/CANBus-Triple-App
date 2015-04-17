@@ -146,6 +146,12 @@ angular.module('cbt')
 	});
 
 
+	Uint8Array.prototype.clear = function(){
+		for(var i=0; i<this.byteLength; i++)
+			this[i] = 0;
+		return this;
+	};
+
 
 
 

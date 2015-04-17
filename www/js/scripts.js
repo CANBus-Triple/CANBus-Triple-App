@@ -5,8 +5,10 @@
  *
 */
 
+window.cbtAppDebug = true;
 
-angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
+
+angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule'])
 
 	.run(function($ionicPlatform) {
 		/*
@@ -28,7 +30,7 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 		/*
 		*		Node-Webkit Setup
 		*/
-		if(typeof require != 'undefined'){
+		if(typeof require != 'undefined' && process.platform == 'darwin' ){
 
 			var gui = require('nw.gui'),
 		  		win = gui.Window.get();
@@ -64,23 +66,30 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 
 	      .state('hardware', {
 					url: '/hardware',
-					abstract: true,
-					templateUrl: 'templates/hardware/main.html'
+					// abstract: true,
+					controller: 'HWStatusController',
+					templateUrl: 'templates/hardware/hardware.html',
 		    })
-
 				.state('hardware.status', {
-          url: '',
-          controller: 'HWStatusController',
-          templateUrl: 'templates/hardware/hw-status.html'
+          url: '/status',
+					views: {
+						'pane':{
+							// controller: 'HWStatusController',
+							templateUrl: 'templates/hardware/device.html'
+						}
+					}
         })
-
-				.state('firmware', {
+				.state('hardware.firmware', {
           url: '/firmware',
-          controller: 'BuildsController',
-          templateUrl: 'templates/firmware.html',
+					views: {
+						'pane':{
+							controller: 'BuildsController',
+		          templateUrl: 'templates/hardware/firmware.html',
+						}
+					}
         })
 
-	      .state('hardware.connect', {
+	      .state('connect', {
           url: '/connect',
           controller: 'ConnectionController',
           templateUrl: 'templates/hardware/connection.html'
@@ -102,6 +111,18 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 	          url: '/diagnostics',
 	          controller: 'DiagController',
 	          templateUrl: 'templates/diagnostics.html'
+	      })
+
+				.state('services', {
+	          url: '/services',
+	          controller: 'ServicesController',
+	          templateUrl: 'templates/services.html'
+	      })
+
+				.state('pipe', {
+	          url: '/pipe',
+	          controller: 'PipeController',
+	          templateUrl: 'templates/pipe.html'
 	      })
 
 		    // .state('logger.view', {
@@ -140,48 +161,56 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 	    .primaryPalette('deep-orange')
 	    .accentPalette('grey');
 
-	})
+	});
 
-	.config(['$provide', function ($provide) {
-	  $provide.decorator('$rootScope', function ($delegate) {
+	if( window.cbtAppDebug )
+		angular.module('cbt')
+			.config(['$provide', function ($provide) {
+			  $provide.decorator('$rootScope', function ($delegate) {
 
-	    var _emit = $delegate.$emit;
-	    $delegate.$emit = function(){
-	      console.log.apply(console, arguments);
-	      _emit.apply(this, arguments);
-	    };
+			    var _emit = $delegate.$emit;
+			    $delegate.$emit = function(){
+			      console.log.apply(console, arguments);
+			      _emit.apply(this, arguments);
+			    };
 
-			var origBroadcast = $delegate.$broadcast;
-			$delegate.$broadcast = function() {
-	      // console.log("$broadcast: ", JSON.stringify(arguments));
-	      console.log("$broadcast: ", arguments);
-	      return origBroadcast.apply(this, arguments);
-	    };
+					var origBroadcast = $delegate.$broadcast;
+					$delegate.$broadcast = function() {
+			      // console.log("$broadcast: ", JSON.stringify(arguments));
+			      console.log("$broadcast: ", arguments);
+			      return origBroadcast.apply(this, arguments);
+			    };
 
-	    return $delegate;
+			    return $delegate;
 
-	  });
-	}])
-
-	;
+			  });
+			}]);
 
 
 angular.module('cbt')
-	.controller('AppController', function ($scope, $rootScope, $timeout, $ionicModal, $mdDialog, HardwareService, UtilsService) {
+	.controller('AppController', function ($window, $scope, $rootScope, $timeout, $ionicModal, $mdDialog, HardwareService, UtilsService) {
 
 		$scope.navTitle = "AppController";
 		$scope.title = "AppController title";
 
 		$scope.hwState = {};
 
+		$scope.comLock = false;
 
-		$scope.leftButtons = [{
-		 	type: 'button-clear',
-			content: '<i class="icon ion-navicon"></i>',
-	    tap: function(e) {
-      		$scope.cbtSideMenu.toggle();
-    		}
-		}];
+		$scope.uiLarge = false;
+
+		angular.element($window).bind('resize', function() {
+			$scope.uiLarge = !$window.matchMedia("(min-width:768px)").matches;
+		})
+
+
+		// $scope.leftButtons = [{
+		//  	type: 'button-clear',
+		// 	content: '<i class="icon ion-navicon"></i>',
+	  //   tap: function(e) {
+    //   		$scope.cbtSideMenu.toggle();
+    // 		}
+		// }];
 
 
 		$scope.rightButtons = [];
@@ -409,7 +438,7 @@ angular.module('cbt')
 
 
 angular.module('cbt')
-	.controller('BuildsController', function ($scope, $state, $timeout, $ionicModal, BuildsService, FirmwareService){
+	.controller('BuildsController', function ($scope, $state, $timeout, $ionicModal, BuildsService, FirmwareService, HardwareService){
 
 		$scope.navTitle = "Firmware Update";
 		$scope.title = "Firmware Update";
@@ -468,17 +497,16 @@ angular.module('cbt')
 		}
 
 		$scope.flash = function( file ){
+			console.log("FLASH:",BuildsService.rootPath + file);
+			$scope.cleanup();
 			$scope.showFlashModal();
 			$timeout(function(){
 				FirmwareService.send( BuildsService.rootPath + file );
-			}, 2000);
+			}, 200);
 		}
 
 		$scope.$on('FirmwareService.FLASH_PROGRESS', function(event, data){
-
-				$scope.flashProgress = Math.ceil(data * 100);
-
-			console.log($scope.flashProgress);
+			$scope.flashProgress = Math.ceil(data * 100);
 		});
 
 		$scope.$on('FirmwareService.FLASH_SUCCESS', function(event, data){
@@ -654,44 +682,147 @@ angular.module('cbt')
 
 
 angular.module('cbt')
-	.controller('HWStatusController', function ($rootScope, $scope, $state, $http, $interval, $timeout, HardwareService) {
+	.controller('HWStatusController', function ($rootScope, $scope, $state, $http, $interval, $timeout, $ionicModal, HardwareService) {
 
     $scope.navTitle = "Hardware";
 		$scope.title = "Connect";
 
 		var updateIndex = 0,
-				updateFrequency = 500,
+				updateFrequency = 2000,
 				commandMap = ['info', 'bus1status', 'bus2status', 'bus3status'],
-				speeds = [10,20,50,83,100,125,250,500,800,1000];
+				autobaud = 'Auto Detect',
+				speeds = [10,20,50,83,100,125,250,500,800,1000,autobaud];
 
 
-		if( !$scope.hardwareConnected ) $state.go('hardware.connect');
+		if( !$scope.hardwareConnected ) $state.go('connect');
 
 		$scope.speeds = speeds;
-		$scope.bus1speed = 1;
-		$scope.bus2speed = 1;
-		$scope.bus3speed = 1;
+
+		$scope.$watch(function(){
+			if( $scope.hwState['bitrate-bus1'] )
+				return $scope.hwState['bitrate-bus1'].rate;
+		},function(newVal, oldVal){
+			$scope.bus1speed = speeds.indexOf(newVal);
+			console.info('bitrate-bus1', arguments, $scope.bus1speed);
+		});
+
+		$scope.$watch(function(){
+			if( $scope.hwState['bitrate-bus2'] )
+				return $scope.hwState['bitrate-bus2'].rate;
+		},function(newVal, oldVal){
+			$scope.bus2speed = speeds.indexOf(newVal);
+		});
+
+		$scope.$watch(function(){
+			if( $scope.hwState['bitrate-bus3'] )
+				return $scope.hwState['bitrate-bus3'].rate;
+		},function(newVal, oldVal){
+			$scope.bus3speed = speeds.indexOf(newVal);
+		});
+
+
+		$scope.setRate = function( bus, speed ){
+
+			console.log('setRate', arguments);
+
+			var sp = speeds[speed];
+
+			if( sp == autobaud )
+				$scope.autoBaud(bus);
+			else
+				HardwareService.command('bitrate', [ bus, sp >> 8, sp & 0xff ]);
+
+		}
+
+
+
+		function start(){
+
+			HardwareService.command('bitrate', [0x01]);
+
+			window.hwIntPromise = $interval($scope.updateStatus, updateFrequency);
+
+		}
+
+
 
 		$scope.autoBaud = function(bus){
 			cleanup();
-			HardwareService.command('autobaud', [parseInt(bus)]);
+
+			$scope.autobaudBus = bus;
+			$scope.autobaudFound = null;
+			$scope.autobaudComplete = false;
+
+			$ionicModal.fromTemplateUrl('templates/modals/autobaud.html', {
+			    scope: $scope,
+			    animation: 'slide-in-up',
+					backdropClickToClose: false,
+					hardwareBackButtonClose: false
+			  }).then(function(modal) {
+			    $scope.modal = modal;
+			    $scope.modal.show();
+			  });
+			  $scope.closeModal = function() {
+			    $scope.modal.hide();
+			  };
+			  //Cleanup the modal when we're done with it!
+			  $scope.$on('$destroy', function() {
+			    $scope.modal.remove();
+			  });
+			  // Execute action on hide modal
+			  $scope.$on('modal.hidden', function() {
+			    // Execute action
+			  });
+			  // Execute action on remove modal
+			  $scope.$on('modal.removed', function() {
+			    // Execute action
+			  });
+
+				HardwareService.command('autobaud', [parseInt(bus)]);
+
 		}
 
 		$scope.updateStatus = function(){
-
-			if(!$scope.hardwareConnected) return;
+			if(!$scope.hardwareConnected || $scope.comLock) return;
 
 			HardwareService.command( commandMap[updateIndex++] );
 			updateIndex = updateIndex <= 3 ? updateIndex : 0;
 		}
 
-		var intPromise = $interval($scope.updateStatus, updateFrequency);
 		function cleanup(){
-			if(intPromise) $interval.cancel(intPromise);
+			console.info('cleanup');
+			if(window.hwIntPromise){
+				$interval.cancel(window.hwIntPromise);
+				window.hwIntPromise == null;
+			}
 		}
+		$scope.cleanup = cleanup;
 
-		$scope.$on('$destroy', function(){
-			console.log("DESTROY DESTROY DESTROY DESTROY DESTROY DESTROY DESTROY ");
+
+		$scope.$on('hardwareEvent', function(event, object){
+
+			switch( object.event ){
+				case 'autobaudComplete':
+					$scope.autobaudComplete = true;
+					$scope.autobaudFound = object.rate;
+					$timeout(function(){ HardwareService.command('bitrate', [0x01]) }, 2000);
+					break;
+				case 'bitrate-bus1':
+					HardwareService.command('bitrate', [0x02])
+					break;
+				case 'bitrate-bus2':
+					HardwareService.command('bitrate', [0x03])
+					break;
+				case 'bitrate-bus3':
+
+					break;
+			}
+
+		});
+
+		$scope.$on('$ionicView.enter', start);
+
+		$scope.$on('$ionicView.leave', function(){
 			cleanup();
 		});
 
@@ -818,8 +949,16 @@ angular.module('cbt')
 angular.module('cbt')
 	.controller('LoggerController', function ($scope, $state, $location, $timeout, $ionicPopover, HardwareService, UtilsService) {
 
+		var maxMessages = process ? 64:32, // 128 messsages on desktop, 32 on mobile
+				viewMode = {
+					CRON: 'Chronological',
+					COMPACT: 'Compact'
+				};
+
 		$scope.title = "CANBus Triple";
 		$scope.navTitle = "Packet Logger";
+
+		$scope.filterMids = [];
 
 		$scope.showCmdBtn();
 
@@ -887,15 +1026,18 @@ angular.module('cbt')
 
 	  $scope.modeSwitchDisabled = true;
 
-	  $scope.viewMode = "Compact";
+	  $scope.viewMode = viewMode.COMPACT;
+		$scope.showFilter = true;
 	  $scope.switchMode = function(event){
 
 			switch($scope.viewMode){
-				case 'Compact':
-					$scope.viewMode = "Chronological";
+				case viewMode.COMPACT:
+					$scope.viewMode = viewMode.CRON;
+					$scope.showFilter = false;
 				break;
-				case 'Chronological':
-					$scope.viewMode = "Compact";
+				case viewMode.CRON:
+					$scope.viewMode = viewMode.COMPACT;
+					$scope.showFilter = true;
 				break;
 			}
 
@@ -920,10 +1062,14 @@ angular.module('cbt')
 		$scope.readHandler = function(packet){
 
 			// Cron mode
-			if( $scope.viewMode === "Chronological" ){
+			if( $scope.viewMode === viewMode.CRON ){
 
-				if( $scope.interestMids.indexOf(packet.messageId) > -1 )
+				if( $scope.interestMids.length < 1 || $scope.interestMids.indexOf(packet.messageId) > -1 )
 					$scope.midBuffer.unshift({mid: packet.messageId, packet: packet});
+
+				// Check max length
+				if( $scope.midBuffer.length > maxMessages )
+					$scope.midBuffer = $scope.midBuffer.slice(0, maxMessages);
 
 				$timeout(function(){}, 1);
 
@@ -983,17 +1129,11 @@ angular.module('cbt')
 
 
 angular.module('cbt')
-	.controller('MenuController', function ($scope, $location, MenuService) {
+	.controller('MenuController', function ($scope, $state, $location, MenuService) {
 
 		$scope.title = "CANBus Triple";
 
 		$scope.list = MenuService.all();
-
-		$scope.goTo = function(page) {
-		  $location.url('/' + page);
-		  $scope.cbtSideMenu.hide();
-		};
-
 
 		$scope.$on('SettingsService.CHANGE', function(event, name){
 
@@ -1004,11 +1144,13 @@ angular.module('cbt')
 			}
 
 		});
-		
+
+		$scope.$on('$stateChangeStart', function(event, name){
+			$scope.cbtSideMenu.hide();
+		});
+
+
 		$scope.listPlugins = MenuService.allPlugins();
-
-
-		
 
 
 	});
@@ -1028,6 +1170,108 @@ angular.module('cbt')
 		
 	  		
 		
+	});
+
+'use strict';
+
+
+angular.module('cbt')
+	.controller('PipeController', function ($scope, PipeService) {
+
+		$scope.navTitle = "Packet Pipe"
+
+		$scope.pipeName = 'no pipe yet';
+		$scope.running = false;
+
+		$scope.$watch(function(){
+			return PipeService.running();
+		}, function(newVal, oldVal){
+			$scope.running = newVal;
+		});
+
+		$scope.toggle = function(){
+			if( $scope.running == false )
+				$scope.start();
+			else
+				$scope.stop();
+		}
+
+		$scope.start = function(){
+			$scope.pipeName = PipeService.start();
+		}
+
+		$scope.stop = function(){
+			PipeService.stop();
+		}
+
+		$scope.$on('$destroy', function(){
+			PipeService.stop();
+		});
+
+
+	});
+
+'use strict';
+
+
+angular.module('cbt')
+	.controller('ServicesController', function ($scope, HardwareService, CBTSettings) {
+
+		$scope.navTitle = "Services Settings";
+
+
+		if( $scope.hwConnected )
+			CBTSettings.load();
+
+		$scope.init = function(){
+			CBTSettings.load();
+		}
+
+	  $scope.resetStockCmd = function(){
+	    HardwareService.command('restoreEeprom');
+	  }
+
+	  $scope.dbg = function(){
+	    // CBTSettings.debugEeprom();
+	    console.log( CBTSettings );
+	  }
+
+	  $scope.sendEeprom = function(){
+	    CBTSettings.sendEeprom();
+	  }
+
+		$scope.resetHardware = function(){
+			HardwareService.command('bootloader');
+		}
+
+
+	  $scope.pids = CBTSettings.pids;
+
+	  $scope.$on("hardwareEvent", function(event, data){
+	    switch(data.event){
+	      case 'eepromSave':
+					console.info(data);
+	      break;
+				case 'eepromReset':
+					console.info('eepromReset', data);
+	      break;
+	    }
+	  });
+
+
+		$scope.$on('HardwareService.CONNECTED', function(){
+			CBTSettings.load();
+		});
+
+
+
+
+
+		$scope.$on('$destroy', function(){
+
+		});
+
+
 	});
 
 'use strict';
@@ -1584,6 +1828,57 @@ angular.module('cbt')
     replace: true
   };
 });
+
+'use strict';
+
+angular.module('cbt')
+  .directive('pidEditor', ['CBTSettings', function(CBTSettings){
+
+    return {
+      restrict: 'E',
+      template: '<section ui-sortable="{tolerance:100}" ng-model="pids" class="pids">'+
+                  '<pid-object ng-repeat="pid in pids" class="pid-object bevel-shadow" index="$index" pid="pid"/>'+
+                '</section>',
+      link: function (scope, elem, attrs) {
+
+        /*
+        scope.pidRows = [];
+        var columns = 4;
+        for( var i=0; i<CBTSettings.pids.length; i+=columns )
+          scope.pidRows.push( CBTSettings.pids.slice( i, i+columns ) );
+
+        if( i < CBTSettings.pids.length && CBTSettings.pids.length-i < columns)
+          scope.pidRows.push( CBTSettings.pids.slice( i, CBTSettings.pids.length ) );
+          */
+
+      },
+      scope: {
+        pids: "="
+      }
+    }
+
+  }]).
+  directive('pidObject', ['CBTSettings', function(CBTSettings){
+
+    return {
+      restrict: 'E',
+      template: '<form class="pid-form">'+
+                '<label for="name">NAME</label><input type="text" class="form-control" id="name" ng-model="pid.name" max="8"/>'+
+                '<label for="busid">BUS</label><input type="text" class="form-control" id="busid" ng-model="pid.busId" max="1"/>'+
+                '<label for="txd">TXD</label><input type="text" class="form-control" id="txd" ng-model="pid.txd" max="8"/>'+
+                '<label for="rxf">RXF</label><input type="text" class="form-control" id="rxf" ng-model="pid.rxf" max="8"/>'+
+                '<label for="rxd">RXD</label><input type="text" class="form-control" id="rxd" ng-model="pid.rxd" max="8"/>'+
+                '<label for="mth">MATH</label><input type="text" class="form-control" id="mth" ng-model="pid.mth" max="8"/>'+
+                '</form>',
+      link: function (scope, elem, attrs) {
+      },
+      scope: {
+        index: "=",
+        pid: "="
+      }
+    }
+
+  }]);
 
 'use strict';
 
@@ -2201,8 +2496,7 @@ angular.module('cbt')
 angular.module('cbt')
 	.factory('BuildsService', function($rootScope, $timeout, $http, HardwareService){
 
-    // https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple/master/builds/builds.json
-    var rootPath = 'https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple/master/builds/',
+    var rootPath = 'https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple-Builds/master/',
         sources = [];
 
 
@@ -2231,6 +2525,193 @@ angular.module('cbt')
 		};
 
 	});
+
+'use strict';
+
+angular.module('cbt')
+  .factory('CBTSettings', function ($rootScope, $q, UtilsService, HardwareService){
+
+    var eepromBuffer = new ArrayBuffer(512);
+    var eepromView = new Uint8Array(eepromBuffer);
+
+    // EEPROM Struct
+    var displayEnabled = new Uint8Array(eepromBuffer, 0, 1);
+    var firstboot = new Uint8Array(eepromBuffer, 1, 1);
+    var displayIndex = new Uint8Array(eepromBuffer, 2, 1);
+    var busSpeeds = new Uint8Array(eepromBuffer, 3, 6);
+    /*
+    var hwselftest = new Uint8Array(eepromBuffer, 3, 1);
+    var placeholder4 = new Uint8Array(eepromBuffer, 4, 1);
+    var placeholder5 = new Uint8Array(eepromBuffer, 5, 1);
+    var placeholder6 = new Uint8Array(eepromBuffer, 6, 1);
+    var placeholder7 = new Uint8Array(eepromBuffer, 7, 1);
+    */
+
+    var pids = [],
+        l = 34,   // PID Size
+        off = 14; // Start offset
+
+    for(var i=0; i<8; i++)
+      pids.push({
+        busId: new Uint8Array(eepromBuffer, (l*i)+off, 1),
+        settings: new Uint8Array(eepromBuffer, 1+(l*i)+off, 1),
+        value: new Uint8Array(eepromBuffer, 2+(l*i)+off, 2),
+        txd: new Uint8Array(eepromBuffer, 4+(l*i)+off, 8),
+        rxf: new Uint8Array(eepromBuffer, 12+(l*i)+off, 6),
+        rxd: new Uint8Array(eepromBuffer, 18+(l*i)+off, 2),
+        mth: new Uint8Array(eepromBuffer, 20+(l*i)+off, 6),
+        name: new Uint8Array(eepromBuffer, 26+(l*i)+off, 8)
+      });
+
+
+    /*
+    *   Human readable object of PIDs for view rendering.
+    */
+    var managedPids = [];
+    for(var i=0; i<pids.length; i++)
+      managedPids.push( { busId: '',
+                          settings: [],
+                          value: '',
+                          txd: '',
+                          rxf: '',
+                          rxd: '',
+                          mth: '',
+                          name: ''
+                        });
+
+    /*
+    *   Convert eeprom buffer to managed pid object
+    */
+    var updateManagedPids = function(){
+
+      managedPids.forEach(function(element, index, array){
+        element.busId = pids[index].busId[0];
+        element.settings = pids[index].settings[0];
+        // element.value = (pids[index].value[1] << 8) + pids[index].value[0];
+        element.value = UtilsService.byteArrayToHex(pids[index].value).toUpperCase();
+        element.txd = UtilsService.byteArrayToHex(pids[index].txd).toUpperCase();
+        element.rxf = UtilsService.byteArrayToHex(pids[index].rxf).toUpperCase();
+        element.rxd = UtilsService.byteArrayToHex(pids[index].rxd).toUpperCase();
+        element.mth = UtilsService.byteArrayToHex(pids[index].mth).toUpperCase();
+        element.name = UtilsService.byteArrayToString(pids[index].name);
+      });
+
+    }
+
+    /*
+    *   Convert eeprom buffer to managed pid object
+    */
+    var updateEepromPids = function(){
+
+      managedPids.forEach(function(element, index, array){
+        pids[index].busId.clear().set( [element.busId] );
+        // pids[index].settings.set();
+        pids[index].value.clear().set( UtilsService.hexToByteArray( element.value ) );
+        pids[index].txd.clear().set( UtilsService.hexToByteArray( element.txd ) );
+        pids[index].rxf.clear().set( UtilsService.hexToByteArray( element.rxf ) );
+        pids[index].rxd.clear().set( UtilsService.hexToByteArray( element.rxd ) );
+        pids[index].mth.clear().set( UtilsService.hexToByteArray( element.mth ) );
+        pids[index].name.clear();
+        pids[index].name.set( [0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20] ); // fill with spaces
+        pids[index].name.set( UtilsService.stringToByteArray( element.name ) );
+
+      });
+
+    }
+
+
+    /*
+    * Send Eeprom to CBT in chunks
+    */
+    function sendEeprom(payload){
+
+      // if( !$scope.hwConnected ) return;
+
+
+      // if(!(command instanceof Array)) return;
+
+      var command= [0x01, 0x03],
+          chunkSize = 32,
+          buffer,
+          uint8View,
+          i = 0;
+
+      if( payload instanceof ArrayBuffer ){
+
+        function prepChunk(i){
+          buffer = new ArrayBuffer( command.length + chunkSize + 2 );
+          uint8View = new Uint8Array(buffer);
+          uint8View.set(command);
+          uint8View[command.length] = i;
+          uint8View.set( new Uint8Array(payload, chunkSize*i, chunkSize), command.length+1 );
+          uint8View[buffer.byteLength-1] = 0xA1; // Check byte
+        }
+
+        function sendChunk(){
+          prepChunk(i);
+          HardwareService.send(buffer);
+        }
+
+        var removeListener;
+        function handleSent(event, data){
+          if( data.event == 'eepromData' ){
+            i++;
+
+            console.log( (i*chunkSize) , payload.byteLength );
+
+            if( (i*chunkSize)<payload.byteLength )
+              setTimeout( sendChunk, 40 );
+            else
+              removeListener();
+          }
+        }
+
+        removeListener = $rootScope.$on("hardwareEvent", handleSent);
+
+        sendChunk();
+
+
+      }
+
+    }
+
+
+
+
+    /*
+    *   Events
+    */
+
+    $rootScope.$on("hardwareEvent", handleDataEvent);
+    function handleDataEvent(event, data){
+
+      switch(data.event){
+        case 'eeprom':
+          eepromView.set( UtilsService.hexToUint8Array( data.data ) );
+          updateManagedPids();
+          $rootScope.$apply();
+        break;
+      }
+
+    }
+
+
+    return {
+      pids: managedPids,
+      load: function(){
+        // Ask for eeprom
+        HardwareService.command('getEeprom');
+      },
+      debugEeprom: function(){
+        console.log( pids );
+      },
+      sendEeprom: function(){
+        updateEepromPids();
+        sendEeprom(eepromBuffer);
+      }
+    }
+
+  });
 
 'use strict';
 
@@ -2505,15 +2986,18 @@ angular.module('cbt')
 		/*
 		*	Load Hex file for parsing into ArrayBuffer
 		*/
-		function fetchFirmware(){
+		function fetchFirmware(s){
 
 			var deferred = $q.defer();
 
-			$http({method: 'GET', url: 'https://raw.githubusercontent.com/CANBus-Triple/CANBus-Triple/master/builds/CANBusTriple.cpp.hex'}).
+			$rootScope.$broadcast('FirmwareService.HEX_LOAD_START');
+			$http({method: 'GET', url: s}).
 		    success(function(data, status, headers, config) {
-				deferred.resolve(data);
+					$rootScope.$broadcast('FirmwareService.HEX_LOAD_COMPLETE');
+					deferred.resolve(data);
 		    }).
 		    error(function(data, status, headers, config) {
+					$rootScope.$broadcast('FirmwareService.HEX_LOAD_ERROR', status);
 		     	deferred.reject(status);
 		    });
 
@@ -2547,9 +3031,9 @@ angular.module('cbt')
 		*	Send firmware to Hardware.
 		* Registers a read callback with the HwardwareService, Resets hardware to Bootloader, then parses hex and sends it.
 		*/
-		function send(){
+		function send(s){
 
-			fetchFirmware()
+			fetchFirmware(s)
 				.then( function(d){
 					HardwareService.registerRawHandler( readHandler );
 					hex = new IntelHex( d );
@@ -2566,7 +3050,7 @@ angular.module('cbt')
 
 
 		return {
-			send: function(n){ send(n) },
+			send: function(s){ send(s) },
 		};
 
 	});
@@ -2595,6 +3079,10 @@ angular.module('cbt')
 
 		var commands = {
 			'info':[0x01, 0x01],
+			'bootloader':[0x01, 0x16],
+			'getEeprom':[0x01, 0x02],
+			'setEeprom':[0x01, 0x03],
+			'restoreEeprom':[0x01, 0x04],
 			'bus1status':[0x01, 0x10, 0x01],
 			'bus2status':[0x01, 0x10, 0x02],
 			'bus3status':[0x01, 0x10, 0x03],
@@ -2605,6 +3093,7 @@ angular.module('cbt')
 			'bus2logOff': [0x03, 0x02, 0x00],
 			'bus3logOff': [0x03, 0x03, 0x00],
 			'autobaud': [0x01, 0x08],
+			'bitrate': [0x01, 0x09],
 		};
 
 
@@ -2706,9 +3195,9 @@ angular.module('cbt')
 		function command(name, props){
 
 			if( commands[name] )
-				write( props ? commands[name].concat(props) : commands[name]  );
+				return write( props ? commands[name].concat(props) : commands[name]  );
 			else
-				throw new Error( 'HardwareService Command not found '+name );
+				throw new Error( 'HardwareService Command not found ' + name );
 		}
 
 
@@ -2778,12 +3267,13 @@ angular.module('cbt')
 			}else if( data[0] === 123 || data[1] === 123 ){
 
 				// Dispatch an event with the JSON object
+				var eventObject,
+						string = UtilsService.ab2str( data );
 
-				var eventObject;
 				try{
-					eventObject = JSON.parse( UtilsService.ab2str( data ) );
+					eventObject = JSON.parse( string );
 				}catch(e){
-
+					console.error(e, UtilsService.ab2str( data ));
 				}
 
 				if( eventObject ) $rootScope.$broadcast('hardwareEvent', eventObject);
@@ -2937,10 +3427,16 @@ angular.module('cbt')
       //{ text: 'Dashboard', iconClass: 'icon ion-speedometer', link: 'dashboard'},
       //{ text: 'Diagnostics', iconClass: 'icon ion-ios-pulse', link: 'diagnostics'},
       { text: 'Packet Logger', iconClass: 'icon ion-settings', link: 'logger'},
-      { text: 'Hardware', iconClass: 'icon ion-usb', link: 'hardware'},
-			{ text: 'Firmware', iconClass: 'icon ion-code-download', link: 'firmware'},
+			{ text: 'Services', iconClass: 'icon ion-ios-timer-outline', link: 'services'},
+			{ text: 'Hardware', iconClass: 'icon ion-usb', link: 'hardware.status'},
+			{ text: 'Firmware', iconClass: 'icon ion-code-download', link: 'hardware.firmware'},
+			// { text: 'Packet Pipe', iconClass: 'icon ion-arrow-right-c', link: 'pipe'},
       { text: 'Settings', iconClass: 'icon ion-gear-b', link: 'settings'}
 	  ];
+
+		if(typeof process != 'undefined')
+			menuItems.splice(4, 0, { text: 'Packet Pipe', iconClass: 'icon ion-arrow-right-c', link: 'pipe'});
+
 
 	  var pluginMenuItems = [];
 
@@ -2948,10 +3444,12 @@ angular.module('cbt')
 	  return {
 	    all: function() {
 
-			  if( SettingsService.getDebugMode() == "true" )
-			  	menuItems.push({ text: 'Debug', iconClass: 'icon ion-bug', link: 'debug'});
+				var menu = angular.copy(menuItems);
 
-			  return menuItems;
+			  if( SettingsService.getDebugMode() == "true" )
+					menu.push({ text: 'Debug', iconClass: 'icon ion-bug', link: 'debug'});
+
+			  return menu;
 
 	    },
 
@@ -2968,6 +3466,54 @@ angular.module('cbt')
 
 
 	  }
+	});
+
+'use strict';
+
+
+angular.module('cbt')
+	.factory('PipeService', function($rootScope, SerialService){
+
+		var pipeAdapter = require('cbt-wireshark/adapter'),
+				port = SerialService.getSerialPort(),
+				running = false;
+
+
+		// if( port ) start();
+
+
+		$rootScope.$on('HardwareService.CONNECTED',function(event, data){
+			port = SerialService.getSerialPort();
+		});
+
+
+		function start(){
+			var pipePath = pipeAdapter.init( port, false );
+
+			if( pipePath ){
+				$rootScope.$broadcast('PipeService.OPENED', pipePath);
+				running = true;
+			}
+			return pipePath;
+		}
+
+		function stop(){
+			pipeAdapter.stop();
+			running = false;
+			$rootScope.$broadcast('PipeService.CLOSED');
+		}
+
+		$rootScope.$on('$destroy', function(){
+			stop();
+		});
+
+
+		return {
+			start: start,
+			stop: stop,
+			running: function(){return running;}
+		};
+
 	});
 
 'use strict';
@@ -3000,7 +3546,7 @@ angular.module('cbt')
 		 */
 		window.addEventListener('beforeunload', function() {
 			close();
-		}, false);
+			}, false);
 
 
 		/**
@@ -3022,8 +3568,8 @@ angular.module('cbt')
 				xany: true,
 				flowControl: false,
 				buffersize: 1024,
-			  	parser: parser,
-			  	disconnectedCallback: close
+			  parser: parser,
+			  disconnectedCallback: close
 			}, false);
 
 			serialPort.open(function(err){
@@ -3052,7 +3598,7 @@ angular.module('cbt')
 		*		Serial Data callback
 		*/
 
-		var readline = serialport.parsers.readline("\r", "binary");
+		var readline = serialport.parsers.readline("\r\n", "binary");
 
 		function parser(obj, data){
 
@@ -3095,26 +3641,13 @@ angular.module('cbt')
 		 */
 		function write( data ){
 
-			/*
-			if( data instanceof Uint8Array )
-				data = UtilsService.ab2str( data.buffer );
-
-			if( data instanceof ArrayBuffer )
-				data = UtilsService.ab2str( data );
-
-			if( !( typeof data == 'string' ) ){
-				console.log('SerialService write: Data must be string or Uint8Array', typeof data );
-				return;
-			}
-			*/
-
 			if( data instanceof ArrayBuffer )
 				data = new Uint8Array(data);
 
 			if( data instanceof String )
 				data = UtilsService.stringToByteArray( data );
 
-			console.log("SerialService Sending:", data, UtilsService.ab2str(data) );
+			if(window.cbtAppDebug) console.log("SerialService Sending:", data, UtilsService.ab2str(data) );
 
 			var deferred = $q.defer();
 			serialPort.write(
@@ -3139,11 +3672,6 @@ angular.module('cbt')
 		 * Manually read from serial port
 		 */
 		function read(){
-
-			var deferred = $q.defer();
-			//deferred.resolve( UtilsService.byteArrayToString(byteArray) );
-			//deferred.reject(new Error());
-			return deferred.promise;
 
 		}
 
@@ -3250,7 +3778,8 @@ angular.module('cbt')
 	    write: write,
 	    discovered: discovered,
 	    search: search,
-	    reset: reset
+	    reset: reset,
+			getSerialPort: function(){ return serialPort },
 	  }
 
 	});
@@ -3799,6 +4328,12 @@ angular.module('cbt')
 
 	});
 
+
+	Uint8Array.prototype.clear = function(){
+		for(var i=0; i<this.byteLength; i++)
+			this[i] = 0;
+		return this;
+	};
 
 
 

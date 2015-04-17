@@ -4,8 +4,16 @@
 angular.module('cbt')
 	.controller('LoggerController', function ($scope, $state, $location, $timeout, $ionicPopover, HardwareService, UtilsService) {
 
+		var maxMessages = process ? 64:32, // 128 messsages on desktop, 32 on mobile
+				viewMode = {
+					CRON: 'Chronological',
+					COMPACT: 'Compact'
+				};
+
 		$scope.title = "CANBus Triple";
 		$scope.navTitle = "Packet Logger";
+
+		$scope.filterMids = [];
 
 		$scope.showCmdBtn();
 
@@ -73,15 +81,18 @@ angular.module('cbt')
 
 	  $scope.modeSwitchDisabled = true;
 
-	  $scope.viewMode = "Compact";
+	  $scope.viewMode = viewMode.COMPACT;
+		$scope.showFilter = true;
 	  $scope.switchMode = function(event){
 
 			switch($scope.viewMode){
-				case 'Compact':
-					$scope.viewMode = "Chronological";
+				case viewMode.COMPACT:
+					$scope.viewMode = viewMode.CRON;
+					$scope.showFilter = false;
 				break;
-				case 'Chronological':
-					$scope.viewMode = "Compact";
+				case viewMode.CRON:
+					$scope.viewMode = viewMode.COMPACT;
+					$scope.showFilter = true;
 				break;
 			}
 
@@ -106,10 +117,14 @@ angular.module('cbt')
 		$scope.readHandler = function(packet){
 
 			// Cron mode
-			if( $scope.viewMode === "Chronological" ){
+			if( $scope.viewMode === viewMode.CRON ){
 
-				if( $scope.interestMids.indexOf(packet.messageId) > -1 )
+				if( $scope.interestMids.length < 1 || $scope.interestMids.indexOf(packet.messageId) > -1 )
 					$scope.midBuffer.unshift({mid: packet.messageId, packet: packet});
+
+				// Check max length
+				if( $scope.midBuffer.length > maxMessages )
+					$scope.midBuffer = $scope.midBuffer.slice(0, maxMessages);
 
 				$timeout(function(){}, 1);
 

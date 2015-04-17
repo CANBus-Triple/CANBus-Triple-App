@@ -8,10 +8,16 @@ angular.module('cbt')
       //{ text: 'Dashboard', iconClass: 'icon ion-speedometer', link: 'dashboard'},
       //{ text: 'Diagnostics', iconClass: 'icon ion-ios-pulse', link: 'diagnostics'},
       { text: 'Packet Logger', iconClass: 'icon ion-settings', link: 'logger'},
-      { text: 'Hardware', iconClass: 'icon ion-usb', link: 'hardware'},
-			{ text: 'Firmware', iconClass: 'icon ion-code-download', link: 'firmware'},
+			{ text: 'Services', iconClass: 'icon ion-ios-timer-outline', link: 'services'},
+			{ text: 'Hardware', iconClass: 'icon ion-usb', link: 'hardware.status'},
+			{ text: 'Firmware', iconClass: 'icon ion-code-download', link: 'hardware.firmware'},
+			// { text: 'Packet Pipe', iconClass: 'icon ion-arrow-right-c', link: 'pipe'},
       { text: 'Settings', iconClass: 'icon ion-gear-b', link: 'settings'}
 	  ];
+
+		if(typeof process != 'undefined')
+			menuItems.splice(4, 0, { text: 'Packet Pipe', iconClass: 'icon ion-arrow-right-c', link: 'pipe'});
+
 
 	  var pluginMenuItems = [];
 
@@ -19,10 +25,12 @@ angular.module('cbt')
 	  return {
 	    all: function() {
 
-			  if( SettingsService.getDebugMode() == "true" )
-			  	menuItems.push({ text: 'Debug', iconClass: 'icon ion-bug', link: 'debug'});
+				var menu = angular.copy(menuItems);
 
-			  return menuItems;
+			  if( SettingsService.getDebugMode() == "true" )
+					menu.push({ text: 'Debug', iconClass: 'icon ion-bug', link: 'debug'});
+
+			  return menu;
 
 	    },
 

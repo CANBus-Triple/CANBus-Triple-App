@@ -5,8 +5,10 @@
  *
 */
 
+window.cbtAppDebug = true;
 
-angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
+
+angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule'])
 
 	.run(function($ionicPlatform) {
 		/*
@@ -28,7 +30,7 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 		/*
 		*		Node-Webkit Setup
 		*/
-		if(typeof require != 'undefined'){
+		if(typeof require != 'undefined' && process.platform == 'darwin' ){
 
 			var gui = require('nw.gui'),
 		  		win = gui.Window.get();
@@ -64,23 +66,30 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 
 	      .state('hardware', {
 					url: '/hardware',
-					abstract: true,
-					templateUrl: 'templates/hardware/main.html'
+					// abstract: true,
+					controller: 'HWStatusController',
+					templateUrl: 'templates/hardware/hardware.html',
 		    })
-
 				.state('hardware.status', {
-          url: '',
-          controller: 'HWStatusController',
-          templateUrl: 'templates/hardware/hw-status.html'
+          url: '/status',
+					views: {
+						'pane':{
+							// controller: 'HWStatusController',
+							templateUrl: 'templates/hardware/device.html'
+						}
+					}
         })
-
-				.state('firmware', {
+				.state('hardware.firmware', {
           url: '/firmware',
-          controller: 'BuildsController',
-          templateUrl: 'templates/firmware.html',
+					views: {
+						'pane':{
+							controller: 'BuildsController',
+		          templateUrl: 'templates/hardware/firmware.html',
+						}
+					}
         })
 
-	      .state('hardware.connect', {
+	      .state('connect', {
           url: '/connect',
           controller: 'ConnectionController',
           templateUrl: 'templates/hardware/connection.html'
@@ -102,6 +111,18 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 	          url: '/diagnostics',
 	          controller: 'DiagController',
 	          templateUrl: 'templates/diagnostics.html'
+	      })
+
+				.state('services', {
+	          url: '/services',
+	          controller: 'ServicesController',
+	          templateUrl: 'templates/services.html'
+	      })
+
+				.state('pipe', {
+	          url: '/pipe',
+	          controller: 'PipeController',
+	          templateUrl: 'templates/pipe.html'
 	      })
 
 		    // .state('logger.view', {
@@ -140,27 +161,27 @@ angular.module('cbt', ['ionic', 'ngMaterial', 'LocalStorageModule'])
 	    .primaryPalette('deep-orange')
 	    .accentPalette('grey');
 
-	})
+	});
 
-	.config(['$provide', function ($provide) {
-	  $provide.decorator('$rootScope', function ($delegate) {
+	if( window.cbtAppDebug )
+		angular.module('cbt')
+			.config(['$provide', function ($provide) {
+			  $provide.decorator('$rootScope', function ($delegate) {
 
-	    var _emit = $delegate.$emit;
-	    $delegate.$emit = function(){
-	      console.log.apply(console, arguments);
-	      _emit.apply(this, arguments);
-	    };
+			    var _emit = $delegate.$emit;
+			    $delegate.$emit = function(){
+			      console.log.apply(console, arguments);
+			      _emit.apply(this, arguments);
+			    };
 
-			var origBroadcast = $delegate.$broadcast;
-			$delegate.$broadcast = function() {
-	      // console.log("$broadcast: ", JSON.stringify(arguments));
-	      console.log("$broadcast: ", arguments);
-	      return origBroadcast.apply(this, arguments);
-	    };
+					var origBroadcast = $delegate.$broadcast;
+					$delegate.$broadcast = function() {
+			      // console.log("$broadcast: ", JSON.stringify(arguments));
+			      console.log("$broadcast: ", arguments);
+			      return origBroadcast.apply(this, arguments);
+			    };
 
-	    return $delegate;
+			    return $delegate;
 
-	  });
-	}])
-
-	;
+			  });
+			}]);

@@ -2,7 +2,7 @@
 
 
 angular.module('cbt')
-	.controller('BuildsController', function ($scope, $state, $timeout, $ionicModal, BuildsService, FirmwareService){
+	.controller('BuildsController', function ($scope, $state, $timeout, $ionicModal, BuildsService, FirmwareService, HardwareService){
 
 		$scope.navTitle = "Firmware Update";
 		$scope.title = "Firmware Update";
@@ -61,17 +61,16 @@ angular.module('cbt')
 		}
 
 		$scope.flash = function( file ){
+			console.log("FLASH:",BuildsService.rootPath + file);
+			$scope.cleanup();
 			$scope.showFlashModal();
 			$timeout(function(){
 				FirmwareService.send( BuildsService.rootPath + file );
-			}, 2000);
+			}, 200);
 		}
 
 		$scope.$on('FirmwareService.FLASH_PROGRESS', function(event, data){
-
-				$scope.flashProgress = Math.ceil(data * 100);
-
-			console.log($scope.flashProgress);
+			$scope.flashProgress = Math.ceil(data * 100);
 		});
 
 		$scope.$on('FirmwareService.FLASH_SUCCESS', function(event, data){

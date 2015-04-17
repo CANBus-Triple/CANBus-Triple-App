@@ -28,7 +28,7 @@ angular.module('cbt')
 		 */
 		window.addEventListener('beforeunload', function() {
 			close();
-		}, false);
+			}, false);
 
 
 		/**
@@ -50,8 +50,8 @@ angular.module('cbt')
 				xany: true,
 				flowControl: false,
 				buffersize: 1024,
-			  	parser: parser,
-			  	disconnectedCallback: close
+			  parser: parser,
+			  disconnectedCallback: close
 			}, false);
 
 			serialPort.open(function(err){
@@ -80,7 +80,7 @@ angular.module('cbt')
 		*		Serial Data callback
 		*/
 
-		var readline = serialport.parsers.readline("\r", "binary");
+		var readline = serialport.parsers.readline("\r\n", "binary");
 
 		function parser(obj, data){
 
@@ -123,26 +123,13 @@ angular.module('cbt')
 		 */
 		function write( data ){
 
-			/*
-			if( data instanceof Uint8Array )
-				data = UtilsService.ab2str( data.buffer );
-
-			if( data instanceof ArrayBuffer )
-				data = UtilsService.ab2str( data );
-
-			if( !( typeof data == 'string' ) ){
-				console.log('SerialService write: Data must be string or Uint8Array', typeof data );
-				return;
-			}
-			*/
-
 			if( data instanceof ArrayBuffer )
 				data = new Uint8Array(data);
 
 			if( data instanceof String )
 				data = UtilsService.stringToByteArray( data );
 
-			console.log("SerialService Sending:", data, UtilsService.ab2str(data) );
+			if(window.cbtAppDebug) console.log("SerialService Sending:", data, UtilsService.ab2str(data) );
 
 			var deferred = $q.defer();
 			serialPort.write(
@@ -167,11 +154,6 @@ angular.module('cbt')
 		 * Manually read from serial port
 		 */
 		function read(){
-
-			var deferred = $q.defer();
-			//deferred.resolve( UtilsService.byteArrayToString(byteArray) );
-			//deferred.reject(new Error());
-			return deferred.promise;
 
 		}
 
@@ -278,7 +260,8 @@ angular.module('cbt')
 	    write: write,
 	    discovered: discovered,
 	    search: search,
-	    reset: reset
+	    reset: reset,
+			getSerialPort: function(){ return serialPort },
 	  }
 
 	});

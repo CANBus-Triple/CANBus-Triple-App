@@ -22,6 +22,10 @@ angular.module('cbt')
 
 		var commands = {
 			'info':[0x01, 0x01],
+			'bootloader':[0x01, 0x16],
+			'getEeprom':[0x01, 0x02],
+			'setEeprom':[0x01, 0x03],
+			'restoreEeprom':[0x01, 0x04],
 			'bus1status':[0x01, 0x10, 0x01],
 			'bus2status':[0x01, 0x10, 0x02],
 			'bus3status':[0x01, 0x10, 0x03],
@@ -32,6 +36,7 @@ angular.module('cbt')
 			'bus2logOff': [0x03, 0x02, 0x00],
 			'bus3logOff': [0x03, 0x03, 0x00],
 			'autobaud': [0x01, 0x08],
+			'bitrate': [0x01, 0x09],
 		};
 
 
@@ -133,9 +138,9 @@ angular.module('cbt')
 		function command(name, props){
 
 			if( commands[name] )
-				write( props ? commands[name].concat(props) : commands[name]  );
+				return write( props ? commands[name].concat(props) : commands[name]  );
 			else
-				throw new Error( 'HardwareService Command not found '+name );
+				throw new Error( 'HardwareService Command not found ' + name );
 		}
 
 
@@ -205,12 +210,13 @@ angular.module('cbt')
 			}else if( data[0] === 123 || data[1] === 123 ){
 
 				// Dispatch an event with the JSON object
+				var eventObject,
+						string = UtilsService.ab2str( data );
 
-				var eventObject;
 				try{
-					eventObject = JSON.parse( UtilsService.ab2str( data ) );
+					eventObject = JSON.parse( string );
 				}catch(e){
-
+					console.error(e, UtilsService.ab2str( data ));
 				}
 
 				if( eventObject ) $rootScope.$broadcast('hardwareEvent', eventObject);

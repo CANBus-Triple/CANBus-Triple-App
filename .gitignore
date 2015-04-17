@@ -9,3 +9,4 @@ cordova*.js
 node_modules
 cache
 build
+build.nw
