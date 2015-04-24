@@ -276,7 +276,7 @@ angular.module('cbt')
 			var deferred = $q.defer();
 
 			$rootScope.$broadcast('FirmwareService.HEX_LOAD_START');
-			$http({method: 'GET', url: s}).
+			$http({method: 'GET', url:s}).
 		    success(function(data, status, headers, config) {
 					$rootScope.$broadcast('FirmwareService.HEX_LOAD_COMPLETE');
 					deferred.resolve(data);
@@ -331,10 +331,40 @@ angular.module('cbt')
 		}
 
 
+		/*
+		*	Load the firmware from web into memory
+		*
+		*/
+		function loadFile(s){
+
+			fetchFirmware(s)
+				.then( function(d){
+					hex = new IntelHex( d );
+					})
+				.catch(function (error){
+					$rootScope.$broadcast('FirmwareService.HEX_ERROR', error);
+				});
+
+		}
+
+
+		function sendLoaded(){
+
+			if( hex != null ){
+				HardwareService.registerRawHandler( readHandler );
+				startMachine();
+			}else
+				$rootScope.$broadcast('FirmwareService.HEX_UNAVAILABLE', error);
+
+
+		}
+
 
 
 
 		return {
+			load: loadFile,
+			sendLoaded: sendLoaded,
 			send: function(s){ send(s) },
 		};
 

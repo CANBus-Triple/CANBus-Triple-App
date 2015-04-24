@@ -1,0 +1,19 @@
+
+.pill {
+   background-color: #555;
+   border: solid 1px #444;
+   border-radius: 5em;
+   color: white;
+   display: block;
+   padding: 0.5em 1em;
+   margin: 0.2em;
+   font-size: 75%;
+   text-align: right;
+   position: relative;
+
+   &.bottom {
+     position: absolute;
+     bottom: 12px;
+   }
+
+ }

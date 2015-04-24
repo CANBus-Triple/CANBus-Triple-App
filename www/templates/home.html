@@ -1,9 +1,18 @@
 <ion-view title="{{navTitle}}">
 
-  <ion-content padding="true" class="color-assertive">
+  <ion-content padding="true" class="color-assertive" style="background:url(img/T46C9498_bmyhwv.png) no-repeat; background-size:cover; display:block; height:100%; width:100%;">
 
-  	<h1>Home</h1>
-    <p>Talk about cbt here.</p>
+    <md-list style="margin: 0 auto;">
+      <md-list-item ng-repeat="item in items" class="">
+        <md-button class="md-grid-item-content md-raised md-warn" style="margin: 5% 1%; padding:6% 3%; width:28%;" ng-click="listItemClick($index)">
+          <!-- <md-icon md-svg-src="{{item.icon}}"></md-icon> -->
+          <i class="icon {{item.icon}}" style="font-size:400%;"></i>
+          <div class="md-grid-text"> {{ item.name }} </div>
+        </md-button>
+      </md-list-item>
+    </md-list>
+
+    <p class="pill">Welcome to CANBus Triple App version {{version}}</p>
 
   </ion-content>
 

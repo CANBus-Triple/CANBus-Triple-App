@@ -1,11 +1,10 @@
 'use strict';
 
 angular.module('cbt')
-	.factory('SettingsService', function($rootScope, localStorageService){
-
-		// window.ls = localStorageService;
+	.factory('SettingsService', function($rootScope, localStorageService, $http){
 
 
+		
 		return {
 			// Properties
 

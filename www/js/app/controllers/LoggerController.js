@@ -4,7 +4,7 @@
 angular.module('cbt')
 	.controller('LoggerController', function ($scope, $state, $location, $timeout, $ionicPopover, HardwareService, UtilsService) {
 
-		var maxMessages = process ? 64:32, // 128 messsages on desktop, 32 on mobile
+		var maxMessages = process ? 128:32, // 128 messsages on desktop, 32 on mobile
 				viewMode = {
 					CRON: 'Chronological',
 					COMPACT: 'Compact'
@@ -49,12 +49,12 @@ angular.module('cbt')
 	    }
     );
 
-		$scope.$watchCollection(
-	    "hardwareConnected",
-	    function( newValue, oldValue ) {
-				console.log(arguments);
-	    }
-    );
+		// $scope.$watchCollection(
+	  //   "hardwareConnected",
+	  //   function( newValue, oldValue ) {
+		// 		console.log(arguments);
+	  //   }
+    // );
 
 
 	  $scope.interestMids = [];

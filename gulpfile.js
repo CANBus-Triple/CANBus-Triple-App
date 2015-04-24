@@ -88,6 +88,7 @@ gulp.task('git-check', function(done) {
 gulp.task('nw-build', function(done){
 
 	var nw = new NwBuilder({
+      version: '0.12.0',
 			appName: 'CANBus Triple',
 	    files: paths.nwbuild,
 	    platforms: ['osx64', 'win64','linux64'],

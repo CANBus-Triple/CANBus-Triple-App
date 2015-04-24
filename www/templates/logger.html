@@ -14,8 +14,8 @@
 					<ion-checkbox ng-model="busSettings.can3log">Bus 3</ion-checkbox>
 				</div>
 				<div class="button-bar">
-					<ion-checkbox ng-click="switchMode($event)" ng-disabled="modeSwitchDisabled">View Mode: {{viewMode}}</ion-checkbox>
-					<!-- <a class="button button-outline button-calm" ng-click="switchMode($event)" ng-disabled="modeSwitchDisabled">Mode: {{viewMode}}</a> -->
+					<!-- <ion-checkbox ng-click="switchMode($event)" ng-disabled="modeSwitchDisabled">View Mode: {{viewMode}}</ion-checkbox> -->
+					<a class="button button-outline button-calm" ng-click="switchMode($event)">View mode: {{viewMode}}</a>
 					<a class="button button-outline button-calm" ng-click="clearBuffer()">Clear</a>
 				</div>
 			</div>

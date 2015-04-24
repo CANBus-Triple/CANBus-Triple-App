@@ -8,7 +8,7 @@ angular.module('cbt')
 		$scope.title = "Connect";
 
 		var updateIndex = 0,
-				updateFrequency = 2000,
+				updateFrequency = 400,
 				commandMap = ['info', 'bus1status', 'bus2status', 'bus3status'],
 				autobaud = 'Auto Detect',
 				speeds = [10,20,50,83,100,125,250,500,800,1000,autobaud];
@@ -23,7 +23,6 @@ angular.module('cbt')
 				return $scope.hwState['bitrate-bus1'].rate;
 		},function(newVal, oldVal){
 			$scope.bus1speed = speeds.indexOf(newVal);
-			console.info('bitrate-bus1', arguments, $scope.bus1speed);
 		});
 
 		$scope.$watch(function(){
@@ -45,28 +44,26 @@ angular.module('cbt')
 
 			console.log('setRate', arguments);
 
+
+
 			var sp = speeds[speed];
 
 			if( sp == autobaud )
 				$scope.autoBaud(bus);
-			else
+			else{
+				cleanup();
 				HardwareService.command('bitrate', [ bus, sp >> 8, sp & 0xff ]);
+				$timeout(start, 1000);
+			}
 
-		}
 
-
-
-		function start(){
-
-			HardwareService.command('bitrate', [0x01]);
-
-			window.hwIntPromise = $interval($scope.updateStatus, updateFrequency);
 
 		}
 
 
 
 		$scope.autoBaud = function(bus){
+
 			cleanup();
 
 			$scope.autobaudBus = bus;
@@ -83,6 +80,7 @@ angular.module('cbt')
 			    $scope.modal.show();
 			  });
 			  $scope.closeModal = function() {
+					start();
 			    $scope.modal.hide();
 			  };
 			  //Cleanup the modal when we're done with it!
@@ -109,8 +107,12 @@ angular.module('cbt')
 			updateIndex = updateIndex <= 3 ? updateIndex : 0;
 		}
 
+		function start(){
+			HardwareService.command('bitrate', [0x01]);
+			window.hwIntPromise = $interval($scope.updateStatus, updateFrequency);
+		}
+
 		function cleanup(){
-			console.info('cleanup');
 			if(window.hwIntPromise){
 				$interval.cancel(window.hwIntPromise);
 				window.hwIntPromise == null;

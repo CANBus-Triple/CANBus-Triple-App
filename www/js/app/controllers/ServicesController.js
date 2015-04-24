@@ -2,12 +2,12 @@
 
 
 angular.module('cbt')
-	.controller('ServicesController', function ($scope, HardwareService, CBTSettings) {
+	.controller('ServicesController', function ($scope, $timeout, HardwareService, CBTSettings) {
 
 		$scope.navTitle = "Services Settings";
 
 
-		if( $scope.hwConnected )
+		if( $scope.hardwareConnected )
 			CBTSettings.load();
 
 		$scope.init = function(){
@@ -52,7 +52,20 @@ angular.module('cbt')
 
 
 
+		$scope.$on('$ionicView.enter', function(){
 
+			// Force redraw
+			$timeout(function(){
+				document.getElementById('services').style.display='none';
+				document.getElementById('services').offsetHeight;
+				document.getElementById('services').style.display='block';
+			}, 50);
+
+		});
+
+		$scope.$on('$ionicView.leave', function(){
+
+		});
 
 		$scope.$on('$destroy', function(){
 

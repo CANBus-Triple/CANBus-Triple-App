@@ -98,8 +98,6 @@ angular.module('cbt')
     function sendEeprom(payload){
 
       // if( !$scope.hwConnected ) return;
-
-
       // if(!(command instanceof Array)) return;
 
       var command= [0x01, 0x03],

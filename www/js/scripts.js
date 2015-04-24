@@ -5,7 +5,7 @@
  *
 */
 
-window.cbtAppDebug = true;
+// window.cbtAppDebug = true;
 
 
 angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule'])
@@ -30,6 +30,9 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 		/*
 		*		Node-Webkit Setup
 		*/
+
+		if(typeof require != 'undefined' && window.cbtAppDebug ) require('nw.gui').Window.get().showDevTools();
+
 		if(typeof require != 'undefined' && process.platform == 'darwin' ){
 
 			var gui = require('nw.gui'),
@@ -51,6 +54,9 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 		}
 
 	})
+
+	.constant('appVersion', '0.2.6-alpha1') // Set app version
+
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
 			// Ionic uses AngularUI Router which uses the concept of states
@@ -61,6 +67,7 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 
 				.state('home', {
 					url: '/',
+					controller: 'HomeController',
 					templateUrl: 'templates/home.html'
 				})
 
@@ -159,7 +166,7 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 
 		$mdThemingProvider.theme('default')
 	    .primaryPalette('deep-orange')
-	    .accentPalette('grey');
+	    .accentPalette('blue');
 
 	});
 
@@ -188,9 +195,9 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 
 
 angular.module('cbt')
-	.controller('AppController', function ($window, $scope, $rootScope, $timeout, $ionicModal, $mdDialog, HardwareService, UtilsService) {
+	.controller('AppController', function ($window, $scope, $rootScope, $timeout, $ionicModal, $mdDialog, SettingsService, HardwareService, UtilsService) {
 
-		$scope.navTitle = "AppController";
+		$scope.navTitle = "CANBus Triple";
 		$scope.title = "AppController title";
 
 		$scope.hwState = {};
@@ -203,22 +210,12 @@ angular.module('cbt')
 			$scope.uiLarge = !$window.matchMedia("(min-width:768px)").matches;
 		})
 
-
-		// $scope.leftButtons = [{
-		//  	type: 'button-clear',
-		// 	content: '<i class="icon ion-navicon"></i>',
-	  //   tap: function(e) {
-    //   		$scope.cbtSideMenu.toggle();
-    // 		}
-		// }];
-
-
 		$scope.rightButtons = [];
 
 		$scope.navShowing = false;
 
 		$scope.connectIcon = false;
-		$scope.connectIconDisable = false;
+		$scope.connectIconShow = typeof SettingsService.getDevice() != 'undefined';
 
 		$scope.showCommandButton = false;
 
@@ -238,6 +235,11 @@ angular.module('cbt')
 				}
 			})
 
+		}
+
+		$scope.showCloseButton = typeof process == 'object';
+		$scope.exitApplication = function(){
+			require('nw.gui').App.quit();
 		}
 
 
@@ -443,7 +445,9 @@ angular.module('cbt')
 		$scope.navTitle = "Firmware Update";
 		$scope.title = "Firmware Update";
 
-
+		$scope.message = 'Loading Firmware File...';
+		$scope.showProgress = true;
+		$scope.startFlashButton = false;
 
 
 		$scope.builds = BuildsService.getSources();
@@ -457,7 +461,9 @@ angular.module('cbt')
 
 
 		$scope.selectedBuild = '';
-		$scope.$watch('selectedBuild', function(newVal, oldVal){
+		$scope.selectedBuildVersion = '';
+
+		$scope.$watch('selectedBuildVersion', function(newVal, oldVal){
 			console.info(arguments);
 		});
 
@@ -496,24 +502,62 @@ angular.module('cbt')
 
 		}
 
-		$scope.flash = function( file ){
-			console.log("FLASH:",BuildsService.rootPath + file);
+		$scope.flash = function( ){
+
+				console.log( $scope.selectedBuildVersion );
+
 			$scope.cleanup();
 			$scope.showFlashModal();
+
 			$timeout(function(){
-				FirmwareService.send( BuildsService.rootPath + file );
-			}, 200);
+				FirmwareService.load( BuildsService.rootPath + $scope.selectedBuildVersion );
+			}, 1000);
 		}
+
+		$scope.startFlash = function(){
+
+			$scope.startFlashButton = false;
+			$scope.flashComplete = false;
+			$scope.message = 'Flash in progress...';
+
+			$scope.cleanup();
+			$timeout(FirmwareService.sendLoaded, 1000);
+
+		}
+
+
+		$scope.$on('FirmwareService.HEX_LOAD_ERROR', function(event, data){
+			$scope.message = 'Error loading the firmware file. Are you connected to the internet?';
+			$scope.showProgress = false;
+			$scope.flashProgress = 0;
+			$scope.flashComplete = true;
+		});
+
+		$scope.$on('FirmwareService.HEX_LOAD_START', function(event, data){
+			$scope.message = 'Loading Firmware File...';
+			$scope.showProgress = true;
+			$scope.flashComplete = false;
+		});
+
+		$scope.$on('FirmwareService.HEX_LOAD_COMPLETE', function(event, data){
+			$scope.message = 'Firmware loaded, ready to flash.\nDo not close the app or disconnect your CANBus Triple until flashing is complete.\nPress the \'Flash Now\' button below to start.';
+			$scope.showProgress = false;
+			$scope.flashComplete = true;
+			$scope.startFlashButton = true;
+		});
+
 
 		$scope.$on('FirmwareService.FLASH_PROGRESS', function(event, data){
 			$scope.flashProgress = Math.ceil(data * 100);
 		});
 
 		$scope.$on('FirmwareService.FLASH_SUCCESS', function(event, data){
+			$scope.message = 'Flash Complete';
 			$scope.flashComplete = true;
 		});
 
 		$scope.$on('FirmwareService.FLASH_ERROR', function(event, data){
+			$scope.message = 'Flash Error - Try flashing from Arduino IDE.';
 			$scope.flashComplete = true;
 		});
 
@@ -688,7 +732,7 @@ angular.module('cbt')
 		$scope.title = "Connect";
 
 		var updateIndex = 0,
-				updateFrequency = 2000,
+				updateFrequency = 400,
 				commandMap = ['info', 'bus1status', 'bus2status', 'bus3status'],
 				autobaud = 'Auto Detect',
 				speeds = [10,20,50,83,100,125,250,500,800,1000,autobaud];
@@ -703,7 +747,6 @@ angular.module('cbt')
 				return $scope.hwState['bitrate-bus1'].rate;
 		},function(newVal, oldVal){
 			$scope.bus1speed = speeds.indexOf(newVal);
-			console.info('bitrate-bus1', arguments, $scope.bus1speed);
 		});
 
 		$scope.$watch(function(){
@@ -725,28 +768,26 @@ angular.module('cbt')
 
 			console.log('setRate', arguments);
 
+
+
 			var sp = speeds[speed];
 
 			if( sp == autobaud )
 				$scope.autoBaud(bus);
-			else
+			else{
+				cleanup();
 				HardwareService.command('bitrate', [ bus, sp >> 8, sp & 0xff ]);
+				$timeout(start, 1000);
+			}
 
-		}
 
-
-
-		function start(){
-
-			HardwareService.command('bitrate', [0x01]);
-
-			window.hwIntPromise = $interval($scope.updateStatus, updateFrequency);
 
 		}
 
 
 
 		$scope.autoBaud = function(bus){
+
 			cleanup();
 
 			$scope.autobaudBus = bus;
@@ -763,6 +804,7 @@ angular.module('cbt')
 			    $scope.modal.show();
 			  });
 			  $scope.closeModal = function() {
+					start();
 			    $scope.modal.hide();
 			  };
 			  //Cleanup the modal when we're done with it!
@@ -789,8 +831,12 @@ angular.module('cbt')
 			updateIndex = updateIndex <= 3 ? updateIndex : 0;
 		}
 
+		function start(){
+			HardwareService.command('bitrate', [0x01]);
+			window.hwIntPromise = $interval($scope.updateStatus, updateFrequency);
+		}
+
 		function cleanup(){
-			console.info('cleanup');
 			if(window.hwIntPromise){
 				$interval.cancel(window.hwIntPromise);
 				window.hwIntPromise == null;
@@ -829,6 +875,38 @@ angular.module('cbt')
 
 
 	});
+
+'use strict';
+
+
+angular.module('cbt')
+	.controller('HomeController', function ($scope, $state, appVersion) {
+
+    $scope.version = appVersion;
+
+    $scope.items = [
+      {
+        name: 'Watch CAN Packets',
+        icon: 'ion-settings',
+        sref: 'logger',
+      },
+      {
+        name: 'Pipe CAN packets to Wireshark',
+        icon: 'ion-arrow-right-c',
+        sref: 'pipe',
+      },
+      {
+        name: 'Settings',
+        icon: 'ion-gear-b',
+        sref: 'settings',
+      },
+    ];
+
+    $scope.listItemClick = function(n){
+      $state.go( $scope.items[n].sref );
+    }
+
+});
 
 'use strict';
 
@@ -949,7 +1027,7 @@ angular.module('cbt')
 angular.module('cbt')
 	.controller('LoggerController', function ($scope, $state, $location, $timeout, $ionicPopover, HardwareService, UtilsService) {
 
-		var maxMessages = process ? 64:32, // 128 messsages on desktop, 32 on mobile
+		var maxMessages = process ? 128:32, // 128 messsages on desktop, 32 on mobile
 				viewMode = {
 					CRON: 'Chronological',
 					COMPACT: 'Compact'
@@ -994,12 +1072,12 @@ angular.module('cbt')
 	    }
     );
 
-		$scope.$watchCollection(
-	    "hardwareConnected",
-	    function( newValue, oldValue ) {
-				console.log(arguments);
-	    }
-    );
+		// $scope.$watchCollection(
+	  //   "hardwareConnected",
+	  //   function( newValue, oldValue ) {
+		// 		console.log(arguments);
+	  //   }
+    // );
 
 
 	  $scope.interestMids = [];
@@ -1180,14 +1258,20 @@ angular.module('cbt')
 
 		$scope.navTitle = "Packet Pipe"
 
-		$scope.pipeName = 'no pipe yet';
+		$scope.pipeName = false;
 		$scope.running = false;
+		$scope.startEnable = false;
 
 		$scope.$watch(function(){
 			return PipeService.running();
 		}, function(newVal, oldVal){
 			$scope.running = newVal;
 		});
+
+		$scope.$watch('hardwareConnected', function(newVal, oldVal){
+			$scope.startEnable = !!newVal;
+		});
+
 
 		$scope.toggle = function(){
 			if( $scope.running == false )
@@ -1202,10 +1286,11 @@ angular.module('cbt')
 
 		$scope.stop = function(){
 			PipeService.stop();
+			$scope.pipeName = false;
 		}
 
 		$scope.$on('$destroy', function(){
-			PipeService.stop();
+			$scope.stop();
 		});
 
 
@@ -1215,12 +1300,12 @@ angular.module('cbt')
 
 
 angular.module('cbt')
-	.controller('ServicesController', function ($scope, HardwareService, CBTSettings) {
+	.controller('ServicesController', function ($scope, $timeout, HardwareService, CBTSettings) {
 
 		$scope.navTitle = "Services Settings";
 
 
-		if( $scope.hwConnected )
+		if( $scope.hardwareConnected )
 			CBTSettings.load();
 
 		$scope.init = function(){
@@ -1265,7 +1350,20 @@ angular.module('cbt')
 
 
 
+		$scope.$on('$ionicView.enter', function(){
 
+			// Force redraw
+			$timeout(function(){
+				document.getElementById('services').style.display='none';
+				document.getElementById('services').offsetHeight;
+				document.getElementById('services').style.display='block';
+			}, 50);
+
+		});
+
+		$scope.$on('$ionicView.leave', function(){
+
+		});
 
 		$scope.$on('$destroy', function(){
 
@@ -1689,6 +1787,72 @@ angular.module('cbt')
 
 'use strict';
 
+angular.module('cbt')
+  .directive('flagView', function(){
+
+
+    return {
+      restrict: 'E',
+      template: '{{title}}'+
+                '<a class="led" ng-repeat="led in values track by $index" ng-class="{\'active\':values[$index]}" title="{{info[title.toLowerCase()][$index]}}"></a>',
+      link: function (scope, elem, attrs) {
+
+        scope.values = Array(8);
+
+        scope.$watch('value',function(newValue,oldValue) {
+          for(var i=0; i<8; i++)
+            scope.values[i] = !!(newValue & (0x01 << 7-i));
+        });
+
+      },
+      controller: function($scope){
+
+        // Description Library
+        $scope.info = {
+          error:[
+            'RX1OVR: Receive Buffer 1 Overflow Flag bit',
+            'TXBO: Bus-Off Error Flag bit',
+            'TXBO: Bus-Off Error Flag bit',
+            'TXEP: Transmit Error-Passive Flag bit',
+            'RXEP: Receive Error-Passive Flag bit',
+            'TXWAR: Transmit Error Warning Flag bit',
+            'RXWAR: Receive Error Warning Flag bit',
+            'EWARN: Error Warning Flag bit',
+          ],
+          // Datasheet pg 58
+          control:[
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            ''
+          ],
+          status:[
+            'CANINTF.RX0IF',
+            'CANINTFL.RX1IF',
+            'TXB0CNTRL.TXREQ',
+            'CANINTF.TX0IF',
+            'TXB1CNTRL.TXREQ',
+            'CANINTF.TX1IF',
+            'TXB2CNTRL.TXREQ',
+            'CANINTF.TX2IF'
+          ]
+        }
+
+      },
+      scope: {
+        title: "@",
+        value: "@"
+      }
+    }
+
+  });
+
+'use strict';
+
 /*
 *		Derek K etx313@gmail.com
 *		Display a selectable list of CANBus hardware discovered
@@ -1832,12 +1996,13 @@ angular.module('cbt')
 'use strict';
 
 angular.module('cbt')
-  .directive('pidEditor', ['CBTSettings', function(CBTSettings){
+  .directive('pidEditor', function($timeout, CBTSettings){
 
     return {
       restrict: 'E',
       template: '<section ui-sortable="{tolerance:100}" ng-model="pids" class="pids">'+
-                  '<pid-object ng-repeat="pid in pids" class="pid-object bevel-shadow" index="$index" pid="pid"/>'+
+                  // '<pid-object ng-repeat="pid in pids" class="pid-object bevel-shadow" index="$index" pid="pid"/>'+
+                  '<pid-object ng-repeat="pid in pids" class="pid-object" index="$index" pid="pid"/>'+
                 '</section>',
       link: function (scope, elem, attrs) {
 
@@ -1851,24 +2016,26 @@ angular.module('cbt')
           scope.pidRows.push( CBTSettings.pids.slice( i, CBTSettings.pids.length ) );
           */
 
+        $timeout(function(){},100);
+
       },
       scope: {
         pids: "="
       }
     }
 
-  }]).
-  directive('pidObject', ['CBTSettings', function(CBTSettings){
+  }).
+  directive('pidObject', function(CBTSettings){
 
     return {
       restrict: 'E',
       template: '<form class="pid-form">'+
-                '<label for="name">NAME</label><input type="text" class="form-control" id="name" ng-model="pid.name" max="8"/>'+
-                '<label for="busid">BUS</label><input type="text" class="form-control" id="busid" ng-model="pid.busId" max="1"/>'+
-                '<label for="txd">TXD</label><input type="text" class="form-control" id="txd" ng-model="pid.txd" max="8"/>'+
-                '<label for="rxf">RXF</label><input type="text" class="form-control" id="rxf" ng-model="pid.rxf" max="8"/>'+
-                '<label for="rxd">RXD</label><input type="text" class="form-control" id="rxd" ng-model="pid.rxd" max="8"/>'+
-                '<label for="mth">MATH</label><input type="text" class="form-control" id="mth" ng-model="pid.mth" max="8"/>'+
+                '<label for="name">NAME</label><input type="text" class="form-control" id="name" ng-model="pid.name" maxlength="8"/>'+
+                '<label for="busid">BUS</label><input type="number" class="form-control" id="busid" ng-model="pid.busId" min="1" max="3"/>'+
+                '<label for="txd">TXD</label><input type="text" class="form-control" id="txd" ng-model="pid.txd" maxlength="16"/>'+
+                '<label for="rxf">RXF</label><input type="text" class="form-control" id="rxf" ng-model="pid.rxf" maxlength="12"/>'+
+                '<label for="rxd">RXD</label><input type="text" class="form-control" id="rxd" ng-model="pid.rxd" maxlength="4"/>'+
+                '<label for="mth">MATH</label><input type="text" class="form-control" id="mth" ng-model="pid.mth" maxlength="12"/>'+
                 '</form>',
       link: function (scope, elem, attrs) {
       },
@@ -1878,7 +2045,52 @@ angular.module('cbt')
       }
     }
 
-  }]);
+  });
+
+'use strict';
+
+/*
+*		Derek K etx313@gmail.com
+*		Node-Webkit Popup Directive
+*
+*/
+
+
+angular.module('cbt')
+.directive('popup', function($timeout, UtilsService){
+
+  var gui = require('nw.gui'),
+      nwPopup,
+      url = '';
+
+  function doPop(){
+
+    nwPopup = gui.Window.open( url, {
+        toolbar: false,
+        frame: true,
+        nodejs: false
+        });
+
+  }
+
+  return {
+    restrict: 'A',
+    controller: function ($scope){
+    },
+    link: function($scope, element, attrs){
+
+      if( typeof attrs.popup == 'undefined' )
+        return;
+
+      url = attrs.popup;
+
+      element.bind('click', doPop);
+
+
+    },
+    replace: true
+  };
+});
 
 'use strict';
 
@@ -2626,8 +2838,6 @@ angular.module('cbt')
     function sendEeprom(payload){
 
       // if( !$scope.hwConnected ) return;
-
-
       // if(!(command instanceof Array)) return;
 
       var command= [0x01, 0x03],
@@ -2991,7 +3201,7 @@ angular.module('cbt')
 			var deferred = $q.defer();
 
 			$rootScope.$broadcast('FirmwareService.HEX_LOAD_START');
-			$http({method: 'GET', url: s}).
+			$http({method: 'GET', url:s}).
 		    success(function(data, status, headers, config) {
 					$rootScope.$broadcast('FirmwareService.HEX_LOAD_COMPLETE');
 					deferred.resolve(data);
@@ -3046,10 +3256,40 @@ angular.module('cbt')
 		}
 
 
+		/*
+		*	Load the firmware from web into memory
+		*
+		*/
+		function loadFile(s){
+
+			fetchFirmware(s)
+				.then( function(d){
+					hex = new IntelHex( d );
+					})
+				.catch(function (error){
+					$rootScope.$broadcast('FirmwareService.HEX_ERROR', error);
+				});
+
+		}
+
+
+		function sendLoaded(){
+
+			if( hex != null ){
+				HardwareService.registerRawHandler( readHandler );
+				startMachine();
+			}else
+				$rootScope.$broadcast('FirmwareService.HEX_UNAVAILABLE', error);
+
+
+		}
+
 
 
 
 		return {
+			load: loadFile,
+			sendLoaded: sendLoaded,
 			send: function(s){ send(s) },
 		};
 
@@ -4136,11 +4376,10 @@ angular.module('cbt')
 'use strict';
 
 angular.module('cbt')
-	.factory('SettingsService', function($rootScope, localStorageService){
-
-		// window.ls = localStorageService;
+	.factory('SettingsService', function($rootScope, localStorageService, $http){
 
 
+		
 		return {
 			// Properties
 

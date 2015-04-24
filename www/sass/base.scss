@@ -16,10 +16,13 @@
 
 // Modules
 @import "modules/table";
+@import "modules/pill";
+@import "modules/grid-list";
 
 // Views
 
 // Angular Directives
+@import "directives/flag-view";
 @import "directives/cbt-user-info";
 @import "directives/side-menu";
 @import "directives/pid-object";

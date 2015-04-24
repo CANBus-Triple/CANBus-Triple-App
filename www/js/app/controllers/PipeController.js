@@ -6,14 +6,20 @@ angular.module('cbt')
 
 		$scope.navTitle = "Packet Pipe"
 
-		$scope.pipeName = 'no pipe yet';
+		$scope.pipeName = false;
 		$scope.running = false;
+		$scope.startEnable = false;
 
 		$scope.$watch(function(){
 			return PipeService.running();
 		}, function(newVal, oldVal){
 			$scope.running = newVal;
 		});
+
+		$scope.$watch('hardwareConnected', function(newVal, oldVal){
+			$scope.startEnable = !!newVal;
+		});
+
 
 		$scope.toggle = function(){
 			if( $scope.running == false )
@@ -28,10 +34,11 @@ angular.module('cbt')
 
 		$scope.stop = function(){
 			PipeService.stop();
+			$scope.pipeName = false;
 		}
 
 		$scope.$on('$destroy', function(){
-			PipeService.stop();
+			$scope.stop();
 		});
 
 

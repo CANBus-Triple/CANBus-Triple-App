@@ -1,19 +1,33 @@
 <ion-modal-view>
   <ion-header-bar class="bar bar-header bar-assertive">
     <h1 class="title">Flashing CANBus Triple</h1>
-    <!-- <div class="buttons">
+    <div class="buttons">
     	<button class="button button-clear icon ion-ios7-close-empty" ng-click="closeModal()"></button>
-		</div> -->
+		</div>
   </ion-header-bar>
 
   <ion-content padding="true" scroll="true">
 
-    <div style="position: absolute; left:50%; width:6em; margin-left:-3em;">
-      <h1>{{flashProgress}}</h1>
-      <md-progress-circular class="md-hue-1" md-mode="determinate" value="{{flashProgress}}">
-        {{flashProgress}}
-      </md-progress-circular>
-      <button ng-if="flashComplete" ng-click="closeModal()" class="button">Close</button>
+    <div class="row">
+      <div class="column" style="text-align:center; padding-top: 10%;width:100%">
+
+      <div ng-show="message || showProgress">
+        <p>{{message}}</p>
+        <!-- <md-progress-circular ng-show="showProgress" class="md-hue-1" md-mode="indeterminate"></md-progress-circular> -->
+        <md-progress-linear ng-show="showProgress" class="md-hue-1" style="width:50%; margin-left:25%;" md-mode="indeterminate"></md-progress-linear>
+      </div>
+
+      <md-button class="md-raised md-warn" ng-if="startFlashButton" ng-click="startFlash()">Flash Now</md-button>
+
+      <div ng-show="flashProgress > 0 && flashProgress < 100" style="position: absolute; left:50%; width:6em; margin-left:-3em;">
+        <h2>{{flashProgress}}%</h2>
+        <md-progress-circular class="md-hue-1" md-mode="determinate" value="{{flashProgress}}"></md-progress-circular>
+
+      </div>
+
+      <md-button class="md-raised md-accent" ng-if="flashComplete" ng-click="closeModal()">Ok</md-button>
+
+    </div>
     </div>
 
   </ion-content>

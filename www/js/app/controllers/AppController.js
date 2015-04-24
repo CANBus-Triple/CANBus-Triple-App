@@ -1,8 +1,8 @@
 
 angular.module('cbt')
-	.controller('AppController', function ($window, $scope, $rootScope, $timeout, $ionicModal, $mdDialog, HardwareService, UtilsService) {
+	.controller('AppController', function ($window, $scope, $rootScope, $timeout, $ionicModal, $mdDialog, SettingsService, HardwareService, UtilsService) {
 
-		$scope.navTitle = "AppController";
+		$scope.navTitle = "CANBus Triple";
 		$scope.title = "AppController title";
 
 		$scope.hwState = {};
@@ -15,22 +15,12 @@ angular.module('cbt')
 			$scope.uiLarge = !$window.matchMedia("(min-width:768px)").matches;
 		})
 
-
-		// $scope.leftButtons = [{
-		//  	type: 'button-clear',
-		// 	content: '<i class="icon ion-navicon"></i>',
-	  //   tap: function(e) {
-    //   		$scope.cbtSideMenu.toggle();
-    // 		}
-		// }];
-
-
 		$scope.rightButtons = [];
 
 		$scope.navShowing = false;
 
 		$scope.connectIcon = false;
-		$scope.connectIconDisable = false;
+		$scope.connectIconShow = typeof SettingsService.getDevice() != 'undefined';
 
 		$scope.showCommandButton = false;
 
@@ -50,6 +40,11 @@ angular.module('cbt')
 				}
 			})
 
+		}
+
+		$scope.showCloseButton = typeof process == 'object';
+		$scope.exitApplication = function(){
+			require('nw.gui').App.quit();
 		}
 
 

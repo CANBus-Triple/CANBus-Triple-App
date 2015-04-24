@@ -32,7 +32,7 @@
 
   <body ng-app="cbt" ng-controller="AppController" class="platform-android platform-cordova platform-webview">
 
-    <ion-nav-bar class="bar-assertive nav-title-slide-ios7" ng-class="{'nav-showing': navShowing}">
+    <ion-nav-bar class="bar-assertive nav-title-slide-ios7" ng-class="{'nav-showing': navShowing}" ng-click="derp()">
       <ion-nav-buttons side="left">
         <button class="button button-clear scale-up" ng-click="toggleMenu()" ng-show="uiLarge">
           <i class="icon ion-navicon-round"></i>
@@ -43,7 +43,9 @@
         <button class="button button-clear icon"
                 ng-class="{true: 'ion-ios-circle-filled', false: 'ion-ios-circle-outline'}[connectIcon]"
                 ng-disabled="connectIconEnable"
+                ng-show="connectIconShow"
                 ng-click="connectTap()"></button>
+        <button class="button button-clear icon ion-close-round" ng-show="showCloseButton" ng-click="exitApplication()"></button>
       </ion-nav-buttons>
       <ion-nav-back-button class="button-clear">
         <i class="ion-arrow-left-c"></i> Back
@@ -65,6 +67,9 @@
         <span ng-include="'navigation'"></span>
       </ion-side-menu>
     </ion-side-menus>
+
+
+
 
 
 <!-- templates -->

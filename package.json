@@ -1,6 +1,6 @@
 {
   "name": "CANBusTriple",
-  "version": "0.2.6",
+  "version": "0.2.6-alpha1",
   "private": true,
   "scripts": {
     "start": "node server.js"
@@ -25,11 +25,11 @@
     "serialport": "1.6.3"
   },
   "_comment": " * Node-Webkit Info Below * ",
-  "_main": "www/index.html",
+  "__main": "www/index.html",
   "main": "http://192.168.11.9:3000/",
   "node-remote": "<local>,*",
   "window": {
-    "show": true,
+    "show": false,
     "width": 1280,
     "height": 720,
     "frame": true,
