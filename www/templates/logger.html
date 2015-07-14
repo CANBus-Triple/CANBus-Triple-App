@@ -1,37 +1,52 @@
-<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons" hide-back-button="true">
-	
-	<ion-nav-buttons side="left">
-    <button class="button" ng-click="showSendCommandModal()">Command</button>
-  </ion-nav-buttons>
-	
+<ion-view title="{{navTitle}}" hide-back-button="true" left-buttons="leftButtons" right-buttons="rightButtons">
+
+
 	<ion-content padding="true" scroll="true">
-		
+
 		<div class="slide-left-right-ios7" ng-hide="hardwareConnected" ng-include src="'templates/connectionMessage.html'"></div>
-		
+
 		<div ng-show="hardwareConnected">
+
+			<div class="row">
+				<div class="button-bar">
+					<ion-checkbox ng-model="busSettings.can1log">Bus 1</ion-checkbox>
+					<ion-checkbox ng-model="busSettings.can2log">Bus 2</ion-checkbox>
+					<ion-checkbox ng-model="busSettings.can3log">Bus 3</ion-checkbox>
+				</div>
+				<div class="button-bar">
+					<!-- <ion-checkbox ng-click="switchMode($event)" ng-disabled="modeSwitchDisabled">View Mode: {{viewMode}}</ion-checkbox> -->
+					<a class="button button-outline button-calm" ng-click="switchMode($event)">View mode: {{viewMode}}</a>
+					<a class="button button-outline button-calm" ng-click="clearBuffer()">Clear</a>
+				</div>
+			</div>
+
+			<!--
 			<div class="button-bar">
-			  <a class="button button-outline button-energized" ng-click="openPopover($event)">Bus Settings</a>
-			  <!--
+				<a class="button button-outline button-energized" ng-click="openPopover($event)">Bus Settings</a>
 				<a class="button button-outline button-energized" ng-click="openPopover($event)">CAN Bus 2</a>
 			  <a class="button button-outline button-energized" ng-click="openPopover($event)">CAN Bus 3</a>
-				-->
 			  <a class="button button-outline button-calm" ng-click="switchMode($event)" ng-disabled="modeSwitchDisabled">Mode: {{viewMode}}</a>
 			</div>
+			-->
 			<br/>
 			<table class='pid-table'>
 			  <thead>
 			    <tr>
-			      <th>Bus</th>
+						<th ng-show="showFilter">Filter</th>
+						<th>Bus</th>
 			      <th>Message ID</th>
 			      <th>Payload Hex</th>
-			      <th>String</th>
+			      <th>ASCII</th>
 			      <th>Length</th>
 			      <!-- <th><i class="ion-pinpoint"></i></th> -->
 			    </tr>
 			  </thead>
 			  <tbody>
-			    <tr ng-repeat="item in midBuffer" ng-click="toggleIntrest(item.mid, $event)" ng-class="{true:'selected'}[isInterested(item.mid)]">
-			      <td>{{item.packet.busId}}</td>
+			    <tr ng-repeat="item in midBuffer" ng-class="{true:'selected'}[isInterested(item.mid)]">
+						<td ng-show="showFilter">
+							<md-checkbox class="md-warn" style="margin:0;" aria-label="filter" ng-model="filterMids[item.packet.messageId]" ng-click="toggleIntrest(item.mid, $event)"></md-checkbox>
+						</td>
+						<td>{{item.packet.busId}}</td>
 			      <td>{{numberToHexString(item.packet.messageId)}}</td>
 			      <td>{{item.packet.getPayloadHexString()}}</td>
 			      <td>{{item.packet.getPayloadString()}}</td>
@@ -39,9 +54,9 @@
 			    </tr>
 			  </tbody>
 			</table>
-		
+
 		</div>
-		
+
 	</ion-content>
 
 </ion-view>
@@ -54,16 +69,16 @@
       <h1 class="title">Bus Settings</h1>
     </ion-header-bar>
     <ion-content>
-    
+
       <ul class="list">
 			  <li class="item item-toggle">
 			     CAN Bus 1 Logging Output
-			     <label class="toggle toggle-assertive">
-			       <input type="checkbox" ng-model="busSettings.can1log">
-			       <div class="track">
-			         <div class="handle"></div>
-			       </div>
-			     </label>
+					<label class="toggle toggle-assertive">
+						<input type="checkbox" ng-model="busSettings.can1log">
+						<div class="track">
+							<div class="handle"></div>
+						</div>
+					</label>
 			  </li>
 			  <li class="item item-toggle">
 			     CAN Bus 2 Logging Output
@@ -84,7 +99,7 @@
 			     </label>
 			  </li>
 			</ul>
-			
+			<!-- <button class="button" ui-sref="hardware.status">Hardware Settings</button> -->
     </ion-content>
   </ion-popover-view>
 </script>

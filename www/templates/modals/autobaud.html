@@ -1,0 +1,23 @@
+<ion-modal-view>
+  <ion-header-bar class="bar bar-header bar-assertive">
+    <h1 class="title">Detecting Bus Speed</h1>
+  </ion-header-bar>
+
+  <ion-content padding="true" scroll="true">
+
+    <div class="row">
+      <div class="column" style="text-align:center; padding-top: 10%;width:100%">
+
+        <p ng-show="!autobaudFound">Testing Bus {{autobaudBus}} for {{ hwState.autobaudTest.rate }} kbps</p>
+        <p ng-show="autobaudFound">Detected <b>{{autobaudFound}} kbps</b> on <b>Bus {{autobaudBus}}</b></p>
+
+        <md-progress-linear ng-show="!autobaudFound" class="md-hue-1" style="width:50%; margin-left:25%;" md-mode="indeterminate"></md-progress-linear>
+
+        <md-button class="md-raised md-accent" ng-if="autobaudComplete" ng-click="closeModal()" class="button">Close</md-button>
+
+      </div>
+    </div>
+
+  </ion-content>
+
+</ion-modal-view>

@@ -1,0 +1,19 @@
+<ion-view title="{{navTitle}}">
+
+  <ion-content id="services" padding="true" class="color-assertive">
+
+    <div ng-init="init()" class="container">
+
+    <md-button class="md-raised" ng-click="init()">Reload Settings</md-button>
+    <!-- <md-button class="md-raised" ng-click="dbg()">Dump eprom struct</md-button> -->
+    <md-button class="md-raised" ng-click="sendEeprom()">Save to CANBus Triple</md-button>
+    <md-button class="md-raised" ng-click="resetHardware()">Restart</md-button>
+    <md-button class="md-raised" ng-click="resetStockCmd()">Factory Reset Settings</md-button>
+
+    <pid-editor pids="pids"/>
+
+  </div>
+
+  </ion-content>
+
+</ion-view>

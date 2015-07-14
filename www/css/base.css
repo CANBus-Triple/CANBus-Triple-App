@@ -21,13 +21,25 @@
   color: #f0b840; }
 
 body, html {
-  height: 100%; }
+  height: 100%;
+  -webkit-user-select: text !important; }
+
+.scroll {
+  -webkit-user-select: text; }
 
 ion-nav-bar {
-  -webkit-app-region: drag; }
+  display: block;
+  height: 3em;
+  -webkit-app-region: drag;
+  position: relative;
+  z-index: 9999;
+  cursor: move; }
+  ion-nav-bar button {
+    -webkit-app-region: no-drag;
+    cursor: pointer; }
 
-ion-nav-view {
-  -webkit-app-region: no-drag; }
+p {
+  white-space: pre-line; }
 
 body, h1, h2, h3, h4, h5 {
   font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, "Lucida Grande"; }
@@ -56,6 +68,10 @@ form input[type='number']::-webkit-outer-spin-button, form input[type='number']:
   -webkit-appearance: none;
   margin: 0; }
 
+.cbt-white-box {
+  background: url(../img/cbt-outline-white.svg) center center no-repeat;
+  background-size: contain; }
+
 /*
 *	Ionic Framework Overrides
 */
@@ -72,10 +88,6 @@ form input[type='number']::-webkit-outer-spin-button, form input[type='number']:
 .side-menu .icon {
   font-size: 1.6em; }
 
-.side-menu .item-content {
-  font-weight: bold;
-  padding: 1.5em; }
-
 /*
 *	Header left button animation
 */
@@ -83,7 +95,7 @@ ion-nav-bar {
   -webkit-transform: translate3d(0, 0, 0); }
 
 ion-nav-bar.nav-showing .left-buttons {
-  margin-left: -20px; }
+  margin-left: -4px; }
 
 ion-nav-bar .left-buttons {
   margin-left: 0;
@@ -119,23 +131,77 @@ ion-nav-bar .left-buttons {
 .height-animation.ng-hide-remove {
   display: block !important; }
 
+.scale-up.ng-hide-add, .scale-up.ng-hide-remove {
+  transition: all 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  opacity: 1;
+  -webkit-transform: scale(1) rotate(0deg);
+  transform: scale(1) rotate(0deg); }
+
+.scale-up.ng-hide {
+  opacity: 0;
+  -webkit-transform: scale(0.333) rotate(-24deg);
+  transform: scale(0.333) rotate(-24deg); }
+
+.scale-up.ng-show {
+  opacity: 1;
+  -webkit-transform: scale(1);
+  transform: scale(1); }
+
+md-grid-tile {
+  background-color: white; }
+
+md-grid-tile-header h3 {
+  font-weight: 900;
+  font-style: italic;
+  font-size: 200%;
+  color: #282828; }
+
 /*
 *		Module Styles
 */
 table.pid-table {
   width: 100%;
-  border: solid 1px #efefef;
   background-color: #f8f8f8;
   text-align: left; }
   table.pid-table th {
     font-size: 1.5em;
     font-weight: light;
     padding: 0.3em;
-    color: #b1b1b1; }
+    color: #b1b1b1;
+    border-bottom: solid 1px #efefef; }
   table.pid-table td {
     padding: 0.5em;
-    border: solid 1px #efefef;
+    border-bottom: solid 1px #efefef;
     color: #5a6065; }
+
+.pill, flag-view {
+  background-color: #555;
+  border: solid 1px #444;
+  border-radius: 5em;
+  color: white;
+  display: block;
+  padding: 0.5em 1em;
+  margin: 0.2em;
+  font-size: 75%;
+  text-align: right;
+  position: relative; }
+  .pill.bottom, flag-view.bottom {
+    position: absolute;
+    bottom: 12px; }
+
+.md-grid-text {
+  padding-bottom: 5px; }
+
+flag-view .led {
+  transition: all 50ms;
+  display: inline-block;
+  background-color: #666;
+  border-radius: 100%;
+  height: 0.8em;
+  width: 0.8em;
+  margin-left: 0.3em; }
+  flag-view .led.active {
+    background-color: red; }
 
 /*
 *	CBTUserInfo
@@ -178,9 +244,55 @@ table.pid-table {
     z-index: 9901;
     box-shadow: 2px 4px 5px rgba(50, 50, 50, 0.4);
     -webkit-transform: translate3d(-300px, 0px, 0); }
-  .side-menu img#logo {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-    width: 8em;
-    height: 8em; }
+
+img#logo {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  width: 8em;
+  height: 8em; }
+
+.bevel-shadow {
+  box-shadow: 0 1px 0 #CCC, 0 2px 0 #C9C9C9, 0 3px 0 #BBB, 0 4px 0 #B9B9B9, 0 5px 0 #AAA, 0 6px 1px rgba(0, 0, 0, 0.1), 0 0 5px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.3), 0 3px 5px rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.2), 0 20px 20px rgba(0, 0, 0, 0.15); }
+
+.pids {
+  margin: 22px -1% 0 -1%;
+  width: 100%;
+  -webkit-transition: 0.6s ease-out all; }
+
+.pid-object {
+  border-radius: 4px;
+  min-height: 3em;
+  width: 18em;
+  display: block;
+  margin: 0 1% 2% 1%;
+  padding: 0.8em;
+  background: #f2f2f2;
+  float: left; }
+
+.pids h3 {
+  background-color: #aaa;
+  color: white;
+  margin-top: 0; }
+
+.pid-form {
+  margin: 0 auto; }
+
+.pid-form input {
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 3px;
+  width: 78%; }
+
+.pid-form label, .pid-form input {
+  display: inline-block;
+  vertical-align: baseline; }
+
+.pid-form label {
+  width: 20%;
+  margin-right: 2%; }
+
+.pid-form form, .pid-form input {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box; }

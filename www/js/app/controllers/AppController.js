@@ -1,26 +1,28 @@
 
 angular.module('cbt')
-	.controller('AppController', function ($scope, $rootScope, $timeout, $ionicModal, HardwareService, UtilsService) {
+	.controller('AppController', function ($window, $scope, $rootScope, $timeout, $ionicModal, $mdDialog, SettingsService, HardwareService, UtilsService) {
 
-		$scope.navTitle = "AppController";
+		$scope.navTitle = "CANBus Triple";
 		$scope.title = "AppController title";
 
+		$scope.hwState = {};
 
-		$scope.leftButtons = [{
-		  type: 'button-clear',
-			content: '<i class="icon ion-navicon"></i>',
-	    tap: function(e) {
-	      $scope.cbtSideMenu.toggle();
-	    }
-		},
-		];
+		$scope.comLock = false;
+
+		$scope.uiLarge = false;
+
+		angular.element($window).bind('resize', function() {
+			$scope.uiLarge = !$window.matchMedia("(min-width:768px)").matches;
+		})
 
 		$scope.rightButtons = [];
 
 		$scope.navShowing = false;
 
 		$scope.connectIcon = false;
-		$scope.connectIconDisable = false;
+		$scope.connectIconShow = typeof SettingsService.getDevice() != 'undefined';
+
+		$scope.showCommandButton = false;
 
 		$scope.$on('CBTSideMenu.IN', navHandler);
 		$scope.$on('CBTSideMenu.OUT', navHandler);
@@ -40,16 +42,24 @@ angular.module('cbt')
 
 		}
 
+		$scope.showCloseButton = typeof process == 'object';
+		$scope.exitApplication = function(){
+			require('nw.gui').App.quit();
+		}
+
 
 		$scope.toggleMenu = function(){
 			$scope.cbtSideMenu.toggle();
 		}
 
+		$scope.showCmdBtn = function(){
+			$scope.showCommandButton = true;
+		}
 
 
 
 		/*
-		*		Send Command Modal 
+		*		Send Command Modal
 		*/
 
 		$scope.recentCommands = [
@@ -58,28 +68,28 @@ angular.module('cbt')
 			'03 02 01 0000 0000',
 			'03 03 01 0000 0000',
 		];
-		
-		
+
+
 		$scope.sendCommand = function(command){
-		
+
 			$scope.commandInput = command;
 
 			if( typeof command != 'string' ) return;
-			
+
 			command = command.replace(/\s/g,'');
-			
+
 			if( command.length < 1 ) return;
-			
+
 			if( $scope.recentCommands.indexOf(command) == -1 )
 				$scope.recentCommands.unshift(command);
-			
+
 			HardwareService.send( UtilsService.hexToUint8Array( command ) );
-			
+
 		}
-		
+
 		$scope.showSendCommandModal = function(){
-			
-			$ionicModal.fromTemplateUrl('templates/sendCommandModal.html', {
+
+			$ionicModal.fromTemplateUrl('templates/modals/sendCommand.html', {
 		    scope: $scope,
 		    animation: 'slide-in-up'
 		  }).then(function(modal) {
@@ -101,15 +111,15 @@ angular.module('cbt')
 		  $scope.$on('modal.removed', function() {
 		    // Execute action
 		  });
-			
+
 		}
-		
-		
-		
-		
-		
-		
-		
+
+
+
+
+
+
+
 		/*
 		*	Watch HardwareService connection status
 		*/
@@ -120,10 +130,32 @@ angular.module('cbt')
         $scope.hardwareConnected = newVal;
       }
     )
-    
-    
-    
-		
+
+
+		/*
+		*	Watch Hardware state for access from all controllers
+		*/
+		$rootScope.$on( 'hardwareEvent', hardwareEventHandler );
+		function hardwareEventHandler( eventName, eventObject ){
+
+			$timeout(function(){
+				switch(eventObject.event){
+					case 'busdbg':
+						if( typeof $scope.hwState[eventObject.event] == 'undefined' ) $scope.hwState[eventObject.event] = {};
+						$scope.hwState[eventObject.event][eventObject.name] = eventObject;
+						break;
+					default:
+						$scope.hwState[eventObject.event] = eventObject;
+						break;
+				}
+
+			});
+
+		}
+
+
+
+
 
 
 		/*

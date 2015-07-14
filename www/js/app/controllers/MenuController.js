@@ -2,17 +2,11 @@
 
 
 angular.module('cbt')
-	.controller('MenuController', function ($scope, $location, MenuService) {
+	.controller('MenuController', function ($scope, $state, $location, MenuService) {
 
 		$scope.title = "CANBus Triple";
 
 		$scope.list = MenuService.all();
-
-		$scope.goTo = function(page) {
-		  $location.url('/' + page);
-		  $scope.cbtSideMenu.hide();
-		};
-
 
 		$scope.$on('SettingsService.CHANGE', function(event, name){
 
@@ -23,11 +17,13 @@ angular.module('cbt')
 			}
 
 		});
-		
+
+		$scope.$on('$stateChangeStart', function(event, name){
+			$scope.cbtSideMenu.hide();
+		});
+
+
 		$scope.listPlugins = MenuService.allPlugins();
-
-
-		
 
 
 	});

@@ -1,0 +1,87 @@
+<ion-view title="{{navTitle}}">
+
+  <ion-content padding="true" class="color-assertive" hide-back-button="true">
+
+    <!-- {{hwState}} -->
+
+    <md-grid-list md-cols-sm="2" md-cols-gt-sm="6" md-row-height-gt-md="1:1" md-row-height="2:2" md-gutter="24px" md-gutter-gt-sm="12px" >
+
+        <md-grid-tile class="gray cbt-white-box" md-rowspan="1" md-colspan="1" md-colspan-sm="2" ng-click="updateStatus()" style="color:white; font-size:150%; text-align:center;">
+          <p ng-if="hwState.version.name" style="line-height:1.1em; margin-bottom:0; padding:0 0.6em;">{{ hwState.version.name }}<br>{{ hwState.version.version }}</p>
+          <md-progress-circular ng-if="!hwState.version.name && hardwareConnected" class="md-accent" md-mode="indeterminate"></md-progress-circular>
+          <p ng-if="!hwState.version.name && !hardwareConnected"><b>Not Connected</b></p>
+        </md-grid-tile>
+
+        <md-grid-tile class="md-whiteframe-z2" md-rowspan="3" md-colspan="3" md-colspan-sm="2">
+          <ui-view name="pane" animation="slide-left-right-ios7"></ui-view>
+        </md-grid-tile>
+
+        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="2" md-colspan-sm="2">
+          <md-grid-tile-header>
+            <h3>CAN Bus 1</h3>
+          </md-grid-tile-header>
+
+
+          <div class="row" style="margin-top:3.1em;">
+            <div class="col-50">
+              <flag-view title="Status" value="{{hwState.busdbg['Bus 1'].canctrl}}"></flag-view>
+              <flag-view title="Control" value="{{hwState.busdbg['Bus 1'].status}}"></flag-view>
+              <flag-view title="Error" value="{{hwState.busdbg['Bus 1'].error}}"></flag-view>
+            </div>
+            <div class="col-50" style="padding: 7%;">
+              <h3 style="margin:0;">Bit rate:</h3>
+              <md-select style="margin:0;" placeholder="Bus Speed Unknown" ng-model="bus1speed" ng-change="setRate(1, bus1speed)">
+                <md-option ng-repeat="speed in speeds" value="{{$index}}">{{speed}} {{$last?'':'kbps'}}</md-option>
+              </md-select>
+            </div>
+          </div>
+
+        </md-grid-tile>
+
+        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="2" md-colspan-sm="2">
+          <md-grid-tile-header>
+            <h3>CAN Bus 2</h3>
+          </md-grid-tile-header>
+
+          <div class="row" style="margin-top:3.2em;">
+            <div class="col-50">
+              <flag-view title="Status" value="{{hwState.busdbg['Bus 2'].canctrl}}"></flag-view>
+              <flag-view title="Control" value="{{hwState.busdbg['Bus 2'].status}}"></flag-view>
+              <flag-view title="Error" value="{{hwState.busdbg['Bus 2'].error}}"></flag-view>
+            </div>
+            <div class="col-50" style="padding: 7%;">
+              <h3 style="margin:0;">Bit rate:</h3>
+              <md-select style="margin:0;" placeholder="Bus Speed Unknown" ng-model="bus2speed" ng-change="setRate(2, bus2speed)">
+                <md-option ng-repeat="speed in speeds" value="{{$index}}">{{speed}} {{$last?'':'kbps'}}</md-option>
+              </md-select>
+            </div>
+          </div>
+
+        </md-grid-tile>
+
+        <md-grid-tile class="md-whiteframe-z2" md-rowspan="1" md-colspan="2">
+          <md-grid-tile-header>
+            <h3>CAN Bus 3</h3>
+          </md-grid-tile-header>
+
+          <div class="row" style="margin-top:3.2em;">
+            <div class="col-50">
+              <flag-view title="Status" value="{{hwState.busdbg['Bus 3'].canctrl}}"></flag-view>
+              <flag-view title="Control" value="{{hwState.busdbg['Bus 3'].status}}"></flag-view>
+              <flag-view title="Error" value="{{hwState.busdbg['Bus 3'].error}}"></flag-view>
+            </div>
+            <div class="col-50" style="padding: 7%;">
+              <h3 style="margin:0;">Bit rate:</h3>
+              <md-select style="margin:0;" placeholder="Bus Speed Unknown" ng-model="bus3speed" ng-change="setRate(3, bus3speed)">
+                <md-option ng-repeat="speed in speeds" value="{{$index}}">{{speed}} {{$last?'':'kbps'}}</md-option>
+              </md-select>
+            </div>
+          </div>
+
+        </md-grid-tile>
+
+  </md-grid-list>
+
+  </ion-content>
+
+</ion-view>

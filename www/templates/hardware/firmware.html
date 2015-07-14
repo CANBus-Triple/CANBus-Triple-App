@@ -1,0 +1,25 @@
+
+  <md-grid-tile-header>
+    <h3>Available Firmware Builds</h3>
+  </md-grid-tile-header>
+
+  <div class="row">
+    <div class="col-100">
+
+      <div ng-if="builds.length < 1">
+        <md-progress-circular class="md-hue-1" md-mode="indeterminate"></md-progress-circular>
+      </div>
+
+      <md-select placeholder="Pick Build Name" ng-model="selectedBuild" ng-show="builds.length">
+        <md-option ng-repeat="build in builds" value="{{$index}}">{{build.name}}</md-option>
+      </md-select>
+
+      <md-select placeholder="Pick Build Version" ng-model="selectedBuildVersion" ng-show="selectedBuild">
+        <md-option ng-repeat="b in builds[selectedBuild].builds | orderBy:'-build'" value="{{b.path}}">{{b.build}}</md-option>
+      </md-select>
+
+      <md-button class="md-raised md-warn" ng-if="selectedBuildVersion && hardwareConnected"
+                  ng-click="flash(selectedBuildVersion)">Flash Now</button>
+
+    </div>
+  </div>

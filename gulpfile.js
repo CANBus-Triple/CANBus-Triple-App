@@ -12,12 +12,12 @@ var reload      = browserSync.reload;
 
 var paths = {
   sass: ['./www/sass/**/*.scss'],
-  nwjs: ['package.json','./www/**/**', './node_modules/serialport/**/**', './node_modules/noble/**/**']
+  nwbuild: ['./package.json','./www/**/*', './node_modules/cbt-wireshark/**/*', './node_modules/serialport/**/*', './node_modules/noble/**/*']
 };
 
-gulp.task('default', ['sass', 'serve']);
+gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'nw-build']);
+gulp.task('build', ['install', 'sass-build', 'scripts', 'nw-build']);
 
 // Static Server + watching scss/html files
 gulp.task('serve', ['sass'], function() {
@@ -26,7 +26,7 @@ gulp.task('serve', ['sass'], function() {
         server: "./www"
     });
 
-    gulp.watch("www/js/**/*").on('change', reload);;
+    gulp.watch("www/js/**/*", ['scripts']).on('change', reload);;
     gulp.watch("www/sass/**/*.scss", ['sass']);
     gulp.watch("www/templates/**/*.html").on('change', reload);
 });
@@ -37,6 +37,12 @@ gulp.task('sass', function() {
         .pipe(sass())
         .pipe(gulp.dest("./www/css"))
         .pipe(reload({stream: true}));
+});
+
+gulp.task('scripts', function() {
+  return gulp.src('./www/js/app/**/*.js')
+    .pipe(concat('scripts.js'))
+    .pipe(gulp.dest('./www/js'));
 });
 
 gulp.task('sass-build', function(done) {
@@ -79,12 +85,12 @@ gulp.task('git-check', function(done) {
   done();
 });
 
-
 gulp.task('nw-build', function(done){
 
 	var nw = new NwBuilder({
+      version: '0.12.0',
 			appName: 'CANBus Triple',
-	    files: paths.nwjs, // use the glob format
+	    files: paths.nwbuild,
 	    platforms: ['osx64', 'win64','linux64'],
 	    macIcns: 'build_assets/nw.icns',
 	});

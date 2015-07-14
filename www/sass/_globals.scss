@@ -2,14 +2,30 @@
 body,
 html {
 	height: 100%;
+	-webkit-user-select: text !important;
+}
+
+.scroll {
+	-webkit-user-select: text;
 }
 
 ion-nav-bar {
+	display: block;
+	height: 3em;
 	-webkit-app-region: drag;
+	position: relative;
+	z-index: 9999;
+	cursor: move;
+
+	button {
+		-webkit-app-region: no-drag;
+		cursor: pointer;
+	}
 }
 
-ion-nav-view {
-	-webkit-app-region: no-drag;
+
+p {
+	white-space: pre-line;
 }
 
 
@@ -56,4 +72,9 @@ form input[type='number']::-webkit-outer-spin-button,
 form input[type='number']::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+}
+
+
+.cbt-white-box {
+	background: url(../img/cbt-outline-white.svg) center center no-repeat; background-size:contain;
 }

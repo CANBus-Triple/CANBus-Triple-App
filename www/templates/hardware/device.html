@@ -1,0 +1,11 @@
+<md-grid-tile-header>
+  <h3>Device Information</h3>
+</md-grid-tile-header>
+
+<ul>
+  <li><b>Firmware:</b> {{ hwState.version.name }}</li>
+  <li><b>Build:</b> {{ hwState.version.version }}</li>
+  <li><b>Free Memory:</b> {{ hwState.version.memory }}</li>
+</ul>
+<br>
+<md-button class="md-raised md-warn" ui-sref="hardware.firmware">Firmware Update</md-button>

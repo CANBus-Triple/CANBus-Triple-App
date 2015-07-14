@@ -1,0 +1,41 @@
+<ion-view title="{{navTitle}}">
+
+  <ion-content padding="true" class="color-assertive">
+
+    <md-grid-list md-cols-sm="2" md-cols-gt-sm="6" md-row-height-gt-md="1:1" md-row-height="2:2" md-gutter="24px" md-gutter-gt-sm="12px" >
+      <md-grid-tile class="" md-rowspan="2" md-colspan="3" md-colspan-sm="2" ng-click="updateStatus()" style="color:white; font-size:150%; text-align:center;">
+        <div class="row">
+          <div class="column" style="width: 100%; text-align:center;">
+            <md-grid-tile-header>
+              <h3>Pipe Setup</h3>
+            </md-grid-tile-header>
+            <p>
+              <h3 ng-hide="pipeName">Pipe not running.</h3>
+              <h3 ng-show="pipeName">Pipes running at:</h3>
+              <ul ng-show="pipeName" style="color: grey;">
+                <li ng-repeat="pipe in pipeName">{{pipe}}</li>
+              </ul>
+            </p>
+            <md-button class="md-raised md-accent" ng-click="toggle()" ng-disabled="!startEnable">{{ running ? 'Stop':'Start' }}</md-button>
+          </div>
+        </div>
+      </md-grid-tile>
+      <md-grid-tile class="" md-rowspan="2" md-colspan="3" md-colspan-sm="2" ng-click="updateStatus()" style="color:white; font-size:150%; text-align:center;">
+        <div class="row">
+          <div class="column" style="width: 100%; padding: 2em;">
+            <md-grid-tile-header>
+              <h3>About</h3>
+            </md-grid-tile-header>
+            <p style="color: #222; font-size:75%;">This utility will allow you to pipe data from the CANBus Triple to the <a popup="https://www.wireshark.org/" href="#">Wireshark Network Analizer</a> software.  </p>
+            <md-button class="md-raised md-accent" popup="https://canb.us/tutorials/wireshark">Read the Tutorial</md-button>
+          </div>
+        </div>
+      </md-grid-tile>
+    </md-grid-list>
+
+
+
+
+  </ion-content>
+
+</ion-view>

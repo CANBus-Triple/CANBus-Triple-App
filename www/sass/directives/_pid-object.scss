@@ -1,0 +1,71 @@
+.bevel-shadow {
+  box-shadow: 0 1px 0 #CCC,
+      				0 2px 0 #C9C9C9,
+      				0 3px 0 #BBB,
+      				0 4px 0 #B9B9B9,
+      				0 5px 0 #AAA,
+      				0 6px 1px rgba(0, 0, 0, .1),
+      				0 0 5px rgba(0, 0, 0, .1),
+      				0 1px 3px rgba(0, 0, 0, .3),
+      				0 3px 5px rgba(0, 0, 0, .2),
+      				0 5px 10px rgba(0, 0, 0, .25),
+      				0 10px 10px rgba(0, 0, 0, .2),
+      				0 20px 20px rgba(0, 0, 0, .15);
+}
+
+
+
+.pids {
+  margin: 22px -1% 0 -1%;
+  width: 100%;
+  -webkit-transition: 0.6s ease-out all;
+}
+
+.pid-object {
+  border-radius: 4px;
+  min-height: 3em;
+  width: 18em;
+  display: block;
+  margin: 0 1% 2% 1%;
+  padding: 0.8em;
+  background: #f2f2f2;
+  float: left;
+}
+
+
+
+.pids h3 {
+  background-color: #aaa;
+  color: white;
+  margin-top: 0;
+}
+
+.pid-form {
+  margin: 0 auto;
+}
+
+.pid-form input {
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 3px;
+  width: 78%;
+}
+
+
+.pid-form label,
+.pid-form input {
+    display: inline-block;
+    vertical-align: baseline;
+}
+
+.pid-form label {
+    width: 20%;
+    margin-right: 2%;
+}
+
+.pid-form form,
+.pid-form input {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
