@@ -42,7 +42,8 @@
 			    </tr>
 			  </thead>
 			  <tbody>
-			    <tr ng-repeat="item in midBuffer" ng-class="{true:'selected'}[isInterested(item.mid)]">
+					<tr ng-repeat="item in midBuffer" ng-class="{true:'selected'}[isInterested(item.mid)]">
+					<!-- <tr ng-repeat="item in midBuffer track by item.packet.messageId" ng-class="{true:'selected'}[isInterested(item.mid)]"> -->
 						<td ng-show="showFilter">
 							<md-checkbox class="md-warn" style="margin:0;" aria-label="filter" ng-model="filterMids[item.packet.messageId]" ng-click="toggleIntrest(item.mid, $event)"></md-checkbox>
 						</td>
