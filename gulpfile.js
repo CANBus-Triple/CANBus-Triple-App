@@ -6,18 +6,22 @@ var sass = require('gulp-sass');
 var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
 var sh = require('shelljs');
-var NwBuilder = require('node-webkit-builder');
 var browserSync = require('browser-sync');
 var reload      = browserSync.reload;
 
+var gulp = require('gulp');
+var electron = require('gulp-electron');
+var packageJson = require('./package.json');
+
+
+
 var paths = {
-  sass: ['./www/sass/**/*.scss'],
-  nwbuild: ['./package.json','./www/**/*', './node_modules/cbt-wireshark/**/*', './node_modules/serialport/**/*', './node_modules/noble/**/*']
+  sass: ['./www/sass/**/*.scss']
 };
 
 gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'scripts', 'nw-build']);
+gulp.task('build', ['install', 'sass-build', 'scripts', 'electron']);
 
 // Static Server + watching scss/html files
 gulp.task('serve', ['sass'], function() {
@@ -57,10 +61,6 @@ gulp.task('sass-build', function(done) {
     .on('end', done);
 });
 
-gulp.task('nw-watch', function() {
-  gulp.watch(paths.nwjs, ['sass', 'nw-build']);
-});
-
 gulp.task('watch', function() {
   gulp.watch(paths.sass, ['sass']);
 });
@@ -85,26 +85,36 @@ gulp.task('git-check', function(done) {
   done();
 });
 
-gulp.task('nw-build', function(done){
 
-	var nw = new NwBuilder({
-      version: '0.12.0',
-			appName: 'CANBus Triple',
-	    files: paths.nwbuild,
-	    platforms: ['osx64', 'win64','linux64'],
-	    macIcns: 'build_assets/nw.icns',
-	});
 
-	//Log stuff you want
+gulp.task('electron', function() {
 
-	nw.on('log',  console.log);
-
-	// Build returns a promise
-	nw.build().then(function () {
-	   console.log('all done!');
-	}).catch(function (error) {
-	    console.error(error);
-	});
-
-	done();
+    gulp.src("")
+    .pipe(electron({
+        src: './src',
+        packageJson: packageJson,
+        release: './release',
+        cache: './cache',
+        version: 'v0.30.6',
+        packaging: true,
+        platforms: ['win32-ia32', 'darwin-x64', 'linux-x86'],
+        platformResources: {
+            darwin: {
+                CFBundleDisplayName: packageJson.name,
+                CFBundleIdentifier: packageJson.name,
+                CFBundleName: packageJson.name,
+                CFBundleVersion: packageJson.version,
+                icon: 'build_assets/nw.icns'
+            },
+            win: {
+                "version-string": packageJson.version,
+                "file-version": packageJson.version,
+                "product-version": packageJson.version,
+                "icon": 'build_assets/cbt.ico'
+            }
+        }
+    }))
+    .pipe(gulp.dest(""));
 });
+
+

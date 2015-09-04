@@ -31,8 +31,9 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 		*		Node-Webkit Setup
 		*/
 
-		if(typeof require != 'undefined' && window.cbtAppDebug ) require('nw.gui').Window.get().showDevTools();
+		// if(typeof require != 'undefined' && window.cbtAppDebug ) require('nw.gui').Window.get().showDevTools();
 
+/*
 		if(typeof require != 'undefined' && process.platform == 'darwin' ){
 
 			var gui = require('nw.gui'),
@@ -52,10 +53,11 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 
 			win.show();
 		}
+*/
 
 	})
 
-	.constant('appVersion', '0.2.6-alpha1') // Set app version
+	.constant('appVersion', '0.2.6-alpha2') // Set app version
 
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
