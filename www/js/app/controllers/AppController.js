@@ -44,7 +44,7 @@ angular.module('cbt')
 
 		$scope.showCloseButton = typeof process == 'object';
 		$scope.exitApplication = function(){
-			require('nw.gui').App.quit();
+			window.close();
 		}
 
 

@@ -6,18 +6,25 @@ var sass = require('gulp-sass');
 var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
 var sh = require('shelljs');
-var NwBuilder = require('node-webkit-builder');
 var browserSync = require('browser-sync');
 var reload      = browserSync.reload;
+var del   = require('del');
+
+var gulp = require('gulp');
+var electron = require('gulp-electron');
+var packageJson = require('./package.json');
+var install = require("gulp-install");
+
+
+
 
 var paths = {
-  sass: ['./www/sass/**/*.scss'],
-  nwbuild: ['./package.json','./www/**/*', './node_modules/cbt-wireshark/**/*', './node_modules/serialport/**/*', './node_modules/noble/**/*']
+  sass: ['./www/sass/**/*.scss']
 };
 
 gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'scripts', 'nw-build']);
+gulp.task('build', ['install', 'sass-build', 'scripts', 'electron-clean', 'electron-copy', 'electron-install', 'electron-build']);
 
 // Static Server + watching scss/html files
 gulp.task('serve', ['sass'], function() {
@@ -57,10 +64,6 @@ gulp.task('sass-build', function(done) {
     .on('end', done);
 });
 
-gulp.task('nw-watch', function() {
-  gulp.watch(paths.nwjs, ['sass', 'nw-build']);
-});
-
 gulp.task('watch', function() {
   gulp.watch(paths.sass, ['sass']);
 });
@@ -85,26 +88,61 @@ gulp.task('git-check', function(done) {
   done();
 });
 
-gulp.task('nw-build', function(done){
+gulp.task('electron-clean', function () {
+  return del([
+    './electron-src/**/*',
+  ]);
+});
 
-	var nw = new NwBuilder({
-      version: '0.12.0',
-			appName: 'CANBus Triple',
-	    files: paths.nwbuild,
-	    platforms: ['osx64', 'win64','linux64'],
-	    macIcns: 'build_assets/nw.icns',
-	});
+gulp.task('electron-copy', ['electron-clean'], function() {
+   gulp.src([
+     'package.json',
+     'main.js',
+     'www/**/*',
+     'node_modules/serialport/build/**/*',
+     'node_modules/serialport/serialport*.*',
+     'node_modules/serialport/*.js',
+     'node_modules/serialport/*.json',
+     'node_modules/cbt-wireshark/**/*',
+     'node_modules/noble/**/*',
+     'node_modules/debug/**/*'
+   ], {base: "."})
+   .pipe(gulp.dest('./electron-src/'));
+});
 
-	//Log stuff you want
 
-	nw.on('log',  console.log);
+gulp.task('electron-install', ['electron-copy'], function() {
+  gulp.src(['./electron-src/package.json'])
+    .pipe(install({production:true, ignoreScripts:true}));
+  });
 
-	// Build returns a promise
-	nw.build().then(function () {
-	   console.log('all done!');
-	}).catch(function (error) {
-	    console.error(error);
-	});
+gulp.task('electron-build', /*['electron-copy'],*/ function() {
 
-	done();
+    gulp.src("")
+    .pipe(electron({
+        src: './electron-src',
+        packageJson: packageJson,
+        release: './release',
+        cache: './cache',
+        asar: true,
+        version: 'v0.34.1',
+        packaging: true,
+        platforms: ['win32-ia32', 'darwin-x64', 'linux-x64'],
+        platformResources: {
+            darwin: {
+                CFBundleDisplayName: packageJson.name,
+                CFBundleIdentifier: packageJson.name,
+                CFBundleName: packageJson.name,
+                CFBundleVersion: packageJson.version,
+                icon: 'build_assets/nw.icns'
+            },
+            win: {
+                "version-string": packageJson.version,
+                "file-version": packageJson.version,
+                "product-version": packageJson.version,
+                "icon": 'build_assets/cbt.ico'
+            }
+        }
+    }))
+    .pipe(gulp.dest(""));
 });

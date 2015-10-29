@@ -20,7 +20,8 @@
 .type-energized {
   color: #f0b840; }
 
-body, html {
+body,
+html {
   height: 100%;
   -webkit-user-select: text !important; }
 
@@ -41,7 +42,12 @@ ion-nav-bar {
 p {
   white-space: pre-line; }
 
-body, h1, h2, h3, h4, h5 {
+body,
+h1,
+h2,
+h3,
+h4,
+h5 {
   font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, "Lucida Grande"; }
 
 h1 {
@@ -64,7 +70,8 @@ h1 {
 /*
 *	Hide Input number spinner
 */
-form input[type='number']::-webkit-outer-spin-button, form input[type='number']::-webkit-inner-spin-button {
+form input[type='number']::-webkit-outer-spin-button,
+form input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0; }
 
@@ -111,7 +118,7 @@ ion-nav-bar .left-buttons {
   margin-top: 0.2em;
   height: 2em;
   width: 2.2em;
-  background: transparent url('../img//cbt-outline-white.svg') no-repeat !important;
+  background: transparent url("../img//cbt-outline-white.svg") no-repeat !important;
   background-size: contain !important; }
 
 /*
@@ -131,7 +138,8 @@ ion-nav-bar .left-buttons {
 .height-animation.ng-hide-remove {
   display: block !important; }
 
-.scale-up.ng-hide-add, .scale-up.ng-hide-remove {
+.scale-up.ng-hide-add,
+.scale-up.ng-hide-remove {
   transition: all 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
   opacity: 1;
   -webkit-transform: scale(1) rotate(0deg);
@@ -284,7 +292,8 @@ img#logo {
   padding: 3px;
   width: 78%; }
 
-.pid-form label, .pid-form input {
+.pid-form label,
+.pid-form input {
   display: inline-block;
   vertical-align: baseline; }
 
@@ -292,7 +301,8 @@ img#logo {
   width: 20%;
   margin-right: 2%; }
 
-.pid-form form, .pid-form input {
+.pid-form form,
+.pid-form input {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box; }
