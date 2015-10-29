@@ -8,10 +8,13 @@ var rename = require('gulp-rename');
 var sh = require('shelljs');
 var browserSync = require('browser-sync');
 var reload      = browserSync.reload;
+var del   = require('del');
 
 var gulp = require('gulp');
 var electron = require('gulp-electron');
 var packageJson = require('./package.json');
+var install = require("gulp-install");
+
 
 
 
@@ -21,7 +24,7 @@ var paths = {
 
 gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'scripts', 'electron']);
+gulp.task('build', ['install', 'sass-build', 'scripts', 'electron-clean', 'electron-copy', 'electron-install', 'electron-build']);
 
 // Static Server + watching scss/html files
 gulp.task('serve', ['sass'], function() {
@@ -85,19 +88,46 @@ gulp.task('git-check', function(done) {
   done();
 });
 
+gulp.task('electron-clean', function () {
+  return del([
+    './electron-src/**/*',
+  ]);
+});
+
+gulp.task('electron-copy', ['electron-clean'], function() {
+   gulp.src([
+     'package.json',
+     'main.js',
+     'www/**/*',
+     'node_modules/serialport/build/**/*',
+     'node_modules/serialport/serialport*.*',
+     'node_modules/serialport/*.js',
+     'node_modules/serialport/*.json',
+     'node_modules/cbt-wireshark/**/*',
+     'node_modules/noble/**/*',
+     'node_modules/debug/**/*'
+   ], {base: "."})
+   .pipe(gulp.dest('./electron-src/'));
+});
 
 
-gulp.task('electron', function() {
+gulp.task('electron-install', ['electron-copy'], function() {
+  gulp.src(['./electron-src/package.json'])
+    .pipe(install({production:true, ignoreScripts:true}));
+  });
+
+gulp.task('electron-build', /*['electron-copy'],*/ function() {
 
     gulp.src("")
     .pipe(electron({
-        src: './src',
+        src: './electron-src',
         packageJson: packageJson,
         release: './release',
         cache: './cache',
-        version: 'v0.30.6',
+        asar: true,
+        version: 'v0.34.1',
         packaging: true,
-        platforms: ['win32-ia32', 'darwin-x64', 'linux-x86'],
+        platforms: ['win32-ia32', 'darwin-x64', 'linux-x64'],
         platformResources: {
             darwin: {
                 CFBundleDisplayName: packageJson.name,
@@ -116,5 +146,3 @@ gulp.task('electron', function() {
     }))
     .pipe(gulp.dest(""));
 });
-
-
