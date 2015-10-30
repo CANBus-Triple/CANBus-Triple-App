@@ -1,6 +1,6 @@
 {
   "name": "CANBusTriple",
-  "version": "0.2.6-alpha2",
+  "version": "0.2.8-alpha3",
   "private": true,
   "main": "main.js",
   "scripts": {

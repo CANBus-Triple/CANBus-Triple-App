@@ -32,6 +32,8 @@
 
   <body ng-app="cbt" ng-controller="AppController" class="platform-android platform-cordova platform-webview">
 
+    <div id="loading" initialisation=""></div>
+
     <ion-nav-bar class="bar-assertive nav-title-slide-ios7" ng-class="{'nav-showing': navShowing}" ng-click="derp()">
       <ion-nav-buttons side="left">
         <button class="button button-clear scale-up" ng-click="toggleMenu()" ng-show="uiLarge">

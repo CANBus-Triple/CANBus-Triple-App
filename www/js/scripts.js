@@ -11,6 +11,15 @@ var remote = require('remote');
 var app = remote.require('app');
 
 
+/*
+*	Catch all errors
+*/
+window.onerror = function(message, url, lineNumber) {
+  console.error(message, url, lineNumber);
+  return true;
+};
+
+
 angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule'])
 
 	// .run(function($ionicPlatform) {
@@ -29,6 +38,7 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 	//
 	// })
 
+
 	.run(function(SerialService){
 
 		// Close serial on app close
@@ -40,7 +50,24 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
 
 	})
 
-	.constant('appVersion', '0.2.6-alpha2') // Set app version
+	// Initial load event
+	.directive('initialisation',['$rootScope', function($rootScope) {
+            return {
+                restrict: 'A',
+                link: function($scope) {
+                    var to;
+                    var listener = $scope.$watch(function() {
+                        clearTimeout(to);
+                        to = setTimeout(function () {
+                            listener();
+                            $rootScope.$broadcast('initialised');
+                        }, 50);
+                    });
+                }
+            };
+        }])
+
+	.constant('appVersion', '0.2.8-alpha3') // Set app version
 
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
@@ -206,6 +233,15 @@ angular.module('cbt')
 
 		$scope.$on('CBTSideMenu.IN', navHandler);
 		$scope.$on('CBTSideMenu.OUT', navHandler);
+
+
+		// Hide loader on init
+		$scope.$on('initialised', function(event){
+			document.getElementById('loading').classList.add('fade');
+			setTimeout(function(){
+				document.getElementById('loading').classList.add('hide');
+			}, 200);
+		});
 
 		function navHandler(event){
 

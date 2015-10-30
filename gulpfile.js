@@ -24,10 +24,10 @@ var paths = {
 
 gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'scripts', 'electron-clean', 'electron-copy', 'electron-install', 'electron-build']);
+gulp.task('build', ['install', 'sass-build', 'scripts', /*'electron-clean',*/ 'electron-copy', 'electron-install', 'electron-build']);
 
 // Static Server + watching scss/html files
-gulp.task('serve', ['sass'], function() {
+gulp.task('serve', ['sass', 'scripts'], function() {
 
     browserSync({
         server: "./www"
@@ -94,21 +94,33 @@ gulp.task('electron-clean', function () {
   ]);
 });
 
-gulp.task('electron-copy', ['electron-clean'], function() {
-   gulp.src([
-     'package.json',
-     'main.js',
-     'www/**/*',
-     'node_modules/serialport/build/**/*',
-     'node_modules/serialport/serialport*.*',
-     'node_modules/serialport/*.js',
-     'node_modules/serialport/*.json',
-     'node_modules/cbt-wireshark/**/*',
-     'node_modules/noble/**/*',
-     'node_modules/debug/**/*'
-   ], {base: "."})
+gulp.task('electron-copy', ['sass', 'scripts', /*'electron-clean'*/], function() {
+
+  var files = [
+    'package.json',
+    'main.js',
+    'www/**/*',
+    'node_modules/cbt-wireshark/**/*',
+    'node_modules/noble/**/*',
+    'node_modules/debug/**/*',
+    'node_modules/serialport/build/**/*',
+    'node_modules/serialport/serialport*.*',
+    'node_modules/serialport/*.js',
+    'node_modules/serialport/*.json'
+  ];
+
+  var serialport = require('serialport/package.json');
+
+  // Add serialport dependancies to files array
+  Object.keys(serialport.dependencies).map(function(v, i, a){
+    files.push('node_modules/'+v+'/**/*');
+  });
+
+  gulp.src(files, {base: "."})
    .pipe(gulp.dest('./electron-src/'));
 });
+
+
 
 
 gulp.task('electron-install', ['electron-copy'], function() {
@@ -116,7 +128,7 @@ gulp.task('electron-install', ['electron-copy'], function() {
     .pipe(install({production:true, ignoreScripts:true}));
   });
 
-gulp.task('electron-build', /*['electron-copy'],*/ function() {
+gulp.task('electron-build', ['electron-copy'], function() {
 
     gulp.src("")
     .pipe(electron({
@@ -127,7 +139,7 @@ gulp.task('electron-build', /*['electron-copy'],*/ function() {
         asar: true,
         version: 'v0.34.1',
         packaging: true,
-        platforms: ['win32-ia32', 'darwin-x64', 'linux-x64'],
+        platforms: ['win32-ia32', 'win32-x64', 'darwin-x64', 'linux-x64'],
         platformResources: {
             darwin: {
                 CFBundleDisplayName: packageJson.name,
