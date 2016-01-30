@@ -12,6 +12,7 @@ var del   = require('del');
 
 var gulp = require('gulp');
 var electron = require('gulp-electron');
+var elecRebuild   = require('electron-rebuild');
 var packageJson = require('./package.json');
 var install = require("gulp-install");
 
@@ -24,10 +25,10 @@ var paths = {
 
 gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'scripts', 'electron-clean', 'electron-copy', 'electron-install', 'electron-build']);
+gulp.task('build', ['install', 'sass-build', 'scripts', /*'electron-clean',*/ 'electron-copy', 'electron-install', 'electron-build']);
 
 // Static Server + watching scss/html files
-gulp.task('serve', ['sass'], function() {
+gulp.task('serve', ['sass', 'scripts'], function() {
 
     browserSync({
         server: "./www"
@@ -94,21 +95,74 @@ gulp.task('electron-clean', function () {
   ]);
 });
 
-gulp.task('electron-copy', ['electron-clean'], function() {
-   gulp.src([
-     'package.json',
-     'main.js',
-     'www/**/*',
-     'node_modules/serialport/build/**/*',
-     'node_modules/serialport/serialport*.*',
-     'node_modules/serialport/*.js',
-     'node_modules/serialport/*.json',
-     'node_modules/cbt-wireshark/**/*',
-     'node_modules/noble/**/*',
-     'node_modules/debug/**/*'
-   ], {base: "."})
+gulp.task('electron-rebuild', [], function() {
+  elecRebuild.shouldRebuildNativeModules('./node_modules/electron-prebuilt/dist/')
+    .then((shouldBuild) => {
+      if (!shouldBuild) return true;
+
+      return elecRebuild.installNodeHeaders('v0.36.7')
+        .then(() => elecRebuild.rebuildNativeModules('v0.36.7', './node_modules'));
+    })
+    .catch((e) => {
+      console.error("Building modules didn't work!");
+      console.error(e);
+    });
+  });
+
+gulp.task('electron-copy', ['sass', 'scripts', /*'electron-rebuild', 'electron-clean'*/], function() {
+
+  var modules = [
+    'serialport',
+    'cbt-wireshark',
+    'noble'
+  ];
+
+  var files = [
+    'package.json',
+    'main.js',
+    'www/**/*',
+    'node_modules/cbt-wireshark/**/*',
+    'node_modules/noble/**/*',
+    'node_modules/debug/**/*',
+    'node_modules/ms/**/*',
+    'node_modules/serialport/node_modules/**/*',
+    'node_modules/serialport/build/**/*',
+    'node_modules/serialport/serialport*.*',
+    'node_modules/serialport/*.js',
+    'node_modules/serialport/*.json'
+  ];
+
+
+  modules.forEach( function(value, index, arr){
+
+    var package = require('serialport/package.json');
+    Object.keys(package.dependencies).map(function(v, i, a){
+      files.push('node_modules/'+v+'/**/*');
+    });
+
+    //addModules(package);
+
+  });
+
+  // function addModules(package, level){
+  //
+  //   level = level | 1;
+  //   if( level > 7 )return;
+  //
+  //   Object.keys(package.dependencies).map(function(v, i, a){
+  //     files.push('node_modules/'+v+'/**/*');
+  //
+  //     // recursively add required modules (npm 3 flat format only)
+  //     var package = require('./node_modules/'+v+'/package.json');
+  //     addModules(package, level+1);
+  //   });
+  // }
+
+  gulp.src(files, {base: "."})
    .pipe(gulp.dest('./electron-src/'));
+
 });
+
 
 
 gulp.task('electron-install', ['electron-copy'], function() {
@@ -116,7 +170,7 @@ gulp.task('electron-install', ['electron-copy'], function() {
     .pipe(install({production:true, ignoreScripts:true}));
   });
 
-gulp.task('electron-build', /*['electron-copy'],*/ function() {
+gulp.task('electron-build', ['electron-copy'], function() {
 
     gulp.src("")
     .pipe(electron({
@@ -125,9 +179,9 @@ gulp.task('electron-build', /*['electron-copy'],*/ function() {
         release: './release',
         cache: './cache',
         asar: true,
-        version: 'v0.34.1',
+        version: 'v0.36.7',
         packaging: true,
-        platforms: ['win32-ia32', 'darwin-x64', 'linux-x64'],
+        platforms: [/*'win32-ia32', 'win32-x64', */'darwin-x64', /*'linux-x64'*/],
         platformResources: {
             darwin: {
                 CFBundleDisplayName: packageJson.name,
