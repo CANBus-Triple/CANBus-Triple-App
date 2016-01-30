@@ -7,55 +7,67 @@
 
 // window.cbtAppDebug = true;
 
+var remote = require('remote');
+var app = remote.require('app');
+
+
+/*
+*	Catch all errors
+*/
+window.onerror = function(message, url, lineNumber) {
+  console.error(message, url, lineNumber);
+  return true;
+};
+
 
 angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule'])
 
-	.run(function($ionicPlatform) {
-		/*
-	  $ionicPlatform.ready(function() {
-	    // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
-	    // for form inputs)
-	    if(window.cordova && window.cordova.plugins.Keyboard) {
-	      cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-	    }
-	    if(window.StatusBar) {
-	      // org.apache.cordova.statusbar required
-	      StatusBar.styleDefault();
-	    }
-	  });
-		*/
-	})
+	// .run(function($ionicPlatform) {
+	//
+	//   $ionicPlatform.ready(function() {
+	//     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
+	//     // for form inputs)
+	//     if(window.cordova && window.cordova.plugins.Keyboard) {
+	//       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+	//     }
+	//     if(window.StatusBar) {
+	//       // org.apache.cordova.statusbar required
+	//       StatusBar.styleDefault();
+	//     }
+	//   });
+	//
+	// })
+
+
 	.run(function(SerialService){
 
-		/*
-		*		Node-Webkit Setup
-		*/
+		// Close serial on app close
+		app.on('window-all-closed', function() {
+			console.log("We're closing...");
+			SerialService.close();
+		});
 
-		if(typeof require != 'undefined' && window.cbtAppDebug ) require('nw.gui').Window.get().showDevTools();
-
-		if(typeof require != 'undefined' && process.platform == 'darwin' ){
-
-			var gui = require('nw.gui'),
-		  		win = gui.Window.get();
-
-		  var nativeMenuBar = new gui.Menu({ type: "menubar" });
-			nativeMenuBar.createMacBuiltin("CANBus Triple");
-			nativeMenuBar.append(new gui.MenuItem({ label: 'Item A' }));
-			win.menu = nativeMenuBar;
-
-		  win.on('close', function() {
-			  this.hide(); // Pretend to be closed already
-			  console.log("We're closing...");
-			  SerialService.close();
-			  this.close(true);
-			});
-
-			win.show();
-		}
 
 	})
 
-	.constant('appVersion', '0.2.6-alpha1') // Set app version
+	// Initial load event
+	.directive('initialisation',['$rootScope', function($rootScope) {
+            return {
+                restrict: 'A',
+                link: function($scope) {
+                    var to;
+                    var listener = $scope.$watch(function() {
+                        clearTimeout(to);
+                        to = setTimeout(function () {
+                            listener();
+                            $rootScope.$broadcast('initialised');
+                        }, 50);
+                    });
+                }
+            };
+        }])
+
+	.constant('appVersion', '0.2.8-alpha3') // Set app version
 
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
@@ -222,6 +234,15 @@ angular.module('cbt')
 		$scope.$on('CBTSideMenu.IN', navHandler);
 		$scope.$on('CBTSideMenu.OUT', navHandler);
 
+
+		// Hide loader on init
+		$scope.$on('initialised', function(event){
+			document.getElementById('loading').classList.add('fade');
+			setTimeout(function(){
+				document.getElementById('loading').classList.add('hide');
+			}, 200);
+		});
+
 		function navHandler(event){
 
 			$timeout(function(){
@@ -239,7 +260,7 @@ angular.module('cbt')
 
 		$scope.showCloseButton = typeof process == 'object';
 		$scope.exitApplication = function(){
-			require('nw.gui').App.quit();
+			window.close();
 		}
 
 
@@ -2051,7 +2072,7 @@ angular.module('cbt')
 
 /*
 *		Derek K etx313@gmail.com
-*		Node-Webkit Popup Directive
+*		Electron Popup Directive
 *
 */
 
@@ -2059,32 +2080,25 @@ angular.module('cbt')
 angular.module('cbt')
 .directive('popup', function($timeout, UtilsService){
 
-  var gui = require('nw.gui'),
-      nwPopup,
-      url = '';
-
-  function doPop(){
-
-    nwPopup = gui.Window.open( url, {
-        toolbar: false,
-        frame: true,
-        nodejs: false
-        });
-
-  }
-
   return {
     restrict: 'A',
+    scope: {
+      title: '@popup'
+    },
     controller: function ($scope){
+
+      $scope.doPop = function(url){
+        require('shell').openExternal($scope.url);
+      }
+
     },
     link: function($scope, element, attrs){
 
       if( typeof attrs.popup == 'undefined' )
         return;
 
-      url = attrs.popup;
-
-      element.bind('click', doPop);
+      $scope.url = attrs.popup;
+      element.bind('click', $scope.doPop);
 
 
     },
@@ -2743,53 +2757,101 @@ angular.module('cbt')
 angular.module('cbt')
   .factory('CBTSettings', function ($rootScope, $q, UtilsService, HardwareService){
 
-    var eepromBuffer = new ArrayBuffer(512);
-    var eepromView = new Uint8Array(eepromBuffer);
 
-    // EEPROM Struct
-    var displayEnabled = new Uint8Array(eepromBuffer, 0, 1);
-    var firstboot = new Uint8Array(eepromBuffer, 1, 1);
-    var displayIndex = new Uint8Array(eepromBuffer, 2, 1);
-    var busSpeeds = new Uint8Array(eepromBuffer, 3, 6);
-    /*
-    var hwselftest = new Uint8Array(eepromBuffer, 3, 1);
-    var placeholder4 = new Uint8Array(eepromBuffer, 4, 1);
-    var placeholder5 = new Uint8Array(eepromBuffer, 5, 1);
-    var placeholder6 = new Uint8Array(eepromBuffer, 6, 1);
-    var placeholder7 = new Uint8Array(eepromBuffer, 7, 1);
-    */
+    var newFwLayout = false;
 
     var pids = [],
         l = 34,   // PID Size
-        off = 14; // Start offset
-
-    for(var i=0; i<8; i++)
-      pids.push({
-        busId: new Uint8Array(eepromBuffer, (l*i)+off, 1),
-        settings: new Uint8Array(eepromBuffer, 1+(l*i)+off, 1),
-        value: new Uint8Array(eepromBuffer, 2+(l*i)+off, 2),
-        txd: new Uint8Array(eepromBuffer, 4+(l*i)+off, 8),
-        rxf: new Uint8Array(eepromBuffer, 12+(l*i)+off, 6),
-        rxd: new Uint8Array(eepromBuffer, 18+(l*i)+off, 2),
-        mth: new Uint8Array(eepromBuffer, 20+(l*i)+off, 6),
-        name: new Uint8Array(eepromBuffer, 26+(l*i)+off, 8)
-      });
-
-
-    /*
-    *   Human readable object of PIDs for view rendering.
-    */
+        off = 14; // Start offset (<0.5.0)
+        //off = 20; // Start offset (<0.5.0)
     var managedPids = [];
-    for(var i=0; i<pids.length; i++)
-      managedPids.push( { busId: '',
-                          settings: [],
-                          value: '',
-                          txd: '',
-                          rxf: '',
-                          rxd: '',
-                          mth: '',
-                          name: ''
-                        });
+    var busSpeeds;
+    var eepromBuffer;
+    var eepromView;
+    var displayEnabled;
+    var firstboot;
+    var displayIndex;
+
+    // Watch hardware info from Hardware Service to set format properly
+    // $rootScope.$watch(function(){
+    //   return HardwareService.getHardwareInfo().version;
+    // }, function(newValue, oldValue, scope){
+    //   console.log('hardware version changed', arguments);
+    //   initEepromStruct();
+    // });
+
+    initEepromStruct();
+
+
+
+    function initEepromStruct(){
+
+      newFwLayout = upToDate( HardwareService.getHardwareInfo().version, '0.5.0' );
+
+      eepromBuffer = new ArrayBuffer(512);
+      eepromView = new Uint8Array(eepromBuffer);
+
+      // EEPROM Struct
+      displayEnabled = new Uint8Array(eepromBuffer, 0, 1);
+      firstboot = new Uint8Array(eepromBuffer, 1, 1);
+      displayIndex = new Uint8Array(eepromBuffer, 2, 1);
+
+      // Check for fw > 0.5.0, set eeprom struct accordingly
+
+      if( newFwLayout ){
+        busSpeeds = new Uint8Array(eepromBuffer, 3, 12);
+      }else{
+        busSpeeds = new Uint8Array(eepromBuffer, 3, 6);
+      }
+
+
+      /*
+      var hwselftest = new Uint8Array(eepromBuffer, 3, 1);
+      var placeholder4 = new Uint8Array(eepromBuffer, 4, 1);
+      var placeholder5 = new Uint8Array(eepromBuffer, 5, 1);
+      var placeholder6 = new Uint8Array(eepromBuffer, 6, 1);
+      var placeholder7 = new Uint8Array(eepromBuffer, 7, 1);
+      */
+
+
+      // Set offset for new fw eeprom layout
+      if( newFwLayout ){
+        off = 20;
+      }
+
+      pids = [];
+      for(var i=0; i<8; i++)
+        pids.push({
+          busId: new Uint8Array(eepromBuffer, (l*i)+off, 1),
+          settings: new Uint8Array(eepromBuffer, 1+(l*i)+off, 1),
+          value: new Uint8Array(eepromBuffer, 2+(l*i)+off, 2),
+          txd: new Uint8Array(eepromBuffer, 4+(l*i)+off, 8),
+          rxf: new Uint8Array(eepromBuffer, 12+(l*i)+off, 6),
+          rxd: new Uint8Array(eepromBuffer, 18+(l*i)+off, 2),
+          mth: new Uint8Array(eepromBuffer, 20+(l*i)+off, 6),
+          name: new Uint8Array(eepromBuffer, 26+(l*i)+off, 8)
+        });
+
+
+      /*
+      *   Human readable object of PIDs for view rendering.
+      */
+      managedPids = [];
+      for(var i=0; i<pids.length; i++)
+        managedPids.push( { busId: '',
+                            settings: [],
+                            value: '',
+                            txd: '',
+                            rxf: '',
+                            rxd: '',
+                            mth: '',
+                            name: ''
+                          });
+
+    }
+
+
+
 
     /*
     *   Convert eeprom buffer to managed pid object
@@ -2920,6 +2982,42 @@ angular.module('cbt')
         sendEeprom(eepromBuffer);
       }
     }
+
+
+
+    // compare two versions, return true if local is up to date, false otherwise
+    // if both versions are in the form of major[.minor][.patch] then the comparison parses and compares as such
+    // otherwise the versions are treated as strings and normal string compare is done
+
+    function upToDate(local, remote) {
+
+      var VPAT = /^\d+(\.\d+){0,2}$/;
+
+      if (!local || !remote || local.length === 0 || remote.length === 0)
+          return false;
+      if (local == remote)
+          return true;
+      if (VPAT.test(local) && VPAT.test(remote)) {
+          var lparts = local.split('.');
+          while(lparts.length < 3)
+              lparts.push("0");
+          var rparts = remote.split('.');
+          while (rparts.length < 3)
+              rparts.push("0");
+          for (var i=0; i<3; i++) {
+              var l = parseInt(lparts[i], 10);
+              var r = parseInt(rparts[i], 10);
+              if (l === r)
+                  continue;
+              return l > r;
+          }
+          return true;
+      } else {
+          return local >= remote;
+      }
+    }
+
+
 
   });
 
@@ -3313,7 +3411,9 @@ angular.module('cbt')
 				ConnectionMode = {
 					USB:'usb',
 					BT:'bt'
-				};
+				},
+				hardwareInfo = {version:'0.4.0'};
+
 
 		var debugString = {data:''};
 
@@ -3384,7 +3484,9 @@ angular.module('cbt')
 
 			if(device.address == 'serial')
 				SerialService.open(device, readHandler, rawHandler).then(function(){
-					command( 'info' );
+					$timeout(function(){ command( 'info' ); }, 200);
+					$timeout(function(){ command( 'info' ); }, 500);
+					$timeout(function(){ command( 'info' ); }, 700);
 				});
 			else
 				BluetoothService.connect(device, readHandler, rawHandler);
@@ -3516,7 +3618,10 @@ angular.module('cbt')
 					console.error(e, UtilsService.ab2str( data ));
 				}
 
-				if( eventObject ) $rootScope.$broadcast('hardwareEvent', eventObject);
+				if( eventObject ){
+					if( eventObject.version ) setHardwareInfo( eventObject );
+					$rootScope.$broadcast('hardwareEvent', eventObject);
+				}
 
 				// console.log("JSON Event Recieved ", eventObject );
 
@@ -3613,6 +3718,10 @@ angular.module('cbt')
 		}, 1500);
 
 
+		function setHardwareInfo(obj){
+			console.info( 'HW INFO: ', obj );
+			hardwareInfo = obj;
+		}
 
 
 
@@ -3637,6 +3746,7 @@ angular.module('cbt')
 			connectionMode: function(){ return connectionMode; },
 			debugString: debugString,
 			commands: commands,
+			getHardwareInfo: function(){ return hardwareInfo },
 
 			/* Interface Methods */
 			search: searchForDevices,

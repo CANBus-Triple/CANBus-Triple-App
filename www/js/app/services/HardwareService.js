@@ -16,7 +16,9 @@ angular.module('cbt')
 				ConnectionMode = {
 					USB:'usb',
 					BT:'bt'
-				};
+				},
+				hardwareInfo = {version:'0.4.0'};
+
 
 		var debugString = {data:''};
 
@@ -87,7 +89,9 @@ angular.module('cbt')
 
 			if(device.address == 'serial')
 				SerialService.open(device, readHandler, rawHandler).then(function(){
-					command( 'info' );
+					$timeout(function(){ command( 'info' ); }, 200);
+					$timeout(function(){ command( 'info' ); }, 500);
+					$timeout(function(){ command( 'info' ); }, 700);
 				});
 			else
 				BluetoothService.connect(device, readHandler, rawHandler);
@@ -219,7 +223,10 @@ angular.module('cbt')
 					console.error(e, UtilsService.ab2str( data ));
 				}
 
-				if( eventObject ) $rootScope.$broadcast('hardwareEvent', eventObject);
+				if( eventObject ){
+					if( eventObject.version ) setHardwareInfo( eventObject );
+					$rootScope.$broadcast('hardwareEvent', eventObject);
+				}
 
 				// console.log("JSON Event Recieved ", eventObject );
 
@@ -316,6 +323,10 @@ angular.module('cbt')
 		}, 1500);
 
 
+		function setHardwareInfo(obj){
+			console.info( 'HW INFO: ', obj );
+			hardwareInfo = obj;
+		}
 
 
 
@@ -340,6 +351,7 @@ angular.module('cbt')
 			connectionMode: function(){ return connectionMode; },
 			debugString: debugString,
 			commands: commands,
+			getHardwareInfo: function(){ return hardwareInfo },
 
 			/* Interface Methods */
 			search: searchForDevices,

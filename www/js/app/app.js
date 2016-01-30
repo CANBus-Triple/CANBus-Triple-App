@@ -7,55 +7,67 @@
 
 // window.cbtAppDebug = true;
 
+var remote = require('remote');
+var app = remote.require('app');
+
+
+/*
+*	Catch all errors
+*/
+window.onerror = function(message, url, lineNumber) {
+  console.error(message, url, lineNumber);
+  return true;
+};
+
 
 angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule'])
 
-	.run(function($ionicPlatform) {
-		/*
-	  $ionicPlatform.ready(function() {
-	    // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
-	    // for form inputs)
-	    if(window.cordova && window.cordova.plugins.Keyboard) {
-	      cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-	    }
-	    if(window.StatusBar) {
-	      // org.apache.cordova.statusbar required
-	      StatusBar.styleDefault();
-	    }
-	  });
-		*/
-	})
+	// .run(function($ionicPlatform) {
+	//
+	//   $ionicPlatform.ready(function() {
+	//     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
+	//     // for form inputs)
+	//     if(window.cordova && window.cordova.plugins.Keyboard) {
+	//       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+	//     }
+	//     if(window.StatusBar) {
+	//       // org.apache.cordova.statusbar required
+	//       StatusBar.styleDefault();
+	//     }
+	//   });
+	//
+	// })
+
+
 	.run(function(SerialService){
 
-		/*
-		*		Node-Webkit Setup
-		*/
+		// Close serial on app close
+		app.on('window-all-closed', function() {
+			console.log("We're closing...");
+			SerialService.close();
+		});
 
-		if(typeof require != 'undefined' && window.cbtAppDebug ) require('nw.gui').Window.get().showDevTools();
-
-		if(typeof require != 'undefined' && process.platform == 'darwin' ){
-
-			var gui = require('nw.gui'),
-		  		win = gui.Window.get();
-
-		  var nativeMenuBar = new gui.Menu({ type: "menubar" });
-			nativeMenuBar.createMacBuiltin("CANBus Triple");
-			nativeMenuBar.append(new gui.MenuItem({ label: 'Item A' }));
-			win.menu = nativeMenuBar;
-
-		  win.on('close', function() {
-			  this.hide(); // Pretend to be closed already
-			  console.log("We're closing...");
-			  SerialService.close();
-			  this.close(true);
-			});
-
-			win.show();
-		}
 
 	})
 
-	.constant('appVersion', '0.2.6-alpha1') // Set app version
+	// Initial load event
+	.directive('initialisation',['$rootScope', function($rootScope) {
+            return {
+                restrict: 'A',
+                link: function($scope) {
+                    var to;
+                    var listener = $scope.$watch(function() {
+                        clearTimeout(to);
+                        to = setTimeout(function () {
+                            listener();
+                            $rootScope.$broadcast('initialised');
+                        }, 50);
+                    });
+                }
+            };
+        }])
+
+	.constant('appVersion', '0.2.8-alpha3') // Set app version
 
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 

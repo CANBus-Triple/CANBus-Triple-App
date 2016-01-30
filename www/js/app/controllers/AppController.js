@@ -27,6 +27,15 @@ angular.module('cbt')
 		$scope.$on('CBTSideMenu.IN', navHandler);
 		$scope.$on('CBTSideMenu.OUT', navHandler);
 
+
+		// Hide loader on init
+		$scope.$on('initialised', function(event){
+			document.getElementById('loading').classList.add('fade');
+			setTimeout(function(){
+				document.getElementById('loading').classList.add('hide');
+			}, 200);
+		});
+
 		function navHandler(event){
 
 			$timeout(function(){
@@ -44,7 +53,7 @@ angular.module('cbt')
 
 		$scope.showCloseButton = typeof process == 'object';
 		$scope.exitApplication = function(){
-			require('nw.gui').App.quit();
+			window.close();
 		}
 
 
