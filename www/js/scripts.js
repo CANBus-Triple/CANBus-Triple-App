@@ -8,7 +8,30 @@
 // window.cbtAppDebug = true;
 
 var remote = require('remote');
-var app = remote.require('app');
+var app = remote.require('electron').app;
+var autoUpdater = remote.require('auto-updater');
+
+autoUpdater.setFeedUrl('http://files.canb.us/app/latest?version=' + app.getVersion());
+autoUpdater.on('update-downloaded', function(event, releaseNotes, releaseName, releaseDate, updateUrl, quitAndUpdate){
+  console.info(arguments);
+  quitAndUpdate();
+});
+
+autoUpdater.on('checking-for-update', function(){
+  console.info('checking-for-update');
+});
+autoUpdater.on('update-available', function(){
+  console.info('update-available');
+});
+autoUpdater.on('update-not-available', function(){
+  console.info('update-not-available');
+});
+autoUpdater.on('update-downloaded', function(){
+  console.info('update-downloaded');
+});
+
+console.info('CBT App version: '+app.getVersion(), autoUpdater);
+
 
 
 /*
@@ -16,7 +39,7 @@ var app = remote.require('app');
 */
 window.onerror = function(message, url, lineNumber) {
   console.error(message, url, lineNumber);
-  return true;
+  return false;
 };
 
 
@@ -67,7 +90,7 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
             };
         }])
 
-	.constant('appVersion', '0.2.8-alpha3') // Set app version
+	.constant('appVersion', app.getVersion()) // Set app version
 
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
@@ -3027,8 +3050,15 @@ angular.module('cbt')
 *		A FSM for uploading firmware to the CBT via the HardwareService
 */
 
+var avr109 = require('chip.avr.avr109'),
+		Serialport = require('serialport'),
+		tempSerialPort;
+
+
+
+
 angular.module('cbt')
-	.factory('FirmwareService', function($rootScope, $q, $http, $timeout, HardwareService, UtilsService){
+	.factory('FirmwareService', function($rootScope, $q, $http, $timeout, HardwareService, SerialService, UtilsService){
 
 		var pageSize = 128,
 				sendMaxBytes = 16,
@@ -3344,8 +3374,8 @@ angular.module('cbt')
 			fetchFirmware(s)
 				.then( function(d){
 					HardwareService.registerRawHandler( readHandler );
-					hex = new IntelHex( d );
-					startMachine();
+					// hex = new IntelHex( d );
+					// startMachine();
 					})
 				.catch(function (error){
 					$rootScope.$broadcast('FirmwareService.HEX_ERROR', error);
@@ -3362,7 +3392,8 @@ angular.module('cbt')
 
 			fetchFirmware(s)
 				.then( function(d){
-					hex = new IntelHex( d );
+					// hex = new IntelHex( d );
+					hex = d;
 					})
 				.catch(function (error){
 					$rootScope.$broadcast('FirmwareService.HEX_ERROR', error);
@@ -3374,12 +3405,85 @@ angular.module('cbt')
 		function sendLoaded(){
 
 			if( hex != null ){
-				HardwareService.registerRawHandler( readHandler );
-				startMachine();
+				// HardwareService.registerRawHandler( readHandler );
+				// startMachine();
+
+				if( SerialService.getSerialPort() == undefined ){
+					$rootScope.$broadcast('FirmwareService.SERIAL_PORT_FAIL');
+					return;
+				}
+
+				var oldPort = SerialService.getSerialPort();
+
+				HardwareService.command('bootloader');
+
+				$timeout(function () {
+					tempSerialPort = new Serialport.SerialPort(oldPort.path, {
+				    baudRate: 115200,
+				  }, false);
+					tempSerialPort.open(doFlash);
+				}, 1000);
+
 			}else
 				$rootScope.$broadcast('FirmwareService.HEX_UNAVAILABLE', error);
 
 
+		}
+
+		function doFlash(err){
+
+			if(err)
+				$rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+
+			avr109.init(tempSerialPort, { signature: 'CANBusT', timeout:500 }, function (err, flasher) {
+
+				$timeout(function(){
+					if(err)
+						$rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+					else {
+						$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.555 );
+					}
+				});
+
+				console.info('flasher start');
+				flasher.erase(function() {
+					console.log('initialized');
+					$timeout(function(){
+						$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.555 );
+					});
+
+					flasher.program(hex.toString(), function(err) {
+						$timeout(function(){
+							if (err){
+								$rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+							}else{
+								console.log('programmed!');
+								$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.555 );
+							}
+						});
+
+						flasher.verify(function(err) {
+							$timeout(function(){
+								$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.666 );
+								if(err) $rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+							});
+
+							flasher.fuseCheck(function(err) {
+								$timeout(function(){
+									$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.888 );
+									if(err){
+										$rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+									}else{
+										console.log('Flash OK!');
+										$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 1 );
+										$rootScope.$broadcast('FirmwareService.FLASH_SUCCESS');
+									}
+								});
+							});
+						});
+					});
+				});
+			});
 		}
 
 
@@ -3719,7 +3823,6 @@ angular.module('cbt')
 
 
 		function setHardwareInfo(obj){
-			console.info( 'HW INFO: ', obj );
 			hardwareInfo = obj;
 		}
 
@@ -3877,8 +3980,8 @@ if( typeof process != "undefined" && process.platform )
 angular.module('cbt')
 	.factory('SerialService', function( $q, $rootScope, $interval, $timeout, UtilsService ) {
 
-		var serialport = require("serialport"),
-				SerialPort = serialport.SerialPort,
+		var sp = require("serialport"),
+				SerialPort = sp.SerialPort,
 				serialPort;
 
 		var serialOpened = false,
@@ -3910,7 +4013,7 @@ angular.module('cbt')
 
 			serialPort = new SerialPort(serialPath, {
 				// encoding: 'ascii', //Buffer utf8 utf16le ucs2 ascii hex.
-		  	baudrate: baudRate,
+				baudrate: baudRate,
 		  	databits: 8,
 				stopbits: 1,
 				parity: 'none',
@@ -3937,6 +4040,7 @@ angular.module('cbt')
 
 			serialPort.on('close', function(){
 				console.info("Serial Port Closed");
+				$rootScope.$broadcast('SerialService.CLOSE');
 			});
 
 			return deferred.promise;
@@ -3948,7 +4052,7 @@ angular.module('cbt')
 		*		Serial Data callback
 		*/
 
-		var readline = serialport.parsers.readline("\r\n", "binary");
+		var readline = sp.parsers.readline("\r\n", "binary");
 
 		function parser(obj, data){
 
@@ -4031,7 +4135,6 @@ angular.module('cbt')
 		 * @return null
 		 */
 		function registerReadCallback(callback){
-
 			serialPort.on('data', function(data){
 				// TODO Write a new parser for SerialPort that converts directly to ArrayBuffer. Take note of the realline wrapper function above.
 				callback( UtilsService.str2ab(data) );

@@ -324,7 +324,6 @@ angular.module('cbt')
 
 
 		function setHardwareInfo(obj){
-			console.info( 'HW INFO: ', obj );
 			hardwareInfo = obj;
 		}
 

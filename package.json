@@ -17,6 +17,7 @@
     "browser-sync": "^2.9.1",
     "connect": "*",
     "del": "^2.0.2",
+    "electron-installer-squirrel-windows": "^1.2.2",
     "electron-prebuilt": "^0.36.7",
     "electron-rebuild": "^1.1.2",
     "gulp": "^3.9.0",
@@ -32,6 +33,9 @@
   },
   "dependencies": {
     "cbt-wireshark": "^0.1.1",
+    "chip.avr.avr109": "^1.0.5",
+    "electron-squirrel-startup": "^0.1.4",
+    "intel-hex": "^0.1.1",
     "noble": "^1.1.0",
     "serialport": "^2.0.6"
   }

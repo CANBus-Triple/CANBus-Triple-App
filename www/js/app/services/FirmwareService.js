@@ -4,8 +4,15 @@
 *		A FSM for uploading firmware to the CBT via the HardwareService
 */
 
+var avr109 = require('chip.avr.avr109'),
+		Serialport = require('serialport'),
+		tempSerialPort;
+
+
+
+
 angular.module('cbt')
-	.factory('FirmwareService', function($rootScope, $q, $http, $timeout, HardwareService, UtilsService){
+	.factory('FirmwareService', function($rootScope, $q, $http, $timeout, HardwareService, SerialService, UtilsService){
 
 		var pageSize = 128,
 				sendMaxBytes = 16,
@@ -321,8 +328,8 @@ angular.module('cbt')
 			fetchFirmware(s)
 				.then( function(d){
 					HardwareService.registerRawHandler( readHandler );
-					hex = new IntelHex( d );
-					startMachine();
+					// hex = new IntelHex( d );
+					// startMachine();
 					})
 				.catch(function (error){
 					$rootScope.$broadcast('FirmwareService.HEX_ERROR', error);
@@ -339,7 +346,8 @@ angular.module('cbt')
 
 			fetchFirmware(s)
 				.then( function(d){
-					hex = new IntelHex( d );
+					// hex = new IntelHex( d );
+					hex = d;
 					})
 				.catch(function (error){
 					$rootScope.$broadcast('FirmwareService.HEX_ERROR', error);
@@ -351,12 +359,85 @@ angular.module('cbt')
 		function sendLoaded(){
 
 			if( hex != null ){
-				HardwareService.registerRawHandler( readHandler );
-				startMachine();
+				// HardwareService.registerRawHandler( readHandler );
+				// startMachine();
+
+				if( SerialService.getSerialPort() == undefined ){
+					$rootScope.$broadcast('FirmwareService.SERIAL_PORT_FAIL');
+					return;
+				}
+
+				var oldPort = SerialService.getSerialPort();
+
+				HardwareService.command('bootloader');
+
+				$timeout(function () {
+					tempSerialPort = new Serialport.SerialPort(oldPort.path, {
+				    baudRate: 115200,
+				  }, false);
+					tempSerialPort.open(doFlash);
+				}, 1000);
+
 			}else
 				$rootScope.$broadcast('FirmwareService.HEX_UNAVAILABLE', error);
 
 
+		}
+
+		function doFlash(err){
+
+			if(err)
+				$rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+
+			avr109.init(tempSerialPort, { signature: 'CANBusT', timeout:500 }, function (err, flasher) {
+
+				$timeout(function(){
+					if(err)
+						$rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+					else {
+						$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.555 );
+					}
+				});
+
+				console.info('flasher start');
+				flasher.erase(function() {
+					console.log('initialized');
+					$timeout(function(){
+						$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.555 );
+					});
+
+					flasher.program(hex.toString(), function(err) {
+						$timeout(function(){
+							if (err){
+								$rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+							}else{
+								console.log('programmed!');
+								$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.555 );
+							}
+						});
+
+						flasher.verify(function(err) {
+							$timeout(function(){
+								$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.666 );
+								if(err) $rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+							});
+
+							flasher.fuseCheck(function(err) {
+								$timeout(function(){
+									$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 0.888 );
+									if(err){
+										$rootScope.$broadcast('FirmwareService.FLASH_ERROR', err);
+									}else{
+										console.log('Flash OK!');
+										$rootScope.$broadcast('FirmwareService.FLASH_PROGRESS', 1 );
+										$rootScope.$broadcast('FirmwareService.FLASH_SUCCESS');
+									}
+								});
+							});
+						});
+					});
+				});
+			});
 		}
 
 

@@ -8,7 +8,30 @@
 // window.cbtAppDebug = true;
 
 var remote = require('remote');
-var app = remote.require('app');
+var app = remote.require('electron').app;
+var autoUpdater = remote.require('auto-updater');
+
+autoUpdater.setFeedUrl('http://files.canb.us/app/latest?version=' + app.getVersion());
+autoUpdater.on('update-downloaded', function(event, releaseNotes, releaseName, releaseDate, updateUrl, quitAndUpdate){
+  console.info(arguments);
+  quitAndUpdate();
+});
+
+autoUpdater.on('checking-for-update', function(){
+  console.info('checking-for-update');
+});
+autoUpdater.on('update-available', function(){
+  console.info('update-available');
+});
+autoUpdater.on('update-not-available', function(){
+  console.info('update-not-available');
+});
+autoUpdater.on('update-downloaded', function(){
+  console.info('update-downloaded');
+});
+
+console.info('CBT App version: '+app.getVersion(), autoUpdater);
+
 
 
 /*
@@ -16,7 +39,7 @@ var app = remote.require('app');
 */
 window.onerror = function(message, url, lineNumber) {
   console.error(message, url, lineNumber);
-  return true;
+  return false;
 };
 
 
@@ -67,7 +90,7 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
             };
         }])
 
-	.constant('appVersion', '0.2.8-alpha3') // Set app version
+	.constant('appVersion', app.getVersion()) // Set app version
 
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 
