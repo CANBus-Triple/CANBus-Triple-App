@@ -8,7 +8,7 @@
 // window.cbtAppDebug = true;
 
 var remote = require('remote');
-var app = remote.require('app');
+var app = remote.require('electron').app;
 
 
 /*
@@ -16,7 +16,7 @@ var app = remote.require('app');
 */
 window.onerror = function(message, url, lineNumber) {
   console.error(message, url, lineNumber);
-  return true;
+  return false;
 };
 
 
@@ -67,7 +67,7 @@ angular.module('cbt', ['ngAnimate', 'ionic', 'ngMaterial', 'LocalStorageModule']
             };
         }])
 
-	.constant('appVersion', '0.2.8-alpha3') // Set app version
+	.constant('appVersion', app.getVersion()) // Set app version
 
 	.config(function($stateProvider, $urlRouterProvider, localStorageServiceProvider) {
 

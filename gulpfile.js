@@ -9,13 +9,12 @@ var sh = require('shelljs');
 var browserSync = require('browser-sync');
 var reload      = browserSync.reload;
 var del   = require('del');
-
 var gulp = require('gulp');
 var electron = require('gulp-electron');
 var elecRebuild   = require('electron-rebuild');
 var packageJson = require('./package.json');
 var install = require("gulp-install");
-
+var createInstaller = require('electron-installer-squirrel-windows');
 
 
 
@@ -129,7 +128,10 @@ gulp.task('electron-copy', ['sass', 'scripts', /*'electron-rebuild', 'electron-c
     'node_modules/serialport/build/**/*',
     'node_modules/serialport/serialport*.*',
     'node_modules/serialport/*.js',
-    'node_modules/serialport/*.json'
+    'node_modules/serialport/*.json',
+    'node_modules/intel-hex/**/*',
+    'node_modules/electron-squirrel-startup/**/*',
+    'node_modules/chip.avr.avr109/**/*',
   ];
 
 
@@ -163,7 +165,17 @@ gulp.task('electron-copy', ['sass', 'scripts', /*'electron-rebuild', 'electron-c
 
 });
 
-
+gulp.task('electron-installer', [], function(){
+  var opts = {
+    "path": "release/v0.36.7/win32-x64/",
+    "name": "CANBus Triple",
+    "description": "CANBus Triple Desktop app http://canb.us"
+  }
+  createInstaller(opts, function done (err){
+    if(err)
+      gutil.log('electron-installer', gutil.colors.red(err), err);
+  })
+});
 
 gulp.task('electron-install', ['electron-copy'], function() {
   gulp.src(['./electron-src/package.json'])
@@ -181,7 +193,7 @@ gulp.task('electron-build', ['electron-copy'], function() {
         asar: true,
         version: 'v0.36.7',
         packaging: true,
-        platforms: [/*'win32-ia32', 'win32-x64', */'darwin-x64', /*'linux-x64'*/],
+        platforms: [/*'win32-ia32',*/ 'win32-x64', 'darwin-x64', /*'linux-x64'*/],
         platformResources: {
             darwin: {
                 CFBundleDisplayName: packageJson.name,

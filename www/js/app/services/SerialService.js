@@ -9,8 +9,8 @@ if( typeof process != "undefined" && process.platform )
 angular.module('cbt')
 	.factory('SerialService', function( $q, $rootScope, $interval, $timeout, UtilsService ) {
 
-		var serialport = require("serialport"),
-				SerialPort = serialport.SerialPort,
+		var sp = require("serialport"),
+				SerialPort = sp.SerialPort,
 				serialPort;
 
 		var serialOpened = false,
@@ -42,7 +42,7 @@ angular.module('cbt')
 
 			serialPort = new SerialPort(serialPath, {
 				// encoding: 'ascii', //Buffer utf8 utf16le ucs2 ascii hex.
-		  	baudrate: baudRate,
+				baudrate: baudRate,
 		  	databits: 8,
 				stopbits: 1,
 				parity: 'none',
@@ -69,6 +69,7 @@ angular.module('cbt')
 
 			serialPort.on('close', function(){
 				console.info("Serial Port Closed");
+				$rootScope.$broadcast('SerialService.CLOSE');
 			});
 
 			return deferred.promise;
@@ -80,7 +81,7 @@ angular.module('cbt')
 		*		Serial Data callback
 		*/
 
-		var readline = serialport.parsers.readline("\r\n", "binary");
+		var readline = sp.parsers.readline("\r\n", "binary");
 
 		function parser(obj, data){
 
@@ -163,7 +164,6 @@ angular.module('cbt')
 		 * @return null
 		 */
 		function registerReadCallback(callback){
-
 			serialPort.on('data', function(data){
 				// TODO Write a new parser for SerialPort that converts directly to ArrayBuffer. Take note of the realline wrapper function above.
 				callback( UtilsService.str2ab(data) );
