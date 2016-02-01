@@ -9,6 +9,20 @@
 
 var remote = require('remote');
 var app = remote.require('electron').app;
+var autoUpdater = remote.require('auto-updater');
+
+
+autoUpdater.on('update-downloaded', function(event, releaseNotes, releaseName, releaseDate, updateUrl, quitAndUpdate){
+  console.info(arguments);
+
+  var myNotification = new Notification("An update is ready to install", {"body":"CANBus Triple "+releaseName+" is ready to install. Click here"});
+
+  myNotification.onclick = function () {
+    quitAndUpdate();
+    console.log('Notification clicked')
+  }
+  // quitAndUpdate();
+});
 
 
 /*

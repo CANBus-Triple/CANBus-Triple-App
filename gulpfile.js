@@ -24,7 +24,7 @@ var paths = {
 
 gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'scripts', /*'electron-clean',*/ 'electron-copy', 'electron-install', 'electron-build']);
+gulp.task('build', ['install', 'sass-build', 'scripts', 'electron-copy', 'electron-install', 'electron-build']);
 
 // Static Server + watching scss/html files
 gulp.task('serve', ['sass', 'scripts'], function() {
@@ -108,7 +108,7 @@ gulp.task('electron-rebuild', [], function() {
     });
   });
 
-gulp.task('electron-copy', ['sass', 'scripts', /*'electron-rebuild', 'electron-clean'*/], function() {
+gulp.task('electron-copy', ['sass', 'scripts'], function() {
 
   var modules = [
     'serialport',
@@ -177,7 +177,7 @@ gulp.task('electron-installer', [], function(){
   })
 });
 
-gulp.task('electron-install', ['electron-copy'], function() {
+gulp.task('electron-install', [], function() {
   gulp.src(['./electron-src/package.json'])
     .pipe(install({production:true, ignoreScripts:true}));
   });

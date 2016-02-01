@@ -47,24 +47,9 @@ if (handleStartupEvent()) {
   return;
 }
 
+
 var autoUpdater = require('auto-updater');
-
-autoUpdater.setFeedUrl('http://files.canb.us/app/latest-'+process.platform+'?version=' + app.getVersion());
-autoUpdater.on('update-downloaded', function(event, releaseNotes, releaseName, releaseDate, updateUrl, quitAndUpdate){
-  console.info(arguments);
-  new Notification("CANBus Triple", {"body":"An update has been downloaded for the CANBus Triple App", "icon":__dirname+"/www/img/cbt-128.png"});
-  quitAndUpdate();
-});
-
-autoUpdater.on('checking-for-update', function(){
-  console.info('checking-for-update');
-});
-autoUpdater.on('update-available', function(){
-  console.info('update-available');
-});
-autoUpdater.on('update-not-available', function(){
-  console.info('update-not-available');
-});
+autoUpdater.setFeedUrl('http://nuts.canb.us/update/'+process.platform+'/' + app.getVersion());
 
 
 // Report crashes to our server.
@@ -94,7 +79,7 @@ app.on('ready', function() {
   mainWindow.loadURL('file://' + __dirname + '/www/index.html');
 
   // Open the devtools.
-  //mainWindow.openDevTools();
+  // mainWindow.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {

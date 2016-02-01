@@ -1,10 +1,11 @@
 {
   "name": "CANBusTriple",
-  "version": "0.3.1-beta1",
+  "version": "0.3.1",
   "private": true,
   "main": "main.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "sign": "codesign --deep --force --verbose --sign \"Mac Developer: etx313@gmail.com (63PELXM22F)\" ~/Desktop/CANBusTriple/release/v0.36.7/darwin-x64/CANBusTriple.app"
   },
   "config": {
     "disturl": "https://atom.io/download/atom-shell",
