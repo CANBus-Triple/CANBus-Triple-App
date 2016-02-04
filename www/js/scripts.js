@@ -21,7 +21,6 @@ autoUpdater.on('update-downloaded', function(event, releaseNotes, releaseName, r
     quitAndUpdate();
     console.log('Notification clicked')
   }
-
   // quitAndUpdate();
 });
 
@@ -762,6 +761,38 @@ angular.module('cbt')
 
 
 angular.module('cbt')
+	.controller('HomeController', function ($scope, $state, appVersion) {
+
+    $scope.version = appVersion;
+
+    $scope.items = [
+      {
+        name: 'Watch CAN Packets',
+        icon: 'ion-settings',
+        sref: 'logger',
+      },
+      {
+        name: 'Pipe CAN packets to Wireshark',
+        icon: 'ion-arrow-right-c',
+        sref: 'pipe',
+      },
+      {
+        name: 'Settings',
+        icon: 'ion-gear-b',
+        sref: 'settings',
+      },
+    ];
+
+    $scope.listItemClick = function(n){
+      $state.go( $scope.items[n].sref );
+    }
+
+});
+
+'use strict';
+
+
+angular.module('cbt')
 	.controller('HWStatusController', function ($rootScope, $scope, $state, $http, $interval, $timeout, $ionicModal, HardwareService) {
 
     $scope.navTitle = "Hardware";
@@ -911,38 +942,6 @@ angular.module('cbt')
 
 
 	});
-
-'use strict';
-
-
-angular.module('cbt')
-	.controller('HomeController', function ($scope, $state, appVersion) {
-
-    $scope.version = appVersion;
-
-    $scope.items = [
-      {
-        name: 'Watch CAN Packets',
-        icon: 'ion-settings',
-        sref: 'logger',
-      },
-      {
-        name: 'Pipe CAN packets to Wireshark',
-        icon: 'ion-arrow-right-c',
-        sref: 'pipe',
-      },
-      {
-        name: 'Settings',
-        icon: 'ion-gear-b',
-        sref: 'settings',
-      },
-    ];
-
-    $scope.listItemClick = function(n){
-      $state.go( $scope.items[n].sref );
-    }
-
-});
 
 'use strict';
 
