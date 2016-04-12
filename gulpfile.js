@@ -14,9 +14,11 @@ var electron = require('gulp-electron');
 var elecRebuild   = require('electron-rebuild');
 var packageJson = require('./package.json');
 var install = require("gulp-install");
-var createInstaller = require('electron-installer-squirrel-windows');
+var winInstaller = require('electron-windows-installer');
 
 
+
+var electronVersion = 'v0.36.7';
 
 var paths = {
   sass: ['./www/sass/**/*.scss']
@@ -24,7 +26,7 @@ var paths = {
 
 gulp.task('default', ['sass', 'scripts', 'serve']);
 
-gulp.task('build', ['install', 'sass-build', 'scripts', /*'electron-clean',*/ 'electron-copy', 'electron-install', 'electron-build']);
+gulp.task('build', ['install', 'sass-build', 'scripts', 'electron-copy', 'electron-install', 'electron-build']);
 
 // Static Server + watching scss/html files
 gulp.task('serve', ['sass', 'scripts'], function() {
@@ -108,7 +110,7 @@ gulp.task('electron-rebuild', [], function() {
     });
   });
 
-gulp.task('electron-copy', ['sass', 'scripts', /*'electron-rebuild', 'electron-clean'*/], function() {
+gulp.task('electron-copy', ['sass', 'scripts'], function() {
 
   var modules = [
     'serialport',
@@ -132,6 +134,7 @@ gulp.task('electron-copy', ['sass', 'scripts', /*'electron-rebuild', 'electron-c
     'node_modules/intel-hex/**/*',
     'node_modules/electron-squirrel-startup/**/*',
     'node_modules/chip.avr.avr109/**/*',
+    'node_modules/semver/**/*',
   ];
 
 
@@ -165,24 +168,16 @@ gulp.task('electron-copy', ['sass', 'scripts', /*'electron-rebuild', 'electron-c
 
 });
 
-gulp.task('electron-installer', [], function(){
-  var opts = {
-    "path": "release/v0.36.7/win32-x64/",
-    "name": "CANBus Triple",
-    "description": "CANBus Triple Desktop app http://canb.us"
-  }
-  createInstaller(opts, function done (err){
-    if(err)
-      gutil.log('electron-installer', gutil.colors.red(err), err);
-  })
-});
 
-gulp.task('electron-install', ['electron-copy'], function() {
+
+gulp.task('electron-install', [], function() {
   gulp.src(['./electron-src/package.json'])
     .pipe(install({production:true, ignoreScripts:true}));
   });
 
-gulp.task('electron-build', ['electron-copy'], function() {
+gulp.task('electron-build', ['electron-build:osx', 'electron-build:linux', 'electron-build:win']);
+
+gulp.task('electron-build:osx', ['electron-copy'], function() {
 
     gulp.src("")
     .pipe(electron({
@@ -191,9 +186,9 @@ gulp.task('electron-build', ['electron-copy'], function() {
         release: './release',
         cache: './cache',
         asar: true,
-        version: 'v0.36.7',
+        version: electronVersion,
         packaging: true,
-        platforms: [/*'win32-ia32',*/ 'win32-x64', 'darwin-x64', /*'linux-x64'*/],
+        platforms: ['darwin-x64', /*'linux-x64'*/],
         platformResources: {
             darwin: {
                 CFBundleDisplayName: packageJson.name,
@@ -201,7 +196,41 @@ gulp.task('electron-build', ['electron-copy'], function() {
                 CFBundleName: packageJson.name,
                 CFBundleVersion: packageJson.version,
                 icon: 'build_assets/nw.icns'
-            },
+            }
+        }
+    }))
+    .pipe(gulp.dest(""));
+});
+
+gulp.task('electron-build:linux', ['electron-copy'], function() {
+    gulp.src("")
+    .pipe(electron({
+        src: './electron-src',
+        packageJson: packageJson,
+        release: './release',
+        cache: './cache',
+        asar: true,
+        version: electronVersion,
+        packaging: true,
+        platforms: ['linux-x64'],
+        platformResources: {}
+    }))
+    .pipe(gulp.dest(""));
+});
+
+gulp.task('electron-build:win', ['electron-copy'], function() {
+
+    gulp.src("")
+    .pipe(electron({
+        src: './electron-src',
+        packageJson: packageJson,
+        release: './release',
+        cache: './cache',
+        asar: true,
+        version: electronVersion,
+        packaging: true,
+        platforms: ['win32-x64'],
+        platformResources: {
             win: {
                 "version-string": packageJson.version,
                 "file-version": packageJson.version,
@@ -211,4 +240,22 @@ gulp.task('electron-build', ['electron-copy'], function() {
         }
     }))
     .pipe(gulp.dest(""));
+});
+
+
+gulp.task('create-windows-installer', function(done) {
+  winInstaller({
+    productName: 'CANBusTriple',
+    appDirectory: './release/'+electronVersion+'/win32-x64/',
+    outputDirectory: './dist',
+    arch: 'x64',
+    authors: 'CANBus Triple Community',
+    iconUrl: 'http://canb.us/favicon.ico',
+    setupIcon: 'build_assets/cbt.ico',
+    title: "CANBus Triple",
+    exe: "CANBusTriple.exe",
+    remoteReleases: 'https://github.com/CANBus-Triple/CANBus-Triple-App/releases/download/v0.3.1/RELEASES',
+    certificateFile: 'c:/Users/IEUser/Desktop/MyKey.pfx',
+    certificatePassword: 'pimp666'
+  }).then(done).catch(done);
 });

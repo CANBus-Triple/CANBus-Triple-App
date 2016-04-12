@@ -1,10 +1,11 @@
 {
   "name": "CANBusTriple",
-  "version": "0.3.1-beta1",
+  "version": "0.3.2",
   "private": true,
   "main": "main.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "sign": "codesign --deep --force --verbose --sign \"Mac Developer: etx313@gmail.com (63PELXM22F)\" ~/Desktop/CANBusTriple/release/v0.36.7/darwin-x64/CANBusTriple.app"
   },
   "config": {
     "disturl": "https://atom.io/download/atom-shell",
@@ -17,9 +18,10 @@
     "browser-sync": "^2.9.1",
     "connect": "*",
     "del": "^2.0.2",
-    "electron-installer-squirrel-windows": "^1.2.2",
+    "electron-builder": "^2.6.0",
     "electron-prebuilt": "^0.36.7",
     "electron-rebuild": "^1.1.2",
+    "electron-windows-installer": "^1.2.2",
     "gulp": "^3.9.0",
     "gulp-concat": "^2.6.0",
     "gulp-electron": "0.0.9",
@@ -37,6 +39,7 @@
     "electron-squirrel-startup": "^0.1.4",
     "intel-hex": "^0.1.1",
     "noble": "^1.1.0",
+    "semver": "^5.1.0",
     "serialport": "^2.0.6"
   }
 }

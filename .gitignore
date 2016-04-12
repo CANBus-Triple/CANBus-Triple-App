@@ -8,6 +8,7 @@ www/plugins
 cordova*.js
 node_modules
 cache
+dist
 build
 build.nw
 release

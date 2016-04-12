@@ -9,6 +9,20 @@
 
 var remote = require('remote');
 var app = remote.require('electron').app;
+var autoUpdater = remote.require('auto-updater');
+
+
+autoUpdater.on('update-downloaded', function(event, releaseNotes, releaseName, releaseDate, updateUrl, quitAndUpdate){
+  console.info(arguments);
+
+  var myNotification = new Notification("An update is ready to install", {"body":"CANBus Triple "+releaseName+" is ready to install. Click here"});
+
+  myNotification.onclick = function () {
+    quitAndUpdate();
+    console.log('Notification clicked')
+  }
+  // quitAndUpdate();
+});
 
 
 /*
@@ -3493,6 +3507,7 @@ angular.module('cbt')
 					USB:'usb',
 					BT:'bt'
 				},
+				semver = require('semver'),
 				hardwareInfo = {version:'0.4.0'};
 
 
@@ -3516,7 +3531,6 @@ angular.module('cbt')
 			'autobaud': [0x01, 0x08],
 			'bitrate': [0x01, 0x09],
 		};
-
 
 
 
@@ -3801,6 +3815,29 @@ angular.module('cbt')
 
 		function setHardwareInfo(obj){
 			hardwareInfo = obj;
+			updateCommands();
+		}
+
+
+		/*
+		 *	Update command array for various firmware versions
+		 */
+
+		function updateCommands(){
+
+			switch(true){
+				case semver.satisfies(hardwareInfo.version, '>=0.6.0'):
+					commands.bus1logOn = [0x03, 0x01, 0x02];
+					commands.bus2logOn = [0x03, 0x02, 0x02];
+					commands.bus3logOn = [0x03, 0x03, 0x02];
+				break;
+				case semver.satisfies(hardwareInfo.version, '<0.6.0'):
+					commands.bus1logOn = [0x03, 0x01, 0x01];
+					commands.bus2logOn = [0x03, 0x02, 0x01];
+					commands.bus3logOn = [0x03, 0x03, 0x01];
+				break;
+			}
+
 		}
 
 
