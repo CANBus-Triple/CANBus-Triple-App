@@ -132,6 +132,7 @@ gulp.task('electron-copy', ['sass', 'scripts'], function() {
     'node_modules/intel-hex/**/*',
     'node_modules/electron-squirrel-startup/**/*',
     'node_modules/chip.avr.avr109/**/*',
+    'node_modules/semver/**/*',
   ];
 
 
